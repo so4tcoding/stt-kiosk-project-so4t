@@ -33687,7 +33687,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 <script>
 /* TTS_FINAL_MIC_OFF_TUNE_V2 applied: longer post-TTS mute */
 /* TTS_FINAL_MIC_OFF_TUNE_V3_BALANCED applied: shorter post-TTS delay */
-/* TTS_FINAL_MIC_OFF_TUNE_V4_FAST applied: shorter post-TTS delay */
 /* TTS_FINAL_MIC_OFF_PATCH_V1
    목적:
    - TTS 중에는 음성인식/HYBRID STT를 강제로 끔
@@ -33717,7 +33716,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     function estimateMs(text) {
         const len = rawText(text).length;
-        return Math.min(22000, Math.max(2500, len * 110));
+        return Math.min(26000, Math.max(3000, len * 140));
     }
 
     function isMuted() {
@@ -33857,7 +33856,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     function muteMicForTTS(text, reason) {
         const ms = estimateMs(text);
-        const until = now() + ms + 800;
+        const until = now() + ms + 1700;
 
         window.__TTS_FINAL_MIC_OFF = true;
         window.__TTS_FINAL_MIC_OFF_UNTIL = Math.max(window.__TTS_FINAL_MIC_OFF_UNTIL || 0, until);
@@ -33890,7 +33889,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 secondsLeft: secondsLeft(),
                 results: r.results
             });
-        }, 400);
+        }, 300);
 
         clearTimeout(window.__TTS_FINAL_MIC_OFF_RESTART_TIMER);
         window.__TTS_FINAL_MIC_OFF_RESTART_TIMER = setTimeout(function(){
@@ -33903,8 +33902,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
             setTimeout(function(){
                 startRecognitionAfterTTS();
-            }, 250);
-        }, ms + 900);
+            }, 500);
+        }, ms + 1800);
 
         return window.__lastTTSFinalMicOff;
     }
@@ -34048,359 +34047,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 !!window.processVoiceCommand.__TTS_FINAL_MIC_OFF_WRAPPED__,
             hasStartHybridSTT: typeof window.startHybridSTT === "function",
             hasStopHybridSTT: typeof window.stopHybridSTT === "function"
-        };
-    };
-
-    console.log("[" + PATCH + "] loaded");
-})();
-</script>
-
-
-<script>
-/* TTS_ONEND_RESUME_PATCH_V5
-   목적:
-   - 추정 시간 기반 재시작 대신 speechSynthesis.onend 기준으로 음성인식 재시작
-   - TTS 시작 즉시 HYBRID STT OFF
-   - TTS 종료 이벤트 발생 후 짧은 여유 뒤 HYBRID STT ON
-   - UI 변경 없음
-*/
-(function(){
-    "use strict";
-
-    const PATCH = "TTS_ONEND_RESUME_PATCH_V5";
-
-    if (window.__TTS_ONEND_RESUME_PATCH_V5_LOADED__) {
-        console.log("[" + PATCH + "] already loaded");
-        return;
-    }
-    window.__TTS_ONEND_RESUME_PATCH_V5_LOADED__ = true;
-
-    /*
-      TTS 끝난 뒤 몇 ms 후 다시 켤지.
-      너무 빨리 켜져서 꼬리음을 잡으면 500~700.
-      진짜 바로 켜고 싶으면 0~200.
-    */
-    const RESUME_TAIL_MS = 400;
-
-    function rawText(x) {
-        return String(x || "").trim();
-    }
-
-    function estimateSafetyMs(text) {
-        const len = rawText(text).length;
-        return Math.min(30000, Math.max(4000, len * 180));
-    }
-
-    function isOnendMuted() {
-        return !!window.__TTS_ONEND_MIC_OFF;
-    }
-
-    function forceStopRecognition(reason) {
-        const results = [];
-
-        try {
-            if (typeof window.stopHybridSTT === "function") {
-                window.stopHybridSTT();
-                results.push("stopHybridSTT");
-            }
-        } catch(e) {
-            results.push("stopHybridSTT error:" + e.message);
-        }
-
-        try {
-            if (typeof window.stopListening === "function") {
-                window.stopListening();
-                results.push("stopListening");
-            }
-        } catch(e) {
-            results.push("stopListening error:" + e.message);
-        }
-
-        const names = [
-            "recognition",
-            "speechRecognition",
-            "webSpeechRecognition",
-            "webkitRecognition",
-            "mainRecognition",
-            "voiceRecognition",
-            "hybridRecognition",
-            "fastRecognition",
-            "primaryRecognition",
-            "continuousRecognition",
-            "currentRecognition",
-            "rec",
-            "fastRec"
-        ];
-
-        const seen = new Set();
-
-        names.forEach(function(name){
-            try {
-                const obj = window[name];
-                if (!obj || seen.has(obj)) return;
-                seen.add(obj);
-
-                if (typeof obj.stop === "function") {
-                    try {
-                        obj.stop();
-                        results.push(name + ".stop");
-                    } catch(e) {}
-                }
-
-                if (typeof obj.abort === "function") {
-                    try {
-                        obj.abort();
-                        results.push(name + ".abort");
-                    } catch(e) {}
-                }
-            } catch(e) {}
-        });
-
-        console.log("[" + PATCH + "] force stop recognition:", {
-            reason,
-            results
-        });
-
-        return results;
-    }
-
-    function resumeRecognition(reason) {
-        window.__TTS_ONEND_MIC_OFF = false;
-        window.__TTS_FINAL_MIC_OFF = false;
-        window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
-        window.__kioskTTSBusy = false;
-        window.__kioskTTSBusyUntil = 0;
-
-        clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-        clearTimeout(window.__TTS_FINAL_MIC_OFF_RESTART_TIMER);
-        clearTimeout(window.__TTS_ONEND_SAFETY_TIMER);
-        clearTimeout(window.__TTS_ONEND_RESUME_TIMER);
-
-        console.log("[" + PATCH + "] TTS ended, resume recognition:", reason);
-
-        try {
-            if (typeof window.startHybridSTT === "function") {
-                window.startHybridSTT();
-                console.log("[" + PATCH + "] startHybridSTT called");
-                return true;
-            }
-        } catch(e) {
-            console.warn("[" + PATCH + "] startHybridSTT failed:", e);
-        }
-
-        try {
-            if (typeof window.startListening === "function") {
-                window.startListening();
-                console.log("[" + PATCH + "] startListening called");
-                return true;
-            }
-        } catch(e) {
-            console.warn("[" + PATCH + "] startListening failed:", e);
-        }
-
-        return false;
-    }
-
-    function beginTTSMute(text, reason) {
-        const safetyMs = estimateSafetyMs(text);
-
-        window.__TTS_ONEND_MIC_OFF = true;
-        window.__TTS_FINAL_MIC_OFF = true;
-        window.__TTS_FINAL_MIC_OFF_UNTIL = Date.now() + safetyMs + 3000;
-        window.__kioskTTSBusy = true;
-        window.__kioskTTSBusyUntil = Date.now() + safetyMs + 3000;
-
-        console.log("[" + PATCH + "] TTS started, mic off until onend:", {
-            text: rawText(text).slice(0, 120),
-            reason,
-            safetyMs
-        });
-
-        forceStopRecognition(reason || "tts_onend_start");
-
-        clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-        window.__TTS_ONEND_STOP_INTERVAL = setInterval(function(){
-            if (!window.__TTS_ONEND_MIC_OFF) {
-                clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-                return;
-            }
-            forceStopRecognition("onend_interval_guard");
-        }, 250);
-
-        /*
-          혹시 onend가 안 불리는 경우를 위한 안전장치.
-          이건 진짜 비상용이고, 정상은 onend에서 재시작됨.
-        */
-        clearTimeout(window.__TTS_ONEND_SAFETY_TIMER);
-        window.__TTS_ONEND_SAFETY_TIMER = setTimeout(function(){
-            if (window.__TTS_ONEND_MIC_OFF) {
-                console.warn("[" + PATCH + "] onend not fired, safety resume");
-                clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-                resumeRecognition("safety_timeout");
-            }
-        }, safetyMs + 3500);
-    }
-
-    function finishTTSMute(reason) {
-        clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-
-        clearTimeout(window.__TTS_ONEND_RESUME_TIMER);
-        window.__TTS_ONEND_RESUME_TIMER = setTimeout(function(){
-            resumeRecognition(reason || "speech_end");
-        }, RESUME_TAIL_MS);
-    }
-
-    /*
-      startListening이 Watchdog으로 호출되어도 TTS 중이면 막음.
-    */
-    const currentStartListening = window.startListening;
-    if (typeof currentStartListening === "function" && !currentStartListening.__TTS_ONEND_RESUME_WRAPPED__) {
-        const wrappedStart = function(){
-            if (isOnendMuted()) {
-                const result = {
-                    ignored: true,
-                    reason: "tts_onend_mic_off_active",
-                    patch: PATCH,
-                    at: new Date().toISOString()
-                };
-                console.log("[" + PATCH + "] startListening blocked:", result);
-                return result;
-            }
-            return currentStartListening.apply(this, arguments);
-        };
-
-        wrappedStart.__TTS_ONEND_RESUME_WRAPPED__ = true;
-        wrappedStart.__TTS_ONEND_RESUME_ORIGINAL__ = currentStartListening;
-        window.startListening = wrappedStart;
-
-        console.log("[" + PATCH + "] wrapped startListening");
-    }
-
-    /*
-      processVoiceCommand도 TTS 중에는 막음.
-    */
-    const currentPVC = window.processVoiceCommand;
-    if (typeof currentPVC === "function" && !currentPVC.__TTS_ONEND_RESUME_WRAPPED__) {
-        const wrappedPVC = function(){
-            const text = arguments[0];
-
-            if (isOnendMuted()) {
-                const result = {
-                    ignored: true,
-                    reason: "tts_onend_mic_off_active",
-                    text,
-                    patch: PATCH,
-                    at: new Date().toISOString()
-                };
-                console.log("[" + PATCH + "] processVoiceCommand blocked:", result);
-                return result;
-            }
-
-            return currentPVC.apply(this, arguments);
-        };
-
-        wrappedPVC.__TTS_ONEND_RESUME_WRAPPED__ = true;
-        wrappedPVC.__TTS_ONEND_RESUME_ORIGINAL__ = currentPVC;
-        window.processVoiceCommand = wrappedPVC;
-
-        console.log("[" + PATCH + "] wrapped processVoiceCommand");
-    }
-
-    /*
-      speechSynthesis.speak를 onend 기준으로 감싼다.
-      기존 TTS_FINAL_MIC_OFF_PATCH_V1이 이미 감싸고 있어도 그 위에서 다시 감쌈.
-    */
-    try {
-        if (
-            window.speechSynthesis &&
-            typeof window.speechSynthesis.speak === "function" &&
-            !window.speechSynthesis.speak.__TTS_ONEND_RESUME_WRAPPED__
-        ) {
-            const previousSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
-
-            const wrappedSynthSpeak = function(utterance){
-                try {
-                    const text = utterance && utterance.text ? utterance.text : "";
-                    beginTTSMute(text, "speechSynthesis.speak");
-
-                    const oldOnEnd = utterance.onend;
-                    const oldOnError = utterance.onerror;
-
-                    utterance.onend = function(ev){
-                        try {
-                            if (typeof oldOnEnd === "function") oldOnEnd.call(this, ev);
-                        } catch(e) {}
-
-                        console.log("[" + PATCH + "] speechSynthesis onend");
-                        finishTTSMute("speechSynthesis.onend");
-                    };
-
-                    utterance.onerror = function(ev){
-                        try {
-                            if (typeof oldOnError === "function") oldOnError.call(this, ev);
-                        } catch(e) {}
-
-                        console.warn("[" + PATCH + "] speechSynthesis onerror");
-                        finishTTSMute("speechSynthesis.onerror");
-                    };
-                } catch(e) {
-                    console.warn("[" + PATCH + "] wrap utterance failed:", e);
-                }
-
-                return previousSpeak(utterance);
-            };
-
-            wrappedSynthSpeak.__TTS_ONEND_RESUME_WRAPPED__ = true;
-            wrappedSynthSpeak.__TTS_ONEND_RESUME_ORIGINAL__ = previousSpeak;
-
-            window.speechSynthesis.speak = wrappedSynthSpeak;
-
-            console.log("[" + PATCH + "] wrapped speechSynthesis.speak");
-        }
-    } catch(e) {
-        console.warn("[" + PATCH + "] speechSynthesis wrap failed:", e);
-    }
-
-    window.KioskTTSOnEndResumeFix = {
-        patch: PATCH,
-        beginTTSMute,
-        finishTTSMute,
-        resumeRecognition,
-        forceStopRecognition,
-        isMuted: isOnendMuted,
-        clear: function(){
-            window.__TTS_ONEND_MIC_OFF = false;
-            window.__TTS_FINAL_MIC_OFF = false;
-            window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
-            window.__kioskTTSBusy = false;
-            window.__kioskTTSBusyUntil = 0;
-            clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-            clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-            clearTimeout(window.__TTS_FINAL_MIC_OFF_RESTART_TIMER);
-            clearTimeout(window.__TTS_ONEND_SAFETY_TIMER);
-            clearTimeout(window.__TTS_ONEND_RESUME_TIMER);
-            console.log("[" + PATCH + "] cleared");
-            return true;
-        }
-    };
-
-    window.testTTSOnEndResumeFix = function(){
-        return {
-            patch: PATCH,
-            muted: isOnendMuted(),
-            synthSpeakWrapped:
-                !!(window.speechSynthesis &&
-                   window.speechSynthesis.speak &&
-                   window.speechSynthesis.speak.__TTS_ONEND_RESUME_WRAPPED__),
-            startListeningWrapped:
-                typeof window.startListening === "function" &&
-                !!window.startListening.__TTS_ONEND_RESUME_WRAPPED__,
-            processVoiceCommandWrapped:
-                typeof window.processVoiceCommand === "function" &&
-                !!window.processVoiceCommand.__TTS_ONEND_RESUME_WRAPPED__,
-            hasStartHybridSTT: typeof window.startHybridSTT === "function",
-            hasStopHybridSTT: typeof window.stopHybridSTT === "function",
-            resumeTailMs: RESUME_TAIL_MS
         };
     };
 
