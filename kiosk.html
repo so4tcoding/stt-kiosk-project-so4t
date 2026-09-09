@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -34053,360 +34053,853 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     console.log("[" + PATCH + "] loaded");
 })();
-</script>
 
+/* ==========================================================================
+   [추천 메뉴 및 맛 선택 로직 개선 패치]
+   ========================================================================== */
+(function RECOMMENDATION_UPDATE_PATCH() {
+    console.log("✅ 추천 메뉴 업데이트 패치 적용");
 
-<script>
-/* TTS_ONEND_RESUME_PATCH_V5
-   목적:
-   - 추정 시간 기반 재시작 대신 speechSynthesis.onend 기준으로 음성인식 재시작
-   - TTS 시작 즉시 HYBRID STT OFF
-   - TTS 종료 이벤트 발생 후 짧은 여유 뒤 HYBRID STT ON
-   - UI 변경 없음
-*/
-(function(){
-    "use strict";
+    renderTasteSelectPrompt = function() {
+        let shuffled = [...customMenus].sort(() => 0.5 - Math.random());
+        let menuA = shuffled[0].name;
+        let menuB = shuffled[1].name;
 
-    const PATCH = "TTS_ONEND_RESUME_PATCH_V5";
-
-    if (window.__TTS_ONEND_RESUME_PATCH_V5_LOADED__) {
-        console.log("[" + PATCH + "] already loaded");
-        return;
-    }
-    window.__TTS_ONEND_RESUME_PATCH_V5_LOADED__ = true;
-
-    /*
-      TTS 끝난 뒤 몇 ms 후 다시 켤지.
-      너무 빨리 켜져서 꼬리음을 잡으면 500~700.
-      진짜 바로 켜고 싶으면 0~200.
-    */
-    const RESUME_TAIL_MS = 400;
-
-    function rawText(x) {
-        return String(x || "").trim();
-    }
-
-    function estimateSafetyMs(text) {
-        const len = rawText(text).length;
-        return Math.min(30000, Math.max(4000, len * 180));
-    }
-
-    function isOnendMuted() {
-        return !!window.__TTS_ONEND_MIC_OFF;
-    }
-
-    function forceStopRecognition(reason) {
-        const results = [];
-
-        try {
-            if (typeof window.stopHybridSTT === "function") {
-                window.stopHybridSTT();
-                results.push("stopHybridSTT");
-            }
-        } catch(e) {
-            results.push("stopHybridSTT error:" + e.message);
-        }
-
-        try {
-            if (typeof window.stopListening === "function") {
-                window.stopListening();
-                results.push("stopListening");
-            }
-        } catch(e) {
-            results.push("stopListening error:" + e.message);
-        }
-
-        const names = [
-            "recognition",
-            "speechRecognition",
-            "webSpeechRecognition",
-            "webkitRecognition",
-            "mainRecognition",
-            "voiceRecognition",
-            "hybridRecognition",
-            "fastRecognition",
-            "primaryRecognition",
-            "continuousRecognition",
-            "currentRecognition",
-            "rec",
-            "fastRec"
+        const tastes = [
+            {label:'달콤한 맛', emoji:'🍰', color:'text-pink-500'}, {label:'상큼한 맛', emoji:'🍋', color:'text-emerald-600'},
+            {label:'구수한 맛', emoji:'🥣', color:'text-amber-700'}, {label:'고소한 맛', emoji:'🥜', color:'text-blue-600'},
+            {label:'얼큰한 맛', emoji:'🌶️', color:'text-red-500'}, {label:'짭짤한 맛', emoji:'🍟', color:'text-purple-600'}
         ];
 
-        const seen = new Set();
+        let html = `<div class="grid grid-cols-2 gap-2.5 w-full max-w-sm mb-2">` +
+            tastes.map(t => `<div class="glass-panel p-3 text-center font-black text-[16px] ${t.color} bg-white/60"><div class="w-9 h-9 mx-auto mb-1">${illustrationTag(t.emoji, t.label)}</div>${t.label}</div>`).join('') +
+            `</div>
+            <div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2 !text-sm mt-1 w-full">
+                💡 오늘의 추천: ${menuA}<br>⭐ 제일 맛있는 메뉴: ${menuB}
+            </div>`;
 
-        names.forEach(function(name){
-            try {
-                const obj = window[name];
-                if (!obj || seen.has(obj)) return;
-                seen.add(obj);
+        updateUI("어떤 맛을 원하시나요?", "원하시는 맛을 골라보세요.", html);
+        speakText(`오늘의 추천 메뉴는 ${menuA}이고, 제일 맛있는 메뉴는 ${menuB}입니다. 화면에 보이는 맛 중에서 어떤 맛이 드시고 싶으신가요?`);
+    };
 
-                if (typeof obj.stop === "function") {
-                    try {
-                        obj.stop();
-                        results.push(name + ".stop");
-                    } catch(e) {}
-                }
+    const prevAnalyzeHelpQuestion = analyzeHelpQuestion;
+    analyzeHelpQuestion = function(sentence) {
+        if (currentStageName === 'taste_select_prompt') {
+            return "지금 드시고 싶으신 맛을 말씀해주세요. 맛있는 메뉴로 추천해드리겠습니다.";
+        }
+        return prevAnalyzeHelpQuestion(sentence);
+    };
+})();
 
-                if (typeof obj.abort === "function") {
-                    try {
-                        obj.abort();
-                        results.push(name + ".abort");
-                    } catch(e) {}
-                }
-            } catch(e) {}
-        });
+/* ==========================================================================
+   [긴급: 명령어 오학습 방지 및 오염된 기억 초기화 패치]
+   ========================================================================== */
+(function COMMAND_LEARNING_FIX() {
+    console.log("✅ 명령어 오학습 방지 방어막 전개 및 기억 초기화 완료");
 
-        console.log("[" + PATCH + "] force stop recognition:", {
-            reason,
-            results
-        });
+    // 1. 오염된 AI의 단어장(로컬 스토리지) 기억을 강제로 싹 지웁니다.
+    try {
+        localStorage.removeItem("kiosk_learned_pronunciation_dict_v1");
+        localStorage.removeItem("kiosk_learned_pronunciation_dict_v2");
+        localStorage.removeItem("kiosk_pending_misrecognitions_v1");
+        localStorage.removeItem("kiosk_learning_meta_v2");
+    } catch(e) {}
 
-        return results;
-    }
+    // 2. 절대 메뉴 이름으로 학습하면 안 되는 필수 명령어 목록
+    const COMMAND_KEYWORDS = [
+        "이전", "뒤로", "전화면", "처음", "다시시작", "돌아가",
+        "추천", "아무거나", "결정장애", "뭐먹",
+        "결제", "카드", "현금",
+        "매장", "포장", "테이크아웃", "먹고", "들고",
+        "확대", "축소", "돋보기",
+        "사용법", "도와줘", "어떻게", "뭐야"
+    ];
 
-    function resumeRecognition(reason) {
-        window.__TTS_ONEND_MIC_OFF = false;
-        window.__TTS_FINAL_MIC_OFF = false;
-        window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
-        window.__kioskTTSBusy = false;
-        window.__kioskTTSBusyUntil = 0;
-
-        clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-        clearTimeout(window.__TTS_FINAL_MIC_OFF_RESTART_TIMER);
-        clearTimeout(window.__TTS_ONEND_SAFETY_TIMER);
-        clearTimeout(window.__TTS_ONEND_RESUME_TIMER);
-
-        console.log("[" + PATCH + "] TTS ended, resume recognition:", reason);
-
-        try {
-            if (typeof window.startHybridSTT === "function") {
-                window.startHybridSTT();
-                console.log("[" + PATCH + "] startHybridSTT called");
-                return true;
+    // 3. 메뉴 검색 엔진(findMatchingMenu)에 방어막 씌우기
+    const prevFindMatchingMenu_CommandFix = findMatchingMenu;
+    findMatchingMenu = function(inputText) {
+        const clean = String(inputText || "").replace(/[\s,.'?!]+/g, '');
+        
+        // 사용자가 한 말이 명령어 목록에 포함되어 있다면, 메뉴 검색을 즉시 중단합니다.
+        for (let cmd of COMMAND_KEYWORDS) {
+            if (clean.includes(cmd)) {
+                console.log(`🛡️ 명령어 감지됨(${cmd}) - 메뉴로 착각하지 않고 방어합니다:`, inputText);
+                return null;
             }
-        } catch(e) {
-            console.warn("[" + PATCH + "] startHybridSTT failed:", e);
+        }
+        
+        // 명령어가 아니라면 정상적으로 메뉴 검색 로직을 돌립니다.
+        return prevFindMatchingMenu_CommandFix(inputText);
+    };
+})();
+
+/* ==========================================================================
+   [긴급: HYBRID STT 쉴드 및 절대 명령어 방어 패치]
+   ========================================================================== */
+(function HYBRID_STT_ABSOLUTE_SHIELD() {
+    console.log("✅ HYBRID STT 쉴드 및 절대 명령어 방어막 가동");
+
+    window.renderTasteSelectPrompt = function() {
+        let shuffled = [...customMenus].sort(() => 0.5 - Math.random());
+        let menuA = shuffled[0].name;
+        let menuB = shuffled[1].name;
+
+        const tastes = [
+            {label:'달콤한 맛', emoji:'🍰', color:'text-pink-500'}, {label:'상큼한 맛', emoji:'🍋', color:'text-emerald-600'},
+            {label:'구수한 맛', emoji:'🥣', color:'text-amber-700'}, {label:'고소한 맛', emoji:'🥜', color:'text-blue-600'},
+            {label:'얼큰한 맛', emoji:'🌶️', color:'text-red-500'}, {label:'짭짤한 맛', emoji:'🍟', color:'text-purple-600'}
+        ];
+
+        let html = `<div class="grid grid-cols-2 gap-2.5 w-full max-w-sm mb-2">` +
+            tastes.map(t => `<div class="glass-panel p-3 text-center font-black text-[16px] ${t.color} bg-white/60"><div class="w-9 h-9 mx-auto mb-1">${illustrationTag(t.emoji, t.label)}</div>${t.label}</div>`).join('') +
+            `</div>
+            <div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2 !text-sm mt-1 w-full">
+                💡 오늘의 추천: ${menuA}<br>⭐ 제일 맛있는 메뉴: ${menuB}
+            </div>`;
+
+        updateUI("어떤 맛을 원하시나요?", "원하시는 맛을 골라보세요.", html);
+        speakText(`오늘의 추천 메뉴는 ${menuA}이고, 제일 맛있는 메뉴는 ${menuB}입니다. 화면에 보이는 맛 중에서 어떤 맛이 드시고 싶으신가요?`);
+    };
+
+    window.hybridLock = false;
+    function absoluteCommandShield(text) {
+        const clean = String(text).replace(/[\s,.'?!]+/g, '');
+        
+        // "이전으로" 절대 방어 (하이브리드가 무시하기 전에 먼저 인터셉트)
+        if (/이전|뒤로|전화면|돌아가/.test(clean)) {
+            console.log("🛡️ [ABSOLUTE SHIELD] '이전' 명령어 인터셉트! 하이브리드 서버 무시");
+            window.hybridLock = true; setTimeout(()=>window.hybridLock=false, 3000);
+            if (typeof showVoiceResult === 'function') showVoiceResult(text);
+            goBack();
+            return true;
+        }
+        
+        // "추천해 줘" 절대 방어 (하이브리드의 돼지국밥 강제 응답 차단)
+        if (/추천|뭐먹|결정장애/.test(clean)) {
+            console.log("🛡️ [ABSOLUTE SHIELD] '추천' 명령어 인터셉트! 하이브리드 서버 무시");
+            window.hybridLock = true; setTimeout(()=>window.hybridLock=false, 3000);
+            if (typeof showVoiceResult === 'function') showVoiceResult(text);
+            if (['welcome', 'category_select', 'menu_grid', 'add_more_prompt'].includes(currentStageName)) {
+                currentStageName = 'taste_select_prompt'; 
+                renderTasteSelectPrompt(); 
+            } else {
+                speakText("추천 기능은 메뉴 선택 화면에서만 사용할 수 있습니다.");
+            }
+            return true;
         }
 
-        try {
-            if (typeof window.startListening === "function") {
-                window.startListening();
-                console.log("[" + PATCH + "] startListening called");
-                return true;
-            }
-        } catch(e) {
-            console.warn("[" + PATCH + "] startListening failed:", e);
+        if (/처음부터|처음으로|다시시작/.test(clean)) {
+            console.log("🛡️ [ABSOLUTE SHIELD] '처음' 명령어 인터셉트!");
+            window.hybridLock = true; setTimeout(()=>window.hybridLock=false, 3000);
+            if (typeof showVoiceResult === 'function') showVoiceResult(text);
+            if(!document.getElementById('custom-alert-modal').classList.contains('hidden')){ closeCustomAlert(); return true; }
+            speakText("네, 처음 화면으로 돌아갑니다."); showWelcomeScreen();
+            return true;
         }
-
         return false;
     }
 
-    function beginTTSMute(text, reason) {
-        const safetyMs = estimateSafetyMs(text);
+    // 마이크의 원본 음성 신호를 하이브리드 서버가 받기 전에 최상단에서 가로채기
+    if (window.recognition) {
+        const hybridOnResult = window.recognition.onresult;
+        window.recognition.onresult = function(event) {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+            }
+            
+            // 명령어 쉴드에 걸리면 하이브리드 서버로 정보를 넘기지 않고 여기서 완전히 차단함
+            if (transcript && absoluteCommandShield(transcript)) {
+                return; 
+            }
+            
+            if (hybridOnResult) hybridOnResult.apply(this, arguments);
+        };
+    }
 
-        window.__TTS_ONEND_MIC_OFF = true;
-        window.__TTS_FINAL_MIC_OFF = true;
-        window.__TTS_FINAL_MIC_OFF_UNTIL = Date.now() + safetyMs + 3000;
-        window.__kioskTTSBusy = true;
-        window.__kioskTTSBusyUntil = Date.now() + safetyMs + 3000;
+    // 이중 방어막
+    const prevProcessVoiceCommand_shield = processVoiceCommand;
+    processVoiceCommand = function(text) {
+        if (window.hybridLock) {
+            console.log("🛡️ [ABSOLUTE SHIELD] 하이브리드 서버의 강제 개입 차단:", text);
+            return;
+        }
+        if (absoluteCommandShield(text)) return;
+        prevProcessVoiceCommand_shield(text);
+    };
 
-        console.log("[" + PATCH + "] TTS started, mic off until onend:", {
-            text: rawText(text).slice(0, 120),
-            reason,
-            safetyMs
-        });
+    const prevAnalyzeHelpQuestion = analyzeHelpQuestion;
+    analyzeHelpQuestion = function(sentence) {
+        if (currentStageName === 'taste_select_prompt') {
+            return "지금 드시고 싶으신 맛을 말씀해주세요. 맛있는 메뉴로 추천해드리겠습니다.";
+        }
+        return prevAnalyzeHelpQuestion(sentence);
+    };
+})();
 
-        forceStopRecognition(reason || "tts_onend_start");
+/* ==========================================================================
+   [피드백 3종 세트 적용 패치: 확대 포커싱, 추천 맛 안내, 관리자 수동 TTS]
+   ========================================================================== */
+(function FEEDBACK_3_PATCH() {
+    console.log("✅ 3종 피드백 패치 적용 시작");
 
-        clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-        window.__TTS_ONEND_STOP_INTERVAL = setInterval(function(){
-            if (!window.__TTS_ONEND_MIC_OFF) {
-                clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
+    // 1. 화면 확대 시 중요한 메뉴 영역으로 자동 포커싱(스크롤)
+    window.updateZoomUI = function() {
+        const factor = zoomFactors[zoomLevel];
+        document.getElementById('kiosk-frame').style.setProperty('--zoom-factor', factor);
+        const badge = document.getElementById('magnifier-badge');
+        const mainContent = document.getElementById('main-content');
+        
+        if (zoomLevel > 0) { 
+            badge.classList.remove('hidden'); 
+            badge.innerHTML = `🔎 화면맞춤 확대 ${zoomLevel}단계`; 
+            mainContent.style.overflowY = 'auto'; // 확대 시에만 예외적으로 스크롤 허용
+            
+            // 확대되자마자 중요한 메뉴(controls-area) 위치로 부드럽게 자동 스크롤
+            setTimeout(() => {
+                const controls = document.getElementById('controls-area');
+                if (controls) {
+                    mainContent.scrollTo({
+                        top: controls.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 300);
+        } else { 
+            badge.classList.add('hidden'); 
+            mainContent.style.overflowY = 'hidden'; // 원래대로 스크롤 차단
+            mainContent.scrollTo({ top: 0, behavior: 'smooth' }); // 최상단 원상복구
+        }
+        fitToScreen();
+    };
+
+    // 2. 추천 기능 진입 시 맛 목록을 직접 친절하게 읽어주도록 TTS 보강
+    window.renderTasteSelectPrompt = function() {
+        let shuffled = [...customMenus].sort(() => 0.5 - Math.random());
+        let menuA = shuffled[0] ? shuffled[0].name : "치즈버거";
+        let menuB = shuffled[1] ? shuffled[1].name : "오렌지 주스";
+
+        const tastes = [
+            {label:'달콤한 맛', emoji:'🍰', color:'text-pink-500'}, {label:'상큼한 맛', emoji:'🍋', color:'text-emerald-600'},
+            {label:'구수한 맛', emoji:'🥣', color:'text-amber-700'}, {label:'고소한 맛', emoji:'🥜', color:'text-blue-600'},
+            {label:'얼큰한 맛', emoji:'🌶️', color:'text-red-500'}, {label:'짭짤한 맛', emoji:'🍟', color:'text-purple-600'}
+        ];
+
+        let html = `<div class="grid grid-cols-2 gap-2.5 w-full max-w-sm mb-2">` +
+            tastes.map(t => `<div class="glass-panel p-3 text-center font-black text-[16px] ${t.color} bg-white/60"><div class="w-9 h-9 mx-auto mb-1">${illustrationTag(t.emoji, t.label)}</div>${t.label}</div>`).join('') +
+            `</div>
+            <div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2 !text-sm mt-1 w-full">
+                💡 오늘의 추천: ${menuA}<br>⭐ 제일 맛있는 메뉴: ${menuB}
+            </div>`;
+
+        updateUI("어떤 맛을 원하시나요?", "원하시는 맛을 골라보세요.", html);
+        
+        // 대충 고르라고 하지 않고 맛 종류를 전부 세세하게 읽어줍니다.
+        speakText(`오늘의 추천 메뉴는 ${menuA}이고, 제일 맛있는 메뉴는 ${menuB}입니다. 고르실 수 있는 맛은 달콤한 맛, 상큼한 맛, 구수한 맛, 고소한 맛, 얼큰한 맛, 짭짤한 맛이 있습니다. 어떤 맛이 드시고 싶으신가요?`);
+    };
+
+    // 3. 관리자 패널에 "수동 TTS(목소리) 설정" UI 추가
+    function setupAdminTTS() {
+        const adminPanelBody = document.querySelector('#admin-panel .flex-1');
+        if (!adminPanelBody || document.getElementById('tts-voice-select')) return;
+
+        const ttsBlock = document.createElement('div');
+        ttsBlock.className = "bg-white/10 p-4 rounded-2xl border border-white/20 mt-4 w-full flex-shrink-0";
+        ttsBlock.innerHTML = `
+            <h3 class="text-white font-bold flex items-center gap-2 mb-3">🔊 수동 TTS 설정 (목소리 고르기)</h3>
+            <select id="tts-voice-select" class="w-full p-3 rounded-lg bg-black/60 text-white border border-white/30 mb-3 outline-none" style="pointer-events: auto;"></select>
+            <div class="flex gap-2">
+                <button id="tts-test-btn" class="flex-1 py-3 bg-[#e76f51] rounded-lg font-bold text-white shadow-lg active:scale-95 transition-transform" style="pointer-events: auto;">테스트 듣기</button>
+                <button id="tts-save-btn" class="flex-1 py-3 bg-emerald-600 rounded-lg font-bold text-white shadow-lg active:scale-95 transition-transform" style="pointer-events: auto;">적용하기</button>
+            </div>
+            <p id="tts-save-msg" class="text-emerald-400 text-sm mt-3 font-bold text-center hidden">✅ 목소리가 저장되었습니다!</p>
+        `;
+        adminPanelBody.appendChild(ttsBlock);
+
+        const select = document.getElementById('tts-voice-select');
+        
+        const populateVoices = () => {
+            // 브라우저에서 한국어 지원 목소리만 필터링
+            const voices = window.speechSynthesis.getVoices().filter(v => v.lang.includes('ko'));
+            if (voices.length === 0) {
+                select.innerHTML = '<option>한국어 음성을 찾을 수 없습니다</option>';
                 return;
             }
-            forceStopRecognition("onend_interval_guard");
-        }, 250);
-
-        /*
-          혹시 onend가 안 불리는 경우를 위한 안전장치.
-          이건 진짜 비상용이고, 정상은 onend에서 재시작됨.
-        */
-        clearTimeout(window.__TTS_ONEND_SAFETY_TIMER);
-        window.__TTS_ONEND_SAFETY_TIMER = setTimeout(function(){
-            if (window.__TTS_ONEND_MIC_OFF) {
-                console.warn("[" + PATCH + "] onend not fired, safety resume");
-                clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-                resumeRecognition("safety_timeout");
+            select.innerHTML = voices.map((v, i) => `<option value="${i}">${v.name}</option>`).join('');
+            
+            // 로컬 스토리지에 저장된 목소리가 있으면 띄워줌
+            const savedURI = localStorage.getItem('kiosk_manual_tts_voice');
+            if (savedURI) {
+                const idx = voices.findIndex(v => v.voiceURI === savedURI);
+                if (idx >= 0) select.selectedIndex = idx;
+            } else if (window.selectedFemaleVoice) {
+                const idx = voices.findIndex(v => v.voiceURI === window.selectedFemaleVoice.voiceURI);
+                if (idx >= 0) select.selectedIndex = idx;
             }
-        }, safetyMs + 3500);
-    }
-
-    function finishTTSMute(reason) {
-        clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-
-        clearTimeout(window.__TTS_ONEND_RESUME_TIMER);
-        window.__TTS_ONEND_RESUME_TIMER = setTimeout(function(){
-            resumeRecognition(reason || "speech_end");
-        }, RESUME_TAIL_MS);
-    }
-
-    /*
-      startListening이 Watchdog으로 호출되어도 TTS 중이면 막음.
-    */
-    const currentStartListening = window.startListening;
-    if (typeof currentStartListening === "function" && !currentStartListening.__TTS_ONEND_RESUME_WRAPPED__) {
-        const wrappedStart = function(){
-            if (isOnendMuted()) {
-                const result = {
-                    ignored: true,
-                    reason: "tts_onend_mic_off_active",
-                    patch: PATCH,
-                    at: new Date().toISOString()
-                };
-                console.log("[" + PATCH + "] startListening blocked:", result);
-                return result;
-            }
-            return currentStartListening.apply(this, arguments);
         };
 
-        wrappedStart.__TTS_ONEND_RESUME_WRAPPED__ = true;
-        wrappedStart.__TTS_ONEND_RESUME_ORIGINAL__ = currentStartListening;
-        window.startListening = wrappedStart;
+        // 브라우저 보이스가 로딩되면 목록에 채워넣음
+        if (speechSynthesis.getVoices().length > 0) populateVoices();
+        speechSynthesis.onvoiceschanged = populateVoices;
 
-        console.log("[" + PATCH + "] wrapped startListening");
-    }
-
-    /*
-      processVoiceCommand도 TTS 중에는 막음.
-    */
-    const currentPVC = window.processVoiceCommand;
-    if (typeof currentPVC === "function" && !currentPVC.__TTS_ONEND_RESUME_WRAPPED__) {
-        const wrappedPVC = function(){
-            const text = arguments[0];
-
-            if (isOnendMuted()) {
-                const result = {
-                    ignored: true,
-                    reason: "tts_onend_mic_off_active",
-                    text,
-                    patch: PATCH,
-                    at: new Date().toISOString()
-                };
-                console.log("[" + PATCH + "] processVoiceCommand blocked:", result);
-                return result;
+        // 테스트 버튼: 선택한 목소리로 샘플 텍스트 말하기
+        document.getElementById('tts-test-btn').addEventListener('click', () => {
+            const voices = window.speechSynthesis.getVoices().filter(v => v.lang.includes('ko'));
+            const selected = voices[select.value];
+            if (selected) {
+                const u = new SpeechSynthesisUtterance("안녕하세요. 설정하신 키오스크 목소리입니다.");
+                u.voice = selected;
+                u.lang = 'ko-KR';
+                u.rate = 0.95;
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(u);
             }
+        });
 
-            return currentPVC.apply(this, arguments);
-        };
-
-        wrappedPVC.__TTS_ONEND_RESUME_WRAPPED__ = true;
-        wrappedPVC.__TTS_ONEND_RESUME_ORIGINAL__ = currentPVC;
-        window.processVoiceCommand = wrappedPVC;
-
-        console.log("[" + PATCH + "] wrapped processVoiceCommand");
+        // 적용 버튼: 선택한 목소리를 로컬 스토리지에 영구 저장
+        document.getElementById('tts-save-btn').addEventListener('click', () => {
+            const voices = window.speechSynthesis.getVoices().filter(v => v.lang.includes('ko'));
+            const selected = voices[select.value];
+            if (selected) {
+                window.selectedFemaleVoice = selected;
+                localStorage.setItem('kiosk_manual_tts_voice', selected.voiceURI);
+                
+                const msg = document.getElementById('tts-save-msg');
+                msg.classList.remove('hidden');
+                setTimeout(() => msg.classList.add('hidden'), 2000);
+            }
+        });
     }
-
-    /*
-      speechSynthesis.speak를 onend 기준으로 감싼다.
-      기존 TTS_FINAL_MIC_OFF_PATCH_V1이 이미 감싸고 있어도 그 위에서 다시 감쌈.
-    */
-    try {
-        if (
-            window.speechSynthesis &&
-            typeof window.speechSynthesis.speak === "function" &&
-            !window.speechSynthesis.speak.__TTS_ONEND_RESUME_WRAPPED__
-        ) {
-            const previousSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
-
-            const wrappedSynthSpeak = function(utterance){
-                try {
-                    const text = utterance && utterance.text ? utterance.text : "";
-                    beginTTSMute(text, "speechSynthesis.speak");
-
-                    const oldOnEnd = utterance.onend;
-                    const oldOnError = utterance.onerror;
-
-                    utterance.onend = function(ev){
-                        try {
-                            if (typeof oldOnEnd === "function") oldOnEnd.call(this, ev);
-                        } catch(e) {}
-
-                        console.log("[" + PATCH + "] speechSynthesis onend");
-                        finishTTSMute("speechSynthesis.onend");
-                    };
-
-                    utterance.onerror = function(ev){
-                        try {
-                            if (typeof oldOnError === "function") oldOnError.call(this, ev);
-                        } catch(e) {}
-
-                        console.warn("[" + PATCH + "] speechSynthesis onerror");
-                        finishTTSMute("speechSynthesis.onerror");
-                    };
-                } catch(e) {
-                    console.warn("[" + PATCH + "] wrap utterance failed:", e);
+    
+    // 키오스크가 켜질 때 UI를 주입합니다.
+    setTimeout(setupAdminTTS, 1500);
+    
+    // 4. 프로그램이 켜질 때 저장된 수동 TTS를 최우선으로 불러오도록 initVoices 덮어쓰기
+    if (typeof window.initVoices !== 'undefined') {
+        const prevInitVoices = window.initVoices;
+        window.initVoices = function() {
+            prevInitVoices(); // 기존 로직(여성 우선) 먼저 실행
+            const savedURI = localStorage.getItem('kiosk_manual_tts_voice');
+            if (savedURI) {
+                const voices = window.speechSynthesis.getVoices();
+                const savedVoice = voices.find(v => v.voiceURI === savedURI);
+                if (savedVoice) {
+                    window.selectedFemaleVoice = savedVoice;
+                    console.log("✅ 관리자가 세팅한 수동 TTS 보이스 적용 완료:", savedVoice.name);
                 }
+            }
+        };
+    }
+})();
 
-                return previousSpeak(utterance);
-            };
+/* ==========================================================================
+   [긴급: 맛 선택 하이브리드 무시 버그 해결 패치]
+   ========================================================================== */
+(function TASTE_SELECTION_RESCUE_PATCH() {
+    console.log("✅ 맛 선택 키워드 절대 방어막 가동");
 
-            wrappedSynthSpeak.__TTS_ONEND_RESUME_WRAPPED__ = true;
-            wrappedSynthSpeak.__TTS_ONEND_RESUME_ORIGINAL__ = previousSpeak;
+    if (window.recognition) {
+        const prevOnResult = window.recognition.onresult;
+        window.recognition.onresult = function(event) {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+            }
+            
+            const clean = String(transcript).replace(/[\s,.'?!]+/g, '');
+            
+            // 현재 화면이 '추천 맛 선택' 화면일 때만 작동
+            if (currentStageName === 'taste_select_prompt') {
+                // 맛 관련 단어가 하나라도 포함되어 있는지 확인
+                if (/달콤|달달|단|상큼|새콤|구수|담백|고소|매콤|매운|얼큰|짭짤|짠/.test(clean)) {
+                    console.log("🛡️ [TASTE SHIELD] 맛 선택 키워드 감지! 하이브리드 서버 무시 및 강제 처리:", transcript);
+                    window.hybridLock = true; 
+                    setTimeout(() => window.hybridLock = false, 3000);
+                    
+                    if (typeof showVoiceResult === 'function') showVoiceResult(transcript);
+                    
+                    // 하이브리드 AI를 거치지 않고 즉시 로컬에서 다음 화면으로 강제 이동
+                    let keyword = "";
+                    if (clean.match(/달콤|달달|단/)) keyword = "달콤"; 
+                    else if (clean.match(/상큼|새콤/)) keyword = "상큼";
+                    else if (clean.match(/구수|담백/)) keyword = "구수"; 
+                    else if (clean.match(/고소/)) keyword = "고소";
+                    else if (clean.match(/매콤|매운|얼큰/)) keyword = "얼큰"; 
+                    else if (clean.match(/짭짤|짠/)) keyword = "짭짤";
+                    
+                    if (keyword) {
+                        let matchedMenus = customMenus.filter(m => m.taste.includes(keyword) || m.name.includes(keyword));
+                        if (matchedMenus.length === 0) matchedMenus = customMenus;
+                        selectedCategory = "추천 맛"; 
+                        currentGridMenus = matchedMenus; 
+                        currentGridTitle = `${keyword}한 맛 추천 메뉴`;
+                        
+                        if (typeof transitionTo === 'function') {
+                            transitionTo('menu_grid', renderMenuGrid);
+                        }
+                    }
+                    return; // 여기서 함수 종료. 하이브리드 서버로는 절대 넘어가지 않음!
+                }
+            }
+            
+            // 맛 키워드가 아니면 기존 로직(하이브리드 등)으로 정상 전달
+            if (prevOnResult) prevOnResult.apply(this, arguments);
+        };
+    }
+})();
 
-            window.speechSynthesis.speak = wrappedSynthSpeak;
+/* ==========================================================================
+   [긴급: "네/아니요" HYBRID 버림 방지 + G키 관리자창 + TTS 멘트 수정 기능]
+   ========================================================================== */
+(function YES_SHIELD_AND_ADMIN_TTS_PATCH() {
+    console.log("✅ '네/아니요' 방어막 및 관리자 TTS 커스텀 기능 적용");
 
-            console.log("[" + PATCH + "] wrapped speechSynthesis.speak");
+    // 1. 키보드 'G' 또는 'g' 키를 누르면 터치 없이 관리자 창 열기/닫기
+    window.addEventListener('keydown', function(e) {
+        if (e.key.toLowerCase() === 'g') {
+            const adminPanel = document.getElementById('admin-panel');
+            if (adminPanel) {
+                if (adminPanel.classList.contains('hidden')) {
+                    if (typeof openAdminPanel === 'function') openAdminPanel();
+                    else {
+                        adminPanel.classList.remove('hidden');
+                        currentStageName = 'admin_panel_open';
+                    }
+                } else {
+                    if (typeof closeAdminPanel === 'function') closeAdminPanel();
+                    else {
+                        adminPanel.classList.add('hidden');
+                        showWelcomeScreen();
+                    }
+                }
+            }
         }
-    } catch(e) {
-        console.warn("[" + PATCH + "] speechSynthesis wrap failed:", e);
+    });
+
+    // 2. "네", "네네", "아니요" 절대 방어막 추가 (하이브리드가 버리기 전에 인터셉트)
+    if (window.recognition) {
+        const prevHybridOnResult2 = window.recognition.onresult;
+        window.recognition.onresult = function(event) {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+            }
+            
+            const clean = String(transcript).replace(/[\s,.'?!]+/g, '');
+            
+            // "네", "예", "응", "아니", "틀려" 등 긍정/부정어 강제 캐치
+            if (/^(네|네네|예|옙|응|어|아니|아니요|아뇨|아니야|아냐|틀려|틀렸어|맞아|맞습니다)$/.test(clean) || 
+                /네네|아니요/.test(clean)) {
+                
+                // 예/아니오 대답이 필요한 화면인지 확인
+                const yesNoStages = ['welcome', 'menu_confirm', 'temp', 'upsell', 'beverage_option_prompt', 'beverage_result', 'add_more_prompt', 'summary', 'payment'];
+                
+                if (yesNoStages.includes(currentStageName)) {
+                    console.log("🛡️ [YES/NO SHIELD] 긍정/부정어 인터셉트! 하이브리드 쓰레기통행 방어:", transcript);
+                    window.hybridLock = true; 
+                    setTimeout(() => window.hybridLock = false, 3000);
+                    
+                    if (typeof showVoiceResult === 'function') showVoiceResult(transcript);
+                    if (typeof processVoiceCommand === 'function') processVoiceCommand(transcript);
+                    return; // 하이브리드로 안 넘기고 여기서 종료
+                }
+            }
+            
+            // 방어막에 안 걸린 말은 기존 로직(이전 쉴드 및 하이브리드)으로 정상 실행
+            if (prevHybridOnResult2) prevHybridOnResult2.apply(this, arguments);
+        };
     }
 
-    window.KioskTTSOnEndResumeFix = {
-        patch: PATCH,
-        beginTTSMute,
-        finishTTSMute,
-        resumeRecognition,
-        forceStopRecognition,
-        isMuted: isOnendMuted,
-        clear: function(){
-            window.__TTS_ONEND_MIC_OFF = false;
-            window.__TTS_FINAL_MIC_OFF = false;
-            window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
-            window.__kioskTTSBusy = false;
-            window.__kioskTTSBusyUntil = 0;
-            clearInterval(window.__TTS_ONEND_STOP_INTERVAL);
-            clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-            clearTimeout(window.__TTS_FINAL_MIC_OFF_RESTART_TIMER);
-            clearTimeout(window.__TTS_ONEND_SAFETY_TIMER);
-            clearTimeout(window.__TTS_ONEND_RESUME_TIMER);
-            console.log("[" + PATCH + "] cleared");
-            return true;
+    // 3. 관리자 창에 "단계별 TTS 텍스트 커스텀 UI" 추가
+    function setupCustomTTSUI() {
+        const adminPanelBody = document.querySelector('#admin-panel .flex-1');
+        if (!adminPanelBody || document.getElementById('custom-tts-text-block')) return;
+
+        const ttsBlock = document.createElement('div');
+        ttsBlock.id = 'custom-tts-text-block';
+        ttsBlock.className = "bg-white/10 p-4 rounded-2xl border border-white/20 mt-4 w-full flex-shrink-0 overflow-y-auto";
+        
+        // 커스텀 TTS 키 목록
+        const ttsKeys = [
+            { id: 'tts_welcome', label: '첫 인사 (Welcome)', default: '고객님, 반갑습니다! 주문을 시작하시려면 네, 키오스크 사용법이 궁금하시면 사용법 알려줘 라고 말씀해주세요.' },
+            { id: 'tts_place', label: '장소 선택 (Place)', default: '여기서 드시고 가시나요, 아니면 포장해서 들고 가시나요? 여기서 먹을래요, 또는 들고 갈래요 라고 말씀해주세요.' },
+            { id: 'tts_payment', label: '결제 선택 (Payment)', default: '카드로 결제 하실려면 네, 현금으로 결제하실려면 아니요 라고 말씀해주세요.' },
+            { id: 'tts_done', label: '완료 인사 (Done)', default: '감사합니다. 맛있게 드세요.' }
+        ];
+
+        let html = `<h3 class="text-white font-bold flex items-center gap-2 mb-3">✏️ 커스텀 TTS 멘트 설정</h3>`;
+        
+        ttsKeys.forEach(k => {
+            const savedVal = localStorage.getItem(k.id) || k.default;
+            html += `
+                <div class="mb-3">
+                    <label class="text-[#e8d9c0] text-sm font-bold block mb-1">${k.label}</label>
+                    <textarea id="${k.id}" rows="2" class="w-full p-2 rounded bg-black/60 text-white border border-white/30 outline-none" style="pointer-events: auto;">${savedVal}</textarea>
+                </div>
+            `;
+        });
+
+        html += `
+            <button id="save-custom-tts-btn" class="w-full py-3 mt-2 bg-[#e76f51] rounded-lg font-bold text-white shadow-lg active:scale-95 transition-transform" style="pointer-events: auto;">입력한 멘트 저장하기</button>
+            <p id="tts-text-save-msg" class="text-[#f4a261] text-sm mt-3 font-bold text-center hidden">✅ 새로운 멘트가 영구 저장되었습니다!</p>
+        `;
+
+        ttsBlock.innerHTML = html;
+        adminPanelBody.appendChild(ttsBlock);
+
+        // 저장 버튼 이벤트
+        document.getElementById('save-custom-tts-btn').addEventListener('click', () => {
+            ttsKeys.forEach(k => {
+                const val = document.getElementById(k.id).value;
+                localStorage.setItem(k.id, val);
+            });
+            const msg = document.getElementById('tts-text-save-msg');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 2000);
+        });
+    }
+
+    setTimeout(setupCustomTTSUI, 1500);
+
+    // 4. 키오스크 화면 렌더링 함수들을 덮어써서 커스텀 TTS 적용하기
+    const prevShowWelcomeScreen = window.showWelcomeScreen;
+    window.showWelcomeScreen = function() {
+        prevShowWelcomeScreen();
+        const customTTS = localStorage.getItem('tts_welcome');
+        if (customTTS) {
+            window.speechSynthesis.cancel(); // 기본 멘트를 취소하고
+            if (typeof speakText === 'function') speakText(customTTS); // 내가 쓴 멘트 재생
         }
     };
 
-    window.testTTSOnEndResumeFix = function(){
-        return {
-            patch: PATCH,
-            muted: isOnendMuted(),
-            synthSpeakWrapped:
-                !!(window.speechSynthesis &&
-                   window.speechSynthesis.speak &&
-                   window.speechSynthesis.speak.__TTS_ONEND_RESUME_WRAPPED__),
-            startListeningWrapped:
-                typeof window.startListening === "function" &&
-                !!window.startListening.__TTS_ONEND_RESUME_WRAPPED__,
-            processVoiceCommandWrapped:
-                typeof window.processVoiceCommand === "function" &&
-                !!window.processVoiceCommand.__TTS_ONEND_RESUME_WRAPPED__,
-            hasStartHybridSTT: typeof window.startHybridSTT === "function",
-            hasStopHybridSTT: typeof window.stopHybridSTT === "function",
-            resumeTailMs: RESUME_TAIL_MS
-        };
+    const prevRenderPlaceSelect = window.renderPlaceSelect;
+    window.renderPlaceSelect = function() {
+        prevRenderPlaceSelect();
+        const customTTS = localStorage.getItem('tts_place');
+        if (customTTS) {
+            window.speechSynthesis.cancel();
+            if (typeof speakText === 'function') speakText(customTTS);
+        }
     };
 
-    console.log("[" + PATCH + "] loaded");
+    const prevAskPaymentStage = window.askPaymentStage;
+    window.askPaymentStage = function() {
+        prevAskPaymentStage();
+        const customTTS = localStorage.getItem('tts_payment');
+        if (customTTS) {
+            window.speechSynthesis.cancel();
+            if (typeof speakText === 'function') speakText(customTTS);
+        }
+    };
+
+    window.showGoodbyeMessage = function() {
+        const slots = document.getElementById('hardware-slots'); 
+        if (slots) { slots.classList.remove('opacity-100'); slots.classList.add('opacity-0'); }
+        transitionTo('done', () => {
+            updateUI("감사합니다!<br>맛있게 드세요!", "주문 번호를 확인해 주세요.", `<div class="status-giant">잠시 후 처음 화면으로 돌아갑니다.</div>`);
+            const customTTS = localStorage.getItem('tts_done') || "감사합니다. 맛있게 드세요.";
+            speakText(customTTS); 
+            setTimeout(showWelcomeScreen, 5000);
+        });
+    };
+
+})();
+
+/* ==========================================================================
+   [긴급: 관리자 창 전용 스크롤 및 터치 허용 패치]
+   ========================================================================== */
+(function ADMIN_SCROLL_FIX_PATCH() {
+    console.log("✅ 관리자 창 스크롤 허용 패치 적용 완료");
+
+    if (!document.getElementById("admin-scroll-style-patch")) {
+        const style = document.createElement("style");
+        style.id = "admin-scroll-style-patch";
+        style.textContent = `
+            /* 1. 관리자 창 자체의 스크롤과 터치를 강제로 활성화 */
+            #admin-panel {
+                overflow-y: auto !important;
+                touch-action: pan-y !important; /* 위아래 터치 스크롤 허용 */
+                pointer-events: auto !important; /* 마우스/터치 인식 허용 */
+                
+                /* 부드러운 스크롤바 디자인 추가 */
+                scrollbar-width: thin;
+                scrollbar-color: #e76f51 transparent;
+            }
+            
+            /* 2. 관리자 창 내부의 모든 요소(입력창, 버튼 등) 클릭 허용 */
+            #admin-panel * {
+                pointer-events: auto !important;
+            }
+
+            /* 크롬/엣지 스크롤바 커스텀 */
+            #admin-panel::-webkit-scrollbar {
+                width: 8px;
+            }
+            #admin-panel::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 10px;
+            }
+            #admin-panel::-webkit-scrollbar-thumb {
+                background-color: #e76f51;
+                border-radius: 10px;
+            }
+            
+            /* 3. 내부 컨테이너 높이 제한 해제 (내용물이 길어지면 자연스럽게 스크롤되도록) */
+            #admin-panel .flex-1 {
+                overflow: visible !important; 
+                height: auto !important;
+                padding-bottom: 2rem !important; /* 맨 아래 여백 확보 */
+            }
+        `;
+        document.head.appendChild(style);
+    }
+})();
+
+/* ==========================================================================
+   [긴급: 모든 TTS 대사 커스텀 설정 및 영구 저장 패치]
+   ========================================================================== */
+(function ALL_TTS_CUSTOMIZATION_PATCH() {
+    console.log("✅ 모든 TTS 대사 커스텀 엔진 가동 완료");
+
+    const ALL_TTS_CONFIG = [
+        { id: 'tts_welcome', label: '1. 첫 인사', match: '첫 주문이신가요?', default: '첫 주문이신가요? 첫 주문이면 키오스크 사용 방식 알려줘 라고 말씀해주세요. 바로 주문하시려면 주문 시작이라고 말씀해주세요.' },
+        { id: 'tts_guide', label: '2. 사용법 안내', match: '쉽게 설명해드릴게요', default: '쉽게 설명해드릴게요. 이 키오스크는 화면을 누르지 않고 말로 주문합니다. 먹고 싶은 메뉴 이름을 말씀하시고, 몇 개 주문할지 수량을 말씀하시면 됩니다. 그 다음 매장인지 포장인지 말하고, 마지막으로 카드 또는 현금이라고 말씀하시면 주문이 끝납니다. 중간에 잘못 골랐으면 이전 화면이라고 말씀하시면 됩니다. 이제 주문을 시작하겠습니다.' },
+        { id: 'tts_cat', label: '3. 카테고리 선택 ({0}=카테고리명)', regex: /저희 매장에는 (.*?) 카테고리가 있습니다/, default: '저희 매장에는 {0} 카테고리가 있습니다. 무엇을 드시겠습니까?' },
+        { id: 'tts_cat_add', label: '4. 카테고리 (추가 주문)', match: '추가로 주문하실 카테고리를 골라주세요', default: '추가로 주문하실 카테고리를 골라주세요. 추가 주문이 없으시면 결제라고 말씀해주세요.' },
+        { id: 'tts_grid', label: '5. 메뉴 선택 ({0}=메뉴목록)', regex: /^(.*?) 등이 있습니다. 어떤 메뉴를 주문하시겠습니까/, default: '{0} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?' },
+        { id: 'tts_grid_add', label: '6. 메뉴 (추가 주문)', match: '어떤 메뉴를 추가하시겠습니까?', default: '어떤 메뉴를 추가하시겠습니까? 위치나 이름으로 말씀해주세요.' },
+        { id: 'tts_taste', label: '7. 맛 추천 안내 ({0}=메뉴1, {1}=메뉴2)', regex: /오늘의 추천 메뉴는 (.*?)이고, 제일 맛있는 메뉴는 (.*?)입니다/, default: '오늘의 추천 메뉴는 {0}이고, 제일 맛있는 메뉴는 {1}입니다. 고르실 수 있는 맛은 달콤한 맛, 상큼한 맛, 구수한 맛, 고소한 맛, 얼큰한 맛, 짭짤한 맛이 있습니다. 어떤 맛이 드시고 싶으신가요?' },
+        { id: 'tts_confirm', label: '8. 선택 메뉴 확인 ({0}=메뉴명)', regex: /선택하신 게 (.*?) 맞습니까/, default: '선택하신 게 {0} 맞습니까? 맞으면 네, 틀리면 아니요 라고 대답해주세요.' },
+        { id: 'tts_temp', label: '9. 온도 선택 (핫/아이스)', match: '따뜻하게 드시고 싶으시면 따뜻하게', default: '따뜻하게 드시고 싶으시면 따뜻하게, 차갑게 드시고 싶으시면 차갑게 라고 말씀해주세요.' },
+        { id: 'tts_upsell', label: '10. 세트/단품 선택', match: '콜라나 감자튀김을 같이 드시고', default: '콜라나 감자튀김을 같이 드시고 싶으시나요? 같이 드시고 싶으시면 네, 햄버거만 드시고 싶으시면 아니요 라고 말씀해주세요.' },
+        { id: 'tts_qty', label: '11. 수량 선택', match: '메뉴 수량을 말씀해주세요', default: '메뉴 수량을 말씀해주세요.' },
+        { id: 'tts_cup', label: '12. 컵 사이즈 선택', match: '컵 용량을 말씀해주세요', default: '컵 용량을 말씀해주세요. 이백 밀리리터, 삼백오십 밀리리터, 오백 밀리리터 중에서 말씀하시면 됩니다.' },
+        { id: 'tts_bev_prompt2', label: '13. 커피 옵션 안내', match: '커피 샷 추가, 시럽, 얼음 양을 조절하고', default: '커피 샷 추가, 시럽, 얼음 양을 조절하고 싶으시다면 네, 추가할 게 없으시다면 아니요라고 해주세요.' },
+        { id: 'tts_bev_prompt', label: '14. 일반 음료 옵션 안내 ({0}=옵션종류)', regex: /^(.*?) 양을 조절하고 싶으시다면 네/, default: '{0} 양을 조절하고 싶으시다면 네, 추가할 게 없으시다면 아니요라고 해주세요.' },
+        { id: 'tts_bev_step', label: '15. 음료 옵션 세부 조절 ({0}=옵션명)', regex: /^(.*?), 1단계부터 5단계까지/, default: '{0}, 1단계부터 5단계까지 조절 하실 수 있습니다. 몇 단계로 할까요?' },
+        { id: 'tts_bev_result', label: '16. 음료 옵션 완료 확인', match: '선택하신 옵션으로 음료가 완성되었습니다', default: '선택하신 옵션으로 음료가 완성되었습니다. 이대로 주문하시겠습니까?' },
+        { id: 'tts_add_more', label: '17. 추가 주문 의향 묻기', match: '추가하실 메뉴가 있습니까.', default: '추가하실 메뉴가 있습니까. 있으면 네, 없으면 아니요 라고 말씀해주세요.' },
+        { id: 'tts_place', label: '18. 매장/포장 선택', match: '여기서 드시고 가시나요', default: '여기서 드시고 가시나요, 아니면 포장해서 들고 가시나요? 여기서 먹을래요, 또는 들고 갈래요 라고 말씀해주세요.' },
+        { id: 'tts_summary', label: '19. 주문 내역 및 결제 유도 ({0}=금액)', regex: /주문하신 총 금액은 (.*?)원입니다/, default: '주문하신 총 금액은 {0}원입니다. 맞으시면 결제라고 말씀해주세요.' },
+        { id: 'tts_payment', label: '20. 카드/현금 선택', match: '카드로 결제 하실려면', default: '카드로 결제 하실려면 네, 현금으로 결제하실려면 아니요 라고 말씀해주세요.' },
+        { id: 'tts_insert', label: '21. 결제 수단 투입 안내', match: '기기 아래쪽에 결제 수단을 투입해', default: '기기 아래쪽에 결제 수단을 투입해 주세요.' },
+        { id: 'tts_done', label: '22. 결제 완료 인사', match: '감사합니다. 맛있게 드세요', default: '감사합니다. 맛있게 드세요.' }
+    ];
+
+    // 1. 기존 speakText 함수 가로채기 (인터셉터 엔진)
+    if (!window.__originalSpeakTextForMasterTTS) {
+        window.__originalSpeakTextForMasterTTS = speakText;
+    }
+
+    speakText = function(text, onEndCallback = null) {
+        let finalText = text;
+        
+        for (let rule of ALL_TTS_CONFIG) {
+            let isMatch = false;
+            let capturedVars = [];
+            
+            // 정규식 매칭 (동적 변수가 있는 경우)
+            if (rule.regex) {
+                let match = text.match(rule.regex);
+                if (match) {
+                    isMatch = true;
+                    // 추출된 변수 저장
+                    for(let i=1; i<match.length; i++) capturedVars.push(match[i]);
+                }
+            } 
+            // 단순 문자열 포함 매칭 (변수가 없는 경우)
+            else if (rule.match) {
+                if (text.includes(rule.match)) {
+                    isMatch = true;
+                }
+            }
+            
+            if (isMatch) {
+                let customText = localStorage.getItem(rule.id);
+                if (customText) {
+                    finalText = customText;
+                    // 사용자가 작성한 대사 내의 {0}, {1} 부분을 실제 메뉴명이나 금액으로 변환!
+                    for(let i=0; i<capturedVars.length; i++) {
+                        finalText = finalText.replace(`{${i}}`, capturedVars[i]);
+                    }
+                }
+                break; // 매칭 성공 시 즉시 루프 탈출
+            }
+        }
+        
+        // 내가 쓴 대사로 바꿔치기 된 텍스트를 원래 TTS로 전송
+        window.__originalSpeakTextForMasterTTS(finalText, onEndCallback);
+    };
+
+    // 2. 관리자 패널의 TTS 커스텀 UI를 "22종 전체 목록"으로 스크롤 가능하게 재구성
+    function buildMasterTTSAdminUI() {
+        const adminPanelBody = document.querySelector('#admin-panel .flex-1');
+        if (!adminPanelBody) return;
+
+        // 이전 패치로 만든 4칸짜리 구형 블록이 있다면 삭제
+        const oldBlock = document.getElementById('custom-tts-text-block');
+        if (oldBlock) oldBlock.remove();
+
+        const ttsBlock = document.createElement('div');
+        ttsBlock.id = 'custom-tts-text-block';
+        ttsBlock.className = "bg-white/10 p-4 rounded-2xl border border-white/20 mt-4 w-full flex-shrink-0";
+        
+        let html = `
+            <div class="flex justify-between items-center mb-3 sticky top-0 bg-[#3d2f1f] z-10 py-2">
+                <h3 class="text-white font-bold flex items-center gap-2">✏️ 전체 TTS 대사 영구 커스텀 (22종)</h3>
+                <button id="save-master-tts-btn" class="px-5 py-2 bg-[#e76f51] rounded-lg font-black text-white shadow-lg active:scale-95 transition-transform" style="pointer-events: auto;">전체 저장</button>
+            </div>
+            <p id="tts-master-save-msg" class="text-[#f4a261] text-sm mb-3 font-bold text-center hidden">✅ 모든 대사가 컴퓨터에 영구 저장되었습니다!</p>
+            <div class="overflow-y-auto pr-2" style="max-height: 50vh;">
+        `;
+        
+        ALL_TTS_CONFIG.forEach(k => {
+            const savedVal = localStorage.getItem(k.id) || k.default;
+            html += `
+                <div class="mb-4 bg-black/40 p-3 rounded-lg border border-white/10">
+                    <label class="text-[#e8d9c0] text-[13px] font-bold block mb-2">${k.label}</label>
+                    <textarea id="${k.id}" rows="2" class="w-full p-2 rounded bg-black/60 text-white border border-white/30 outline-none text-sm" style="pointer-events: auto; resize: none;">${savedVal}</textarea>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        ttsBlock.innerHTML = html;
+        
+        adminPanelBody.insertBefore(ttsBlock, adminPanelBody.firstChild);
+
+        // 저장 버튼 동작: 22개 대사를 브라우저 DB에 영구 박제
+        document.getElementById('save-master-tts-btn').addEventListener('click', () => {
+            ALL_TTS_CONFIG.forEach(k => {
+                const val = document.getElementById(k.id).value;
+                localStorage.setItem(k.id, val);
+            });
+            const msg = document.getElementById('tts-master-save-msg');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        });
+    }
+    
+    // UI가 준비되면 생성
+    setTimeout(buildMasterTTSAdminUI, 1800);
+})();
+
+/* ==========================================================================
+   [긴급: 관리자 모드 하이브리드 개입 완전 차단 패치]
+   ========================================================================== */
+(function ADMIN_VOICE_SHIELD_PATCH() {
+    console.log("✅ 관리자 창 음성 명령어 절대 방어막 가동");
+
+    if (window.recognition) {
+        const prevHybridOnResult3 = window.recognition.onresult;
+        window.recognition.onresult = function(event) {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+            }
+            
+            const adminPanel = document.getElementById('admin-panel');
+            const isAdminOpen = adminPanel && !adminPanel.classList.contains('hidden');
+            
+            // 관리자 창이 열려있거나, 비밀번호를 대는 중일 때는 하이브리드 서버를 완전히 차단합니다.
+            if (isAdminOpen || currentStageName === 'admin_auth' || currentStageName === 'admin_panel_open') {
+                console.log("🛡️ [ADMIN SHIELD] 관리자 모드 발화 가로채기! 하이브리드 무시:", transcript);
+                
+                window.hybridLock = true; 
+                setTimeout(() => window.hybridLock = false, 1000);
+                
+                if (typeof showVoiceResult === 'function') showVoiceResult(transcript);
+                
+                const clean = String(transcript).toLowerCase().replace(/[\s,.'?!]+/g, '');
+                
+                if (currentStageName === 'admin_auth') {
+                    if (typeof processVoiceCommand === 'function') processVoiceCommand(transcript);
+                } else {
+                    // 관리자 기능(메뉴 추가, 가격, 맛, 닫기 등) 즉시 실행
+                    if (typeof handleAdminVoice === 'function') handleAdminVoice(clean, transcript);
+                }
+                return; // 하이브리드로 절대 넘어가지 못하게 여기서 즉시 종료
+            }
+            
+            if (prevHybridOnResult3) prevHybridOnResult3.apply(this, arguments);
+        };
+    }
+})();
+
+/* ==========================================================================
+   [긴급: 하이브리드 절대 제압용 브라우저 원형(Prototype) 방어막 패치]
+   ========================================================================== */
+(function ULTIMATE_ADMIN_SHIELD() {
+    console.log("✅ 브라우저 심층부(Prototype) 관리자 방어막 가동");
+
+    // 1. 하이브리드 서버가 판별 함수를 쓸 때, 관리자 창이면 무조건 '정상(true)'이라고 속임
+    const prevIsValid = window.isValidContext;
+    window.isValidContext = function(text) {
+        const clean = String(text).replace(/[\s,.'?!]+/g, '');
+        const adminPanel = document.getElementById('admin-panel');
+        const isAdminOpen = adminPanel && !adminPanel.classList.contains('hidden');
+        
+        if (isAdminOpen || currentStageName === 'admin_panel_open') return true;
+        if (/닫기|메뉴추가|나가기|종료/.test(clean)) return true;
+        
+        if (typeof prevIsValid === 'function') return prevIsValid(text);
+        return true;
+    };
+
+    // 2. 가장 치명적인 무기: 하이브리드가 마이크를 켤 때마다 우리 코드를 최우선으로 강제 주입
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec) {
+        const originalStart = SpeechRec.prototype.start;
+        SpeechRec.prototype.start = function() {
+            // 이 마이크 객체에 우리 방어막이 안 씌워져 있다면 즉시 씌움
+            if (!this._ultimateAdminShield) {
+                // true 옵션을 주어 하이브리드(onresult)보다 무조건 먼저 실행되게 가로챔 (Capture Phase)
+                this.addEventListener('result', function(event) {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+                    }
+                    
+                    const clean = String(transcript).replace(/[\s,.'?!]+/g, '');
+                    const adminPanel = document.getElementById('admin-panel');
+                    const isAdminOpen = adminPanel && !adminPanel.classList.contains('hidden');
+
+                    // 관리자 창이 열려있다면 여기서 모든 권한을 독점함
+                    if (isAdminOpen || currentStageName === 'admin_panel_open' || currentStageName === 'admin_auth') {
+                        console.log("🛡️ [PROTOTYPE SHIELD] 하이브리드보다 먼저 가로챔:", transcript);
+                        window.hybridLock = true;
+                        setTimeout(() => window.hybridLock = false, 2000);
+                        
+                        if (typeof showVoiceResult === 'function') showVoiceResult(transcript);
+                        
+                        if (/닫기|나가기|종료/.test(clean)) {
+                            if (typeof closeAdminPanel === 'function') closeAdminPanel();
+                            else { adminPanel.classList.add('hidden'); showWelcomeScreen(); }
+                        } else {
+                            if (typeof handleAdminVoice === 'function') handleAdminVoice(clean, transcript);
+                        }
+                        
+                        // 하이브리드 서버로 음성 결과가 넘어가는 것을 원천 차단
+                        event.stopImmediatePropagation();
+                    }
+                }, true);
+                
+                this._ultimateAdminShield = true;
+            }
+            try { originalStart.apply(this, arguments); } catch(e) {}
+        };
+    }
 })();
 </script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
