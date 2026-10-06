@@ -33,6 +33,12 @@ assert.strictEqual(kind("아메리카노 뭐야"), "menu");
 assert.strictEqual(kind("치즈 케이크가 뭐야"), "menu");
 assert.strictEqual(Assist.classify("치즈 케이크 무슨 맛이야", menus).menu.name, "치즈 케이크");
 assert.strictEqual(kind("아메리카노가 안 보여"), "see");
+assert.strictEqual(kind("추천해줘"), "recommend");
+assert.strictEqual(kind("아무거나"), "recommend");
+assert.strictEqual(Assist.zoomSpeech(1), "화면을 1단계 확대했습니다.");
+assert.strictEqual(Assist.zoomSpeech(3), "화면을 3단계 확대했습니다.");
+assert.ok(Assist.recommendSpeech(menus[0]).includes("아메리카노"));
+assert.strictEqual(Assist.recommendMenu(menus).name, "불고기버거");
 
 const stages = [
     "welcome", "sleep", "open_order_prompt", "guide", "category_select", "menu_grid",

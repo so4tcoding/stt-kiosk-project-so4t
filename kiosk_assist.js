@@ -73,7 +73,33 @@
             return { kind: "help" };
         }
 
+        if (/추천해|추천좀|메뉴추천|뭐가맛|뭐먹|아무거나|인기메뉴|잘나가는/.test(s)) {
+            return { kind: "recommend" };
+        }
+
         return null;
+    }
+
+    function recommendMenu(menus) {
+        const preferred = ["돼지국밥", "불고기버거", "카페라떼", "레몬 에이드", "치즈 케이크"];
+        const list = Array.isArray(menus) ? menus : [];
+        for (let i = 0; i < preferred.length; i++) {
+            const found = list.find(function (menu) { return menu && menu.name === preferred[i]; });
+            if (found) return found;
+        }
+        return list[0] || null;
+    }
+
+    function recommendSpeech(menu) {
+        if (!menu) return "추천할 메뉴가 없습니다. 메뉴판을 먼저 열어주세요.";
+        const price = Number(menu.price || 0).toLocaleString("ko-KR");
+        const taste = menu.taste || menu.category || "인기";
+        return "저희 매장은 " + menu.name + "이 유명합니다. " + menu.name + "은 " + taste + " 메뉴입니다. 가격은 " + price + "원입니다. 원하시면 " + menu.name + "이라고 말씀해주세요.";
+    }
+
+    function zoomSpeech(level) {
+        const step = Math.max(1, Math.min(4, Number(level) || 1));
+        return "화면을 " + step + "단계 확대했습니다.";
     }
 
     function joinNames(names, limit) {
@@ -140,6 +166,9 @@
         classify: classify,
         stageHelp: stageHelp,
         describeMenu: describeMenu,
-        findMenu: findMenu
+        findMenu: findMenu,
+        recommendMenu: recommendMenu,
+        recommendSpeech: recommendSpeech,
+        zoomSpeech: zoomSpeech
     };
 });

@@ -27432,21 +27432,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
       기존 다른 패치가 나중에 startListening을 다시 Whisper로 덮어쓸 수 있어서
       1초마다 다시 하이브리드로 고정
     */
-    setInterval(forceHybridStart, 1000);
+    /* 1초마다 startListening을 되돌리면 말하는 중에 마이크가 반복해서 끊긴다. */
 
     /*
-      페이지 로드 후 하이브리드 자동 시작
+      로드 후에 startListening을 다시 덮어쓰면
+      말하는 동안 stopListening이 반복 호출된다.
     */
-    window.addEventListener("load", function(){
-        setTimeout(function(){
-            forceHybridStart();
-
-            if (typeof window.startHybridSTT === "function") {
-                console.log("⚡ FORCE HYBRID 자동 시작");
-                window.startHybridSTT();
-            }
-        }, 2500);
-    });
 })();
 </script>
 
@@ -28072,14 +28063,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const msg = `저희 매장은 ${menu.name}이 유명합니다. ${menuDesc(menu)} 원하시면 ${menu.name}이라고 말씀해주세요.`;
 
         say(msg);
-
-        try {
-            const idx = getMenus().findIndex(m => m.name === menu.name);
-            if (idx >= 0 && typeof highlightMenuConfirm === "function") {
-                highlightMenuConfirm(menu, idx);
-            }
-        } catch(e) {}
-
         return true;
     }
 
@@ -29745,14 +29728,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const msg = `저희 매장은 ${menu.name}이 유명합니다. ${menu.name}은 ${menu.taste || menu.category || "인기"} 메뉴입니다.` + (price ? ` 가격은 ${price}입니다.` : "") + ` 원하시면 ${menu.name}이라고 말씀해주세요.`;
 
         say(msg);
-
-        try {
-            const idx = list.findIndex(m => m.name === menu.name);
-            if (idx >= 0 && typeof highlightMenuConfirm === "function") {
-                highlightMenuConfirm(menu, idx);
-            }
-        } catch(e) {}
-
         return true;
     }
 
@@ -33881,15 +33856,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         window.__TTS_FINAL_MIC_OFF_INTERVAL = setInterval(function(){
             if (!isMuted()) {
                 clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-                return;
             }
-
-            const r = stopRecognitionOnce("interval_guard");
-
-            console.log("[" + PATCH + "] keep mic off:", {
-                secondsLeft: secondsLeft(),
-                results: r.results
-            });
         }, 400);
 
         clearTimeout(window.__TTS_FINAL_MIC_OFF_RESTART_TIMER);
@@ -35354,7 +35321,13 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         if (decision.kind === "see") {
             bumpZoom();
-            say(guide + " 글씨를 한 단계 키워드렸습니다.");
+            const level = (typeof zoomLevel !== "undefined") ? zoomLevel : 1;
+            say(Assist.zoomSpeech(level));
+            return true;
+        }
+
+        if (decision.kind === "recommend") {
+            say(Assist.recommendSpeech(Assist.recommendMenu(menus())));
             return true;
         }
 
@@ -35373,7 +35346,17 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     if (typeof previousSpeak === "function" && !previousSpeak.__kioskLastSpokenWrap) {
         const wrappedSpeak = function (text) {
             if (text) window.__kioskLastSpoken = String(text);
-            return previousSpeak.apply(this, arguments);
+            const self = this;
+            const args = arguments;
+            const run = function () { return previousSpeak.apply(self, args); };
+            try {
+                if (window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
+                    window.speechSynthesis.cancel();
+                    setTimeout(run, 80);
+                    return;
+                }
+            } catch (e) {}
+            return run();
         };
         wrappedSpeak.__kioskLastSpokenWrap = true;
         window.speakText = speakText = wrappedSpeak;
