@@ -35232,9 +35232,9 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 (function BRIGHT_FEMALE_VOICE_PATCH() {
     console.log("✅ 밝고 높은 톤의 여자 목소리 셋팅 완료");
     
-    // 1. 이상적인 톤(약간 높음)과 속도(살짝 경쾌함) 강제 세팅
-    localStorage.setItem('kiosk_tts_pitch', '1.25');
-    localStorage.setItem('kiosk_tts_rate', '1.05');
+    // 관리자가 저장한 톤과 속도는 새로고침 때 덮어쓰지 않는다.
+    if (!localStorage.getItem('kiosk_tts_pitch')) localStorage.setItem('kiosk_tts_pitch', '1.15');
+    if (!localStorage.getItem('kiosk_tts_rate')) localStorage.setItem('kiosk_tts_rate', '0.95');
     
     // 2. 컴퓨터에 설치된 가장 자연스러운 여자 목소리 자동 추적 및 설정
     function setBestFemaleVoice() {
@@ -35246,15 +35246,14 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                         voices.find(v => v.name.includes('Google') && v.lang.includes('ko')) ||
                         voices.find(v => v.name.includes('Heami'));
                         
-        if (bestVoice) {
+        if (bestVoice && !localStorage.getItem('kiosk_manual_tts_voice')) {
             window.selectedFemaleVoice = bestVoice;
             localStorage.setItem('kiosk_manual_tts_voice', bestVoice.voiceURI);
             
-            // 관리자 창 슬라이더 UI 동기화
             const pitchSlider = document.getElementById('tts-pitch-slider');
-            if (pitchSlider) pitchSlider.value = '1.25';
+            if (pitchSlider) pitchSlider.value = localStorage.getItem('kiosk_tts_pitch') || '1.15';
             const rateSlider = document.getElementById('tts-rate-slider');
-            if (rateSlider) rateSlider.value = '1.05';
+            if (rateSlider) rateSlider.value = localStorage.getItem('kiosk_tts_rate') || '0.95';
             
             const voiceSelect = document.getElementById('tts-voice-select');
             if (voiceSelect) {
@@ -35270,6 +35269,386 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     } else {
         speechSynthesis.addEventListener('voiceschanged', setBestFemaleVoice);
     }
+})();
+</script>
+
+<script src="/kiosk_assist.js"></script>
+<script>
+/* 상황 안내와 단일 Whisper 경로.
+   화면 구조와 주문 단계 전이는 기존 processVoiceCommand 에 그대로 둔다.
+   도움·안 보임·안 들림·메뉴 설명만 맨 앞에서 처리한다. */
+(function KIOSK_ASSIST_AND_SINGLE_STT() {
+    if (window.__KIOSK_ASSIST_AND_SINGLE_STT__) return;
+    window.__KIOSK_ASSIST_AND_SINGLE_STT__ = true;
+
+    const Assist = window.KioskAssist;
+    if (!Assist) {
+        console.error("[kiosk] kiosk_assist.js 를 불러오지 못했습니다.");
+        return;
+    }
+
+    function menus() {
+        try {
+            if (Array.isArray(customMenus)) return customMenus;
+        } catch (e) {}
+        return [];
+    }
+
+    function stageName() {
+        try { return String(currentStageName || "welcome"); } catch (e) { return "welcome"; }
+    }
+
+    function assistContext() {
+        let gridNames = [];
+        let categories = [];
+        try {
+            if (Array.isArray(currentGridMenus)) {
+                gridNames = currentGridMenus.map(function (m) { return m && m.name; }).filter(Boolean);
+            }
+        } catch (e) {}
+        try {
+            categories = menus().map(function (m) { return m && m.category; }).filter(Boolean);
+            categories = [...new Set(categories)];
+        } catch (e2) {}
+        return { gridNames: gridNames, categories: categories };
+    }
+
+    function say(text) {
+        if (!text) return;
+        try {
+            if (typeof speakText === "function") speakText(text);
+            else if (typeof window.speakText === "function") window.speakText(text);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function bumpZoom() {
+        try {
+            if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
+            zoomLevel = Math.min((Number(zoomLevel) || 0) + 1, 4);
+            if (typeof updateZoomUI === "function") updateZoomUI();
+            else if (typeof setZoomLevel === "function") setZoomLevel(zoomLevel);
+        } catch (e) {}
+    }
+
+    function bumpVolume() {
+        try {
+            if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
+            ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
+            window.ttsEnabled = true;
+            if (typeof ttsEnabled !== "undefined") ttsEnabled = true;
+        } catch (e) {}
+    }
+
+    function handleAssist(text) {
+        const decision = Assist.classify(text, menus());
+        if (!decision) return false;
+
+        if (decision.kind === "menu") {
+            say(Assist.describeMenu(decision.menu));
+            return true;
+        }
+
+        const guide = Assist.stageHelp(stageName(), assistContext());
+
+        if (decision.kind === "see") {
+            bumpZoom();
+            say(guide + " 글씨를 한 단계 키워드렸습니다.");
+            return true;
+        }
+
+        if (decision.kind === "hear") {
+            bumpVolume();
+            const last = String(window.__kioskLastSpoken || "").trim();
+            say(last ? ("다시 말씀드릴게요. " + last) : guide);
+            return true;
+        }
+
+        say(guide);
+        return true;
+    }
+
+    const previousSpeak = window.speakText || (typeof speakText === "function" ? speakText : null);
+    if (typeof previousSpeak === "function" && !previousSpeak.__kioskLastSpokenWrap) {
+        const wrappedSpeak = function (text) {
+            if (text) window.__kioskLastSpoken = String(text);
+            return previousSpeak.apply(this, arguments);
+        };
+        wrappedSpeak.__kioskLastSpokenWrap = true;
+        window.speakText = speakText = wrappedSpeak;
+    }
+
+    const previousCommand = window.processVoiceCommand;
+    if (typeof previousCommand === "function" && !previousCommand.__kioskAssistFront) {
+        const wrappedCommand = function (text) {
+            if (handleAssist(text)) return;
+            return previousCommand.apply(this, arguments);
+        };
+        wrappedCommand.__kioskAssistFront = true;
+        window.processVoiceCommand = processVoiceCommand = wrappedCommand;
+    }
+
+    window.__kioskHandleAssist = handleAssist;
+
+    const origFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+        const url = typeof input === "string" ? input : (input && input.url) || "";
+        if (String(url).indexOf("/transcribe") !== -1) {
+            const headers = new Headers((init && init.headers) || (typeof input !== "string" && input && input.headers) || undefined);
+            if (headers.get("X-Kiosk-Stt") !== "1") {
+                return Promise.resolve(new Response(JSON.stringify({ text: "", filtered: "duplicate_stt" }), {
+                    status: 200,
+                    headers: { "Content-Type": "application/json" }
+                }));
+            }
+        }
+        return origFetch(input, init);
+    };
+
+    const OrigSpeech = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (OrigSpeech && OrigSpeech.prototype && !OrigSpeech.prototype.start.__kioskSingleStt) {
+        const origStart = OrigSpeech.prototype.start;
+        const blocked = function () {
+            console.log("[kiosk] Web Speech 는 끄고 Whisper 한 경로만 사용합니다.");
+        };
+        blocked.__kioskSingleStt = true;
+        blocked.__original = origStart;
+        OrigSpeech.prototype.start = blocked;
+    }
+
+    const gum = navigator.mediaDevices && navigator.mediaDevices.getUserMedia
+        ? navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+        : null;
+    let sharedStream = null;
+
+    if (gum && !navigator.mediaDevices.getUserMedia.__kioskShared) {
+        const sharedGet = async function (constraints) {
+            if (constraints && constraints.audio) {
+                if (sharedStream && sharedStream.getAudioTracks().some(function (t) { return t.readyState === "live"; })) {
+                    return sharedStream;
+                }
+                sharedStream = await gum({
+                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+                });
+                return sharedStream;
+            }
+            return gum(constraints);
+        };
+        sharedGet.__kioskShared = true;
+        navigator.mediaDevices.getUserMedia = sharedGet;
+    }
+
+    let audioContext = null;
+    let analyser = null;
+    let dataArray = null;
+    let recorder = null;
+    let recordChunks = [];
+    let speaking = false;
+    let speechStart = 0;
+    let silenceStart = 0;
+    let engineOn = false;
+    let idleTimer = null;
+    let sending = false;
+    const queue = [];
+    const THRESHOLD = 0.03;
+    const SILENCE_MS = 700;
+    const MIN_MS = 450;
+    const MAX_MS = 4500;
+    const IDLE_RESET_MS = 2500;
+
+    function volume() {
+        if (!analyser || !dataArray) return 0;
+        analyser.getByteTimeDomainData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+            const v = (dataArray[i] - 128) / 128;
+            sum += v * v;
+        }
+        return Math.sqrt(sum / dataArray.length);
+    }
+
+    function mimeType() {
+        if (window.MediaRecorder && MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) return "audio/webm;codecs=opus";
+        if (window.MediaRecorder && MediaRecorder.isTypeSupported("audio/webm")) return "audio/webm";
+        return "";
+    }
+
+    function clearIdle() {
+        if (idleTimer) {
+            clearTimeout(idleTimer);
+            idleTimer = null;
+        }
+    }
+
+    function armIdleReset() {
+        clearIdle();
+        idleTimer = setTimeout(function () {
+            if (!engineOn || speaking) return;
+            if (!recorder || recorder.state !== "recording") return;
+            const old = recorder;
+            recorder = null;
+            old.onstop = function () {
+                recordChunks = [];
+                armRecorder();
+            };
+            try { old.stop(); } catch (e) { armRecorder(); }
+        }, IDLE_RESET_MS);
+    }
+
+    function armRecorder() {
+        if (!engineOn || !sharedStream) return;
+        if (recorder && recorder.state === "recording") return;
+        recordChunks = [];
+        const type = mimeType();
+        try {
+            recorder = new MediaRecorder(sharedStream, type ? { mimeType: type } : undefined);
+        } catch (e) {
+            console.error("[kiosk] MediaRecorder", e);
+            return;
+        }
+        recorder.ondataavailable = function (event) {
+            if (event.data && event.data.size) recordChunks.push(event.data);
+        };
+        recorder.start();
+        if (!speaking) armIdleReset();
+    }
+
+    function enqueue(blob) {
+        if (!blob || blob.size < 800) return;
+        queue.push(blob);
+        drain();
+    }
+
+    function isMuted() {
+        const until = window.__TTS_FINAL_MIC_OFF_UNTIL || 0;
+        if (until && Date.now() >= until) {
+            window.__TTS_FINAL_MIC_OFF = false;
+            window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
+            return false;
+        }
+        return !!window.__TTS_FINAL_MIC_OFF || Date.now() < until || window.isTtsSpeaking === true;
+    }
+
+    async function drain() {
+        if (sending || !queue.length) return;
+        sending = true;
+        const blob = queue.shift();
+        try {
+            const body = new FormData();
+            body.append("file", blob, "speech.webm");
+            const response = await origFetch("/transcribe", {
+                method: "POST",
+                headers: { "X-Kiosk-Stt": "1" },
+                body: body
+            });
+            const result = await response.json();
+            const text = String((result && result.text) || "").trim();
+            if (text && typeof window.processVoiceCommand === "function") {
+                const assist = Assist.classify(text, menus());
+                if (!assist && isMuted()) {
+                    console.log("[kiosk] TTS 중 일반 발화는 무시:", text);
+                } else {
+                    window.processVoiceCommand(text);
+                }
+            }
+        } catch (e) {
+            console.error("[kiosk] transcribe", e);
+        } finally {
+            sending = false;
+            drain();
+        }
+    }
+
+    function finishPhrase() {
+        if (!recorder || recorder.state !== "recording") {
+            speaking = false;
+            armRecorder();
+            return;
+        }
+        const old = recorder;
+        recorder = null;
+        speaking = false;
+        silenceStart = 0;
+        old.onstop = function () {
+            const chunks = recordChunks.slice();
+            recordChunks = [];
+            enqueue(new Blob(chunks, { type: "audio/webm" }));
+            armRecorder();
+        };
+        try { old.stop(); } catch (e) { armRecorder(); }
+    }
+
+    function vad() {
+        if (!engineOn) return;
+        const now = Date.now();
+        const level = volume();
+
+        if (level > THRESHOLD) {
+            if (!speaking) {
+                speaking = true;
+                speechStart = now;
+                silenceStart = 0;
+                clearIdle();
+            } else {
+                silenceStart = 0;
+            }
+        } else if (speaking) {
+            if (!silenceStart) silenceStart = now;
+            const said = now - speechStart;
+            const quiet = now - silenceStart;
+            if (said >= MIN_MS && quiet >= SILENCE_MS) {
+                finishPhrase();
+                requestAnimationFrame(vad);
+                return;
+            }
+        }
+
+        if (speaking && speechStart && (now - speechStart) >= MAX_MS) {
+            finishPhrase();
+        }
+
+        requestAnimationFrame(vad);
+    }
+
+    async function startEngine() {
+        if (engineOn) return;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        try {
+            sharedStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            });
+            audioContext = new AudioContext();
+            if (audioContext.state === "suspended") await audioContext.resume();
+            const source = audioContext.createMediaStreamSource(sharedStream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            source.connect(analyser);
+            dataArray = new Uint8Array(analyser.fftSize);
+            engineOn = true;
+            try { isListening = true; isStarting = false; } catch (e) {}
+            const orb = document.getElementById("ai-mic-orb");
+            const frame = document.getElementById("kiosk-frame");
+            if (orb) orb.classList.add("mic-listening");
+            if (frame) frame.classList.add("kiosk-listening-border");
+            armRecorder();
+            requestAnimationFrame(vad);
+            console.log("[kiosk] 단일 Whisper 마이크 시작");
+        } catch (e) {
+            console.error("[kiosk] 마이크 시작 실패", e);
+        }
+    }
+
+    window.startWhisperListening = startEngine;
+    window.startHybridSTT = startEngine;
+    window.stopHybridSTT = function () {};
+    window.stopWhisperListening = function () {};
+    window.startListening = startListening = function () { return startEngine(); };
+    window.stopListening = stopListening = function () {
+        if (!window.__kioskAllowMicStop) return;
+    };
+
+    console.log("[kiosk] 상황 안내와 단일 음성 인식 경로를 적용했습니다.");
 })();
 </script>
 
