@@ -678,11 +678,17 @@
         }
 
         function parseLevel(text) {
-            if (text.match(/5단계|오단계|오|가득|최대|다섯/)) return 5;
-            if (text.match(/4단계|사단계|사|많이|넷/)) return 4;
-            if (text.match(/3단계|삼단계|삼|보통|기본|셋/)) return 3;
-            if (text.match(/2단계|이단계|이|조금|적게|둘/)) return 2;
-            if (text.match(/1단계|일단계|일|없|빼|하나/)) return 1;
+            const raw = String(text || "").replace(/\s+/g, "");
+            if (/5단계|오단계|다섯단계|5단|오단/.test(raw)) return 5;
+            if (/4단계|사단계|네단계|4단|사단/.test(raw)) return 4;
+            if (/3단계|삼단계|세단계|3단|삼단/.test(raw)) return 3;
+            if (/2단계|이단계|두단계|2단|이단/.test(raw)) return 2;
+            if (/1단계|일단계|한단계|1단|일단/.test(raw)) return 1;
+            if (text.match(/5단계|오단계|가득|최대|다섯/)) return 5;
+            if (text.match(/4단계|사단계|많이|넷/)) return 4;
+            if (text.match(/3단계|삼단계|보통|기본|셋/)) return 3;
+            if (text.match(/2단계|이단계|조금|적게|둘/)) return 2;
+            if (text.match(/1단계|일단계|없|빼|하나/)) return 1;
             return 0;
         }
 
@@ -1400,7 +1406,8 @@
                 updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); speakText(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
             } else if (isAddOnPhase) {
                 html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "오른쪽 거", 또는 "결제할게요"</div>`;
-                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); speakText(`어떤 메뉴를 추가하시겠습니까? 위치나 이름으로 말씀해주세요.`);
+                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html);
+                speakText((ttsArray.length ? ttsArray.join(", ") + " 등이 있습니다. " : "") + "추가하실 메뉴 이름을 말씀해주세요. 더 없으면 결제라고 말씀해주세요.");
             } else {
                 html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${menus[0].name}" 또는 "첫번째 거"</div>`;
                 updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); speakText(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
@@ -1584,11 +1591,12 @@
                     transitionTo('menu_grid', renderMenuGrid);
                     break;
                 case 'quantity': {
-                    const m = customMenus.find(mm => mm.name === tempItem.item);
-                    if(!m) { resetTempItemOnly(); transitionTo('menu_grid', renderMenuGrid); break; }
-                    if(m.category === '커피') askTemperature();
-                    else if (m.category === "햄버거") askUpsell();
-                    else { resetTempItemOnly(); transitionTo('menu_grid', renderMenuGrid); }
+                    const keptName = tempItem && tempItem.item ? tempItem.item : "";
+                    const m = customMenus.find(mm => mm.name === keptName);
+                    if (m && m.category === '커피') { askTemperature(); break; }
+                    if (m && m.category === "햄버거") { askUpsell(); break; }
+                    transitionTo('menu_grid', renderMenuGrid);
+                    if (keptName) speakText(keptName + " 수량 선택에서 메뉴판으로 돌아왔습니다. " + keptName + "을 다시 고르시려면 그 메뉴 이름을 말씀해주세요.");
                     break;
                 }
                 case 'cup_size': transitionTo('quantity', askQuantity); break;
@@ -1652,7 +1660,8 @@
                 if (priceMenu) return priceMenu;
             }
             let bestMatch = null; let highestScore = 0; let partialMatches = [];
-            for (let m of customMenus) {
+            const menusByLength = customMenus.slice().sort((a, b) => b.name.length - a.name.length);
+            for (let m of menusByLength) {
                 let nameNoSpace = m.name.toLowerCase().replace(/[\s,.'?!]+/g, '');
                 if (lower.includes(nameNoSpace)) return m;
                 let words = m.name.split(' ');
@@ -1660,7 +1669,7 @@
                 let score = getSimilarity(lower, nameNoSpace);
                 if (score > highestScore) { highestScore = score; bestMatch = m; }
             }
-            if (partialMatches.length > 0) { partialMatches.sort((a, b) => a.name.length - b.name.length); return partialMatches[0]; }
+            if (partialMatches.length > 0) { partialMatches.sort((a, b) => b.name.length - a.name.length); return partialMatches[0]; }
             if (highestScore >= 0.6) return bestMatch;
             return null;
         }
@@ -7750,18 +7759,24 @@ var addLearningCluster = window.addLearningCluster || function() {
                 border: 2px solid rgba(231,111,81,0.18);
             }
 
+            .bev-mini-cup-panel {
+                overflow: visible;
+                min-height: 220px;
+                align-items: flex-end;
+            }
+
             .bev-mini-cup-panel .cup-wrapper {
-                transform: scale(0.58);
-                transform-origin: left center;
-                width: 90px !important;
-                height: 132px !important;
-                margin-left: -4px;
+                transform: none !important;
+                transform-origin: center bottom;
+                width: 150px !important;
+                height: 210px !important;
+                margin: 0 !important;
                 flex-shrink: 0;
             }
 
             .bev-mini-cup-panel .cup-body {
-                width: 130px;
-                height: 185px;
+                width: 120px;
+                height: 180px;
             }
 
             .bev-option-list {
@@ -7919,9 +7934,7 @@ var addLearningCluster = window.addLearningCluster || function() {
             <div class="bev-layout-root">
 
                 <div class="bev-mini-cup-panel">
-                    <div style="width:92px;height:132px;overflow:visible;flex-shrink:0;">
-                        ${miniCup}
-                    </div>
+                    ${miniCup}
                     ${beverageOptionChipsHTML(tempItem)}
                 </div>
 
@@ -7975,9 +7988,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
             <div class="bev-layout-root">
 
                 <div class="bev-mini-cup-panel">
-                    <div style="width:92px;height:132px;overflow:visible;flex-shrink:0;">
-                        ${miniCup}
-                    </div>
+                    ${miniCup}
                     ${beverageOptionChipsHTML(tempItem)}
                 </div>
 
@@ -22321,6 +22332,15 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
 
     function findCategoryFromSpeech(text) {
         const c = compactOrder(text);
+        const plain = String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+
+        if (Array.isArray(customMenus)) {
+            const names = customMenus
+                .map(m => String(m && m.name || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, ""))
+                .filter(name => name.length >= 2)
+                .sort((a, b) => b.length - a.length);
+            if (names.some(name => plain.includes(name))) return "";
+        }
 
         if (!Array.isArray(customMenus)) return "";
 
@@ -26408,6 +26428,13 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             if (mc && c.includes(mc)) return m;
         }
 
+        const plain = String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+        const byName = list.slice().sort((a, b) => String(b.name || "").length - String(a.name || "").length);
+        for (const m of byName) {
+            const name = String(m.name || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+            if (name.length >= 2 && plain.includes(name)) return m;
+        }
+
         return null;
     }
 
@@ -26421,6 +26448,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     };
 
     function findCategory(text){
+        if (findMenu(text)) return "";
         const raw = norm(text);
         const c = compact(text);
         let best = "";
@@ -26613,6 +26641,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/추천|맛있는|제일맛|가장맛|유명|인기|잘나가|뭐가맛|뭐먹|아무거나/.test(c)) return true;
         if (/한번더|한번만더|다시말|다시읽|다시설명|쉽게설명|천천히|안들려|잘안들려|소리키워|소리크게|화면확대해서|크게해서/.test(c)) return true;
         if (/달콤|달달|상큼|새콤|구수|담백|고소|얼큰|짭짤|매콤|단맛/.test(c)) return true;
+        if (/[1-5]단계|일단계|이단계|삼단계|사단계|오단계|단계/.test(c)) return true;
+        if (/무슨메뉴|메뉴가있|뭐가있|뭐있|어떤메뉴|메뉴알려|메뉴뭐|뭐팔|종류|있는메뉴|메뉴이름|뭐뭐/.test(c)) return true;
 
 
         return false;
@@ -26930,10 +26960,18 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             if (mc && c.includes(mc)) return m;
         }
 
+        const plain = String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+        const byName = list.slice().sort((a, b) => String(b.name || "").length - String(a.name || "").length);
+        for (const m of byName) {
+            const name = String(m.name || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+            if (name.length >= 2 && plain.includes(name)) return m;
+        }
+
         return null;
     }
 
     function findCategory(text){
+        if (findMenu(text)) return "";
         const raw = norm(text);
         const c = compact(text);
         let best = "";
@@ -27044,6 +27082,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/추천|맛있는|제일맛|가장맛|유명|인기|잘나가|뭐가맛|뭐먹|아무거나/.test(c)) return true;
         if (/한번더|한번만더|다시말|다시읽|다시설명|쉽게설명|천천히|안들려|잘안들려|소리키워|소리크게|화면확대해서|크게해서/.test(c)) return true;
         if (/달콤|달달|상큼|새콤|구수|담백|고소|얼큰|짭짤|매콤|단맛/.test(c)) return true;
+        if (/[1-5]단계|일단계|이단계|삼단계|사단계|오단계|단계/.test(c)) return true;
+        if (/무슨메뉴|메뉴가있|뭐가있|뭐있|어떤메뉴|메뉴알려|메뉴뭐|뭐팔|종류|있는메뉴|메뉴이름|뭐뭐/.test(c)) return true;
 
 
         return false;
@@ -29923,13 +29963,20 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
       ------------------------------------------------------------
     */
     function parseOptionLevel(text){
+        const raw = String(text || "").replace(/\s+/g, "");
+        if (/5단계|오단계|다섯단계|5단|오단/.test(raw)) return 5;
+        if (/4단계|사단계|네단계|4단|사단/.test(raw)) return 4;
+        if (/3단계|삼단계|세단계|3단|삼단/.test(raw)) return 3;
+        if (/2단계|이단계|두단계|2단|이단/.test(raw)) return 2;
+        if (/1단계|일단계|한단계|1단|일단/.test(raw)) return 1;
+
         const c = compact(text);
 
-        if (/5단계|오단계|오단게|오|다섯|가득|최대|많이많이|완전많이/.test(c)) return 5;
-        if (/4단계|사단계|사단게|사|넷|많이|더/.test(c)) return 4;
-        if (/3단계|삼단계|삼단게|삼|셋|보통|기본|중간/.test(c)) return 3;
-        if (/2단계|이단계|이단게|이|둘|적게|조금|덜/.test(c)) return 2;
-        if (/1단계|일단계|일단게|일|하나|없음|없게|빼|빼고|없이/.test(c)) return 1;
+        if (/5단계|오단계|오단게|다섯|가득|최대|많이많이|완전많이/.test(c)) return 5;
+        if (/4단계|사단계|사단게|넷|많이/.test(c)) return 4;
+        if (/3단계|삼단계|삼단게|셋|보통|기본|중간/.test(c)) return 3;
+        if (/2단계|이단계|이단게|둘|적게|조금|덜/.test(c)) return 2;
+        if (/1단계|일단계|일단게|하나|없음|없게|빼|빼고|없이/.test(c)) return 1;
 
         const digit = c.match(/([1-5])/);
         if (digit) return Number(digit[1]);
@@ -35400,7 +35447,61 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         } catch (e) {}
     }
 
+    function screenChoices(text) {
+        const s = String(text || "").replace(/\s+/g, "");
+        if (!s || !/무슨메뉴|뭐가있|뭐있|뭐있어|어떤메뉴|메뉴알려|메뉴뭐|뭐팔|종류|있는메뉴|메뉴이름|뭐뭐|설명해|모르겠어|어떻게해/.test(s)) return false;
+        const plain = s.replace(/[^0-9a-z가-힣]/g, "");
+        const list = menus();
+        const named = list.slice().sort(function (a, b) { return String(b.name || "").length - String(a.name || "").length; });
+        for (let i = 0; i < named.length; i++) {
+            const name = String(named[i].name || "").replace(/\s+/g, "");
+            if (name.length >= 2 && plain.indexOf(name) !== -1) return false;
+        }
+
+        const stage = stageName();
+        if (stage === "menu_grid") {
+            const grid = (typeof currentGridMenus !== "undefined" && currentGridMenus && currentGridMenus.length) ? currentGridMenus : list;
+            const names = grid.map(function (m) { return m.name + " " + Number(m.price || 0).toLocaleString("ko-KR") + "원"; });
+            say(names.length ? ("이 화면의 메뉴는 " + names.join(", ") + " 입니다. 원하시는 메뉴 이름을 말씀해주세요.") : "지금 보여줄 메뉴가 없습니다.");
+            return true;
+        }
+        if (stage === "category_select") {
+            const cats = [...new Set(list.map(function (m) { return m && m.category; }).filter(Boolean))];
+            say("메뉴 종류는 " + (cats.join(", ") || "국밥, 불고기, 햄버거, 커피, 음료, 디저트") + " 입니다. 하나를 말씀해주세요.");
+            return true;
+        }
+        if (stage === "taste_select_prompt") {
+            say("고르실 수 있는 맛은 달콤, 상큼, 구수, 고소, 얼큰, 짭짤입니다. 원하시는 맛을 말씀해주세요.");
+            return true;
+        }
+        if (stage === "beverage_option_step" || stage === "topping_level" || stage === "level_select") {
+            say("1단계는 없음, 2단계는 적게, 3단계는 보통, 4단계는 많이, 5단계는 가득입니다. 원하시는 단계를 말씀해주세요.");
+            return true;
+        }
+        if (stage === "quantity" || stage === "summary_add_quantity") {
+            const item = (typeof tempItem !== "undefined" && tempItem && tempItem.item) ? tempItem.item : "선택하신 메뉴";
+            say(item + " 수량을 말씀해주세요. 한 개, 두 개처럼 말씀하시면 됩니다.");
+            return true;
+        }
+        if (stage === "summary") {
+            let lines = [];
+            let total = 0;
+            try {
+                (orderState.items || []).forEach(function (i) {
+                    let price = (typeof getMenuPrice === "function" ? getMenuPrice(i.item) : 0) * i.count;
+                    if (i.isSet) price += 2000 * i.count;
+                    total += price;
+                    lines.push(i.item + " " + i.count + "개");
+                });
+            } catch (e) {}
+            say(lines.length ? ("주문하신 메뉴는 " + lines.join(", ") + "입니다. 총 금액은 " + total + "원입니다.") : "주문 내역이 비어 있습니다.");
+            return true;
+        }
+        return false;
+    }
+
     function handleAssist(text) {
+        if (screenChoices(text)) return true;
         const decision = Assist.classify(text, menus());
         if (!decision) return false;
 
