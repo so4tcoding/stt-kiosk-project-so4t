@@ -1,6 +1,7 @@
 #uvicorn stt_server:app --host 0.0.0.0 --port 8000
 import os
 import csv
+import json
 import io
 import uuid
 import time
@@ -516,6 +517,69 @@ def serve_kiosk_assist():
     script = BASE_DIR / "kiosk_assist.js"
     if not script.exists():
         raise HTTPException(status_code=404, detail="kiosk_assist.js not found")
+    return FileResponse(script, media_type="application/javascript")
+
+
+USE_METRICS_PATH = BASE_DIR / "kiosk_use_metrics" / "events.jsonl"
+
+
+def _append_use_metric(event):
+    USE_METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with USE_METRICS_PATH.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+
+def _read_use_metrics():
+    if not USE_METRICS_PATH.exists():
+        return []
+    events = []
+    for line in USE_METRICS_PATH.read_text(encoding="utf-8").splitlines()[-500:]:
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return events
+
+
+@app.post("/api/use-metrics")
+async def post_use_metric(request: Request):
+    body = await request.json()
+    kind = body.get("kind")
+    outcome = body.get("outcome")
+    if kind not in ("use", "learn"):
+        raise HTTPException(status_code=400, detail="kind")
+    if outcome not in ("success", "failure", "loss"):
+        raise HTTPException(status_code=400, detail="outcome")
+    event = {
+        "kind": kind,
+        "outcome": outcome,
+        "text": str(body.get("text") or "")[:80],
+        "canonical": str(body.get("canonical") or "")[:80],
+        "stage": str(body.get("stage") or "")[:40],
+        "at": body.get("at") or datetime.utcnow().isoformat(timespec="seconds") + "Z",
+    }
+    _append_use_metric(event)
+    return {"ok": True}
+
+
+@app.get("/api/use-metrics")
+def get_use_metrics():
+    return {"events": _read_use_metrics()}
+
+
+@app.get("/metrics")
+def metrics_page():
+    page = BASE_DIR / "metrics.html"
+    if not page.exists():
+        raise HTTPException(status_code=404, detail="metrics.html not found")
+    return FileResponse(page)
+
+
+@app.get("/kiosk_use_metrics.js")
+def serve_use_metrics_script():
+    script = BASE_DIR / "kiosk_use_metrics.js"
+    if not script.exists():
+        raise HTTPException(status_code=404, detail="kiosk_use_metrics.js not found")
     return FileResponse(script, media_type="application/javascript")
 
 
