@@ -1521,7 +1521,10 @@
                 <div class="w-full glass-panel p-3 rounded-2xl mb-2 bg-white/60 max-h-[46vh] overflow-hidden">${html}</div>
                 <div class="text-xs font-bold text-[#8a7a63] mt-1 bg-white/40 p-2 rounded-xl text-center">"불고기버거 추가해줘" 또는 "감자튀김 빼줘" 라고 말씀하세요.</div>
             `);
-            speakText(`주문하신 총 금액은 ${sum}원입니다. 맞으시면 결제라고 말씀해주세요.`);
+            const itemSpeech = orderState.items.map(i => `${i.item} ${i.count}개`).join(", ");
+            speakText(itemSpeech
+                ? `주문하신 메뉴는 ${itemSpeech}입니다. 총 금액은 ${sum}원입니다. 맞으시면 결제라고 말씀해주세요.`
+                : "주문 내역이 비어 있습니다.");
         }
         function askPaymentStage() {
             let html = `
@@ -23484,10 +23487,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         } catch (e) {}
 
         try {
-            window.speechSynthesis.cancel();
-        } catch (e) {}
-
-        try {
             if (!selectedFemaleVoice && typeof initVoices === "function") {
                 initVoices();
             }
@@ -23544,7 +23543,17 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             if (onEndCallback) onEndCallback();
         };
 
-        window.speechSynthesis.speak(utterance);
+        const startUtterance = function () {
+            try { window.speechSynthesis.speak(utterance); } catch (e) {}
+        };
+        let busy = false;
+        try { busy = !!(window.speechSynthesis.speaking || window.speechSynthesis.pending); } catch (e) {}
+        if (busy) {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+            setTimeout(startUtterance, 250);
+        } else {
+            startUtterance();
+        }
     };
 
     /* ----------------------------------------------------------------------
@@ -27712,7 +27721,15 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 }
 
                 const msg = orderState.items.map(i => `${i.item} ${i.count}개`).join(", ");
-                say("현재 주문 내역은 " + msg + " 입니다. 결제하시려면 결제라고 말씀해주세요.");
+                let total = 0;
+                try {
+                    total = orderState.items.reduce((sum, i) => {
+                        let price = (typeof getMenuPrice === "function" ? getMenuPrice(i.item) : 0) * i.count;
+                        if (i.isSet) price += 2000 * i.count;
+                        return sum + price;
+                    }, 0);
+                } catch (e) {}
+                say("현재 주문 내역은 " + msg + " 입니다. 총 금액은 " + total + "원입니다. 결제하시려면 결제라고 말씀해주세요.");
                 return true;
             }
         } catch(e) {}
@@ -27803,6 +27820,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 if (typeof orderState !== "undefined") orderState.place = "매장에서 먹기";
                 if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
                     transitionTo("summary", renderSummary);
+                    return true;
                 }
             } catch(e) {}
 
@@ -27815,6 +27833,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 if (typeof orderState !== "undefined") orderState.place = "포장해서 가기";
                 if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
                     transitionTo("summary", renderSummary);
+                    return true;
                 }
             } catch(e) {}
 
@@ -28763,6 +28782,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
                 if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
                     transitionTo("summary", renderSummary);
+                    return true;
                 }
             } catch(e) {}
 
@@ -28780,6 +28800,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
                 if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
                     transitionTo("summary", renderSummary);
+                    return true;
                 }
             } catch(e) {}
 
@@ -30426,6 +30447,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
                 if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
                     transitionTo("summary", renderSummary);
+                    return true;
                 }
             } catch(e) {
                 console.error(e);
@@ -30445,6 +30467,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
                 if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
                     transitionTo("summary", renderSummary);
+                    return true;
                 }
             } catch(e) {
                 console.error(e);
@@ -35411,17 +35434,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const wrappedSpeak = function (text) {
             if (text) window.__kioskLastSpoken = String(text);
             window.__kioskTtsHeardUntil = Date.now();
-            const self = this;
-            const args = arguments;
-            const run = function () { return previousSpeak.apply(self, args); };
-            try {
-                if (window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
-                    window.speechSynthesis.cancel();
-                    setTimeout(run, 80);
-                    return;
-                }
-            } catch (e) {}
-            return run();
+            return previousSpeak.apply(this, arguments);
         };
         wrappedSpeak.__kioskLastSpokenWrap = true;
         window.speakText = speakText = wrappedSpeak;
