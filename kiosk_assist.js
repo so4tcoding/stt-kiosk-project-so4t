@@ -73,10 +73,6 @@
             return { kind: "help" };
         }
 
-        if (/추천해|추천좀|메뉴추천|뭐가맛|뭐먹|아무거나|인기메뉴|잘나가는/.test(s)) {
-            return { kind: "recommend" };
-        }
-
         return null;
     }
 

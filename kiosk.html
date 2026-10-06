@@ -26414,25 +26414,29 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function findCategory(text){
         const raw = norm(text);
         const c = compact(text);
+        let best = "";
+        let bestLen = 0;
 
         for (const cat of getCategoryList()) {
             const arr = categoryAliases[cat] || [cat];
 
             for (const alias of arr) {
                 const ac = compact(alias);
-                if (!ac) continue;
+                if (!ac || ac.length < 2) continue;
 
-                if (c === ac) return cat;
-                if (c === ac + "메뉴") return cat;
-                if (c === ac + "보여") return cat;
-                if (c === ac + "알려") return cat;
+                if (c.includes(ac) && ac.length > bestLen) {
+                    best = cat;
+                    bestLen = ac.length;
+                }
             }
 
-            if (raw.includes(cat + " 메뉴")) return cat;
-            if (raw.includes(cat + " 보여")) return cat;
+            if ((raw.includes(cat + " 메뉴") || raw.includes(cat + " 보여")) && cat.length > bestLen) {
+                best = cat;
+                bestLen = cat.length;
+            }
         }
 
-        return "";
+        return best;
     }
 
     function isHelp(text){
@@ -26599,6 +26603,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/왼쪽|오른쪽|위에서|아래에서|밑에서|맨위|맨아래|상단|하단|첫번째|두번째|세번째|네번째|다섯번째|마지막|끝에있는/.test(c)) return true;
         if (/추천|맛있는|제일맛|가장맛|유명|인기|잘나가|뭐가맛|뭐먹|아무거나/.test(c)) return true;
         if (/한번더|한번만더|다시말|다시읽|다시설명|쉽게설명|천천히|안들려|잘안들려|소리키워|소리크게|화면확대해서|크게해서/.test(c)) return true;
+        if (/달콤|달달|상큼|새콤|구수|담백|고소|얼큰|짭짤|매콤|단맛/.test(c)) return true;
 
 
         return false;
@@ -26917,24 +26922,29 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function findCategory(text){
         const raw = norm(text);
         const c = compact(text);
+        let best = "";
+        let bestLen = 0;
 
         for (const cat of getCategories()) {
             const arr = categoryAliases[cat] || [cat];
 
             for (const alias of arr) {
                 const ac = compact(alias);
-                if (!ac) continue;
+                if (!ac || ac.length < 2) continue;
 
-                if (c === ac) return cat;
-                if (c === ac + "메뉴") return cat;
-                if (c === ac + "보여") return cat;
+                if (c.includes(ac) && ac.length > bestLen) {
+                    best = cat;
+                    bestLen = ac.length;
+                }
             }
 
-            if (raw.includes(cat + " 메뉴")) return cat;
-            if (raw.includes(cat + " 보여")) return cat;
+            if ((raw.includes(cat + " 메뉴") || raw.includes(cat + " 보여")) && cat.length > bestLen) {
+                best = cat;
+                bestLen = cat.length;
+            }
         }
 
-        return "";
+        return best;
     }
 
     function isHelp(text){
@@ -27019,6 +27029,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/왼쪽|오른쪽|위에서|아래에서|밑에서|맨위|맨아래|상단|하단|첫번째|두번째|세번째|네번째|다섯번째|마지막|끝에있는/.test(c)) return true;
         if (/추천|맛있는|제일맛|가장맛|유명|인기|잘나가|뭐가맛|뭐먹|아무거나/.test(c)) return true;
         if (/한번더|한번만더|다시말|다시읽|다시설명|쉽게설명|천천히|안들려|잘안들려|소리키워|소리크게|화면확대해서|크게해서/.test(c)) return true;
+        if (/달콤|달달|상큼|새콤|구수|담백|고소|얼큰|짭짤|매콤|단맛/.test(c)) return true;
 
 
         return false;
@@ -27194,6 +27205,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
             const res = await fetch(WHISPER_URL, {
                 method: "POST",
+                headers: { "X-Kiosk-Stt": "1" },
                 body: fd
             });
 
@@ -28053,17 +28065,22 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return false;
         }
 
-        const menu = recommendMenuForCurrentScreen();
+        try {
+            if (typeof openRecommendFlow === "function") {
+                openRecommendFlow();
+                return true;
+            }
+        } catch (e) {}
 
-        if (!menu) {
-            say("추천해드릴 메뉴가 없습니다. 메뉴판을 먼저 열어주세요.");
-            return true;
-        }
+        try {
+            currentStageName = "taste_select_prompt";
+            if (typeof renderTasteSelectPrompt === "function") {
+                renderTasteSelectPrompt();
+                return true;
+            }
+        } catch (e2) {}
 
-        const msg = `저희 매장은 ${menu.name}이 유명합니다. ${menuDesc(menu)} 원하시면 ${menu.name}이라고 말씀해주세요.`;
-
-        say(msg);
-        return true;
+        return false;
     }
 
     function parseNumberWord(text){
@@ -29706,29 +29723,22 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return false;
         }
 
-        const list = getMenus();
-
-        if (!list.length) {
-            say("추천할 메뉴가 없습니다. 메뉴판을 먼저 열어주세요.");
-            return true;
-        }
-
-        const preferred = ["돼지국밥", "불고기버거", "카페라떼", "레몬 에이드", "치즈 케이크"];
-        let menu = list[0];
-
-        for (const p of preferred) {
-            const found = list.find(m => m.name === p);
-            if (found) {
-                menu = found;
-                break;
+        try {
+            if (typeof openRecommendFlow === "function") {
+                openRecommendFlow();
+                return true;
             }
-        }
+        } catch (e) {}
 
-        const price = menu.price ? Number(menu.price).toLocaleString() + "원" : "";
-        const msg = `저희 매장은 ${menu.name}이 유명합니다. ${menu.name}은 ${menu.taste || menu.category || "인기"} 메뉴입니다.` + (price ? ` 가격은 ${price}입니다.` : "") + ` 원하시면 ${menu.name}이라고 말씀해주세요.`;
+        try {
+            currentStageName = "taste_select_prompt";
+            if (typeof renderTasteSelectPrompt === "function") {
+                renderTasteSelectPrompt();
+                return true;
+            }
+        } catch (e2) {}
 
-        say(msg);
-        return true;
+        return false;
     }
 
     function handleFeature(text){
@@ -35241,9 +35251,9 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
 <script src="/kiosk_assist.js"></script>
 <script>
-/* 상황 안내와 단일 Whisper 경로.
-   화면 구조와 주문 단계 전이는 기존 processVoiceCommand 에 그대로 둔다.
-   도움·안 보임·안 들림·메뉴 설명만 맨 앞에서 처리한다. */
+/* 상황 안내만 앞에서 처리한다.
+   빠른 음성인식과 Whisper 보완은 기존 하이브리드가 맡는다.
+   추천은 맛 선택 화면으로 넘기고, 말하는 동안 마이크를 반복해서 끄지 않는다. */
 (function KIOSK_ASSIST_AND_SINGLE_STT() {
     if (window.__KIOSK_ASSIST_AND_SINGLE_STT__) return;
     window.__KIOSK_ASSIST_AND_SINGLE_STT__ = true;
@@ -35326,11 +35336,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
-        if (decision.kind === "recommend") {
-            say(Assist.recommendSpeech(Assist.recommendMenu(menus())));
-            return true;
-        }
-
         if (decision.kind === "hear") {
             bumpVolume();
             const last = String(window.__kioskLastSpoken || "").trim();
@@ -35389,17 +35394,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }
         return origFetch(input, init);
     };
-
-    const OrigSpeech = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (OrigSpeech && OrigSpeech.prototype && !OrigSpeech.prototype.start.__kioskSingleStt) {
-        const origStart = OrigSpeech.prototype.start;
-        const blocked = function () {
-            console.log("[kiosk] Web Speech 는 끄고 Whisper 한 경로만 사용합니다.");
-        };
-        blocked.__kioskSingleStt = true;
-        blocked.__original = origStart;
-        OrigSpeech.prototype.start = blocked;
-    }
 
     const gum = navigator.mediaDevices && navigator.mediaDevices.getUserMedia
         ? navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
@@ -35662,16 +35656,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }
     }
 
-    window.startWhisperListening = startEngine;
-    window.startHybridSTT = startEngine;
-    window.stopHybridSTT = function () {};
-    window.stopWhisperListening = function () {};
-    window.startListening = startListening = function () { return startEngine(); };
-    window.stopListening = stopListening = function () {
-        if (!window.__kioskAllowMicStop) return;
-    };
-
-    console.log("[kiosk] 상황 안내와 단일 음성 인식 경로를 적용했습니다.");
+    console.log("[kiosk] 상황 안내를 적용했습니다. 하이브리드 음성인식은 그대로 둡니다.");
 })();
 </script>
 
