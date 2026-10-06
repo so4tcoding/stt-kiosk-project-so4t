@@ -26658,6 +26658,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function processFilteredText(text){
         const t = normalizeText(text);
 
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            console.log("[kiosk] TTS 중 음성 차단:", t);
+            return true;
+        }
+
         if (!isRelated(t)) {
             console.log("🚫 하이브리드 무관 발화 버림:", t);
             return true;
@@ -27077,6 +27082,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function routeText(text){
         const t = normalizeText(text);
 
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            console.log("[kiosk] TTS 중 음성 차단:", t);
+            chunks = [];
+            return true;
+        }
+
         if (!isRelated(t)) {
             console.log("🚫 HYBRID 무관 발화 버림:", t);
             return true;
@@ -27159,6 +27170,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
             recorder.ondataavailable = function(e){
                 if (!e.data || e.data.size === 0) return;
+                if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+                    chunks = [];
+                    return;
+                }
 
                 const now = Date.now();
                 chunks.push({ blob: e.data, time: now });
@@ -27179,6 +27194,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     async function sendWhisper(fallbackText){
         if (sendingWhisper) return;
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            chunks = [];
+            console.log("[kiosk] TTS 중 음성 차단:", fallbackText);
+            return;
+        }
 
         sendingWhisper = true;
 
@@ -27212,7 +27232,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             const data = await res.json();
             const text = normalizeText(data.text || "");
 
-            if (text && isRelated(text)) {
+            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+                chunks = [];
+                console.log("[kiosk] TTS 중 음성 차단:", text || fallbackText);
+            } else if (text && isRelated(text)) {
                 console.log("🧠 HYBRID Whisper 결과:", text);
                 routeText(text);
             } else {
@@ -27230,6 +27253,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const t = normalizeText(text);
 
         if (!t) return;
+
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            chunks = [];
+            console.log("[kiosk] TTS 중 음성 차단:", t);
+            return;
+        }
 
         if (!isRelated(t)) {
             console.log("🚫 HYBRID 1차 무관 발화 버림:", t);
@@ -27256,6 +27285,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 
     async function startHybrid(){
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            clearTimeout(restartTimer);
+            restartTimer = setTimeout(startHybrid, 400);
+            return;
+        }
+
         await ensureAudioQueue();
 
         if (!SpeechRecognitionClass) {
@@ -33705,7 +33740,28 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         return Math.min(22000, Math.max(2500, len * 110));
     }
 
+    function synthActive() {
+        try {
+            return !!(window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending));
+        } catch (e) {
+            return false;
+        }
+    }
+
+    window.__kioskTtsBlocking = function () {
+        const until = window.__TTS_FINAL_MIC_OFF_UNTIL || 0;
+        const cap = until ? until + 2000 : 0;
+        if (synthActive() && (!cap || now() < cap)) {
+            window.__kioskTtsHeardUntil = now();
+            window.__TTS_FINAL_MIC_OFF = true;
+            return true;
+        }
+        return now() - (window.__kioskTtsHeardUntil || 0) < 800;
+    };
+
     function isMuted() {
+        if (window.__kioskTtsBlocking()) return true;
+
         const until = window.__TTS_FINAL_MIC_OFF_UNTIL || 0;
 
         if (until && now() >= until) {
@@ -33844,6 +33900,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const ms = estimateMs(text);
         const until = now() + ms + 800;
 
+        window.__kioskTtsHeardUntil = now();
         window.__TTS_FINAL_MIC_OFF = true;
         window.__TTS_FINAL_MIC_OFF_UNTIL = Math.max(window.__TTS_FINAL_MIC_OFF_UNTIL || 0, until);
 
@@ -33870,17 +33927,19 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }, 400);
 
         clearTimeout(window.__TTS_FINAL_MIC_OFF_RESTART_TIMER);
-        window.__TTS_FINAL_MIC_OFF_RESTART_TIMER = setTimeout(function(){
+        window.__TTS_FINAL_MIC_OFF_RESTART_TIMER = setTimeout(function tryRestartAfterTts(){
+            if (window.__kioskTtsBlocking && window.__kioskTtsBlocking()) {
+                window.__TTS_FINAL_MIC_OFF_RESTART_TIMER = setTimeout(tryRestartAfterTts, 300);
+                return;
+            }
+
             window.__TTS_FINAL_MIC_OFF = false;
             window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
             window.__kioskTTSBusy = false;
             window.__kioskTTSBusyUntil = 0;
 
             clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-
-            setTimeout(function(){
-                startRecognitionAfterTTS();
-            }, 250);
+            startRecognitionAfterTTS();
         }, ms + 900);
 
         return window.__lastTTSFinalMicOff;
@@ -35371,6 +35430,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     const previousCommand = window.processVoiceCommand;
     if (typeof previousCommand === "function" && !previousCommand.__kioskAssistFront) {
         const wrappedCommand = function (text) {
+            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+                console.log("[kiosk] TTS 중 음성 차단:", text);
+                return;
+            }
             if (handleAssist(text)) return;
             return previousCommand.apply(this, arguments);
         };
@@ -35656,7 +35719,26 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }
     }
 
-    console.log("[kiosk] 상황 안내를 적용했습니다. 하이브리드 음성인식은 그대로 둡니다.");
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec && SpeechRec.prototype && !SpeechRec.prototype.start.__kioskTtsGuard) {
+        const previousStart = SpeechRec.prototype.start;
+        const guardedStart = function () {
+            if (!this.__kioskTtsGuard) {
+                this.__kioskTtsGuard = true;
+                this.addEventListener("result", function (event) {
+                    if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+                        console.log("[kiosk] TTS 중 음성 차단");
+                        event.stopImmediatePropagation();
+                    }
+                }, true);
+            }
+            return previousStart.apply(this, arguments);
+        };
+        guardedStart.__kioskTtsGuard = true;
+        SpeechRec.prototype.start = guardedStart;
+    }
+
+    console.log("[kiosk] 상황 안내를 적용했습니다. 말하는 동안에는 음성 인식을 받지 않습니다.");
 })();
 </script>
 
