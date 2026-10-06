@@ -22668,39 +22668,53 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
             .clean-bev-preview {
                 width: 100%;
                 display: grid;
-                grid-template-columns: 92px 1fr;
+                grid-template-columns: 128px 1fr;
                 gap: 0.55em;
                 align-items: center;
-                padding: 0.55em;
+                padding: 0.65em 0.7em;
                 border-radius: 1.25em;
                 background: rgba(255,255,255,0.72);
                 border: 1.5px solid rgba(150,120,80,0.18);
                 box-shadow: 0 8px 18px rgba(120,80,35,0.08);
-                min-height: 118px;
-                overflow: hidden;
+                min-height: 188px;
+                overflow: visible;
             }
 
             .clean-bev-cupbox {
-                width: 92px;
-                height: 112px;
+                width: 128px;
+                height: 188px;
                 position: relative;
-                overflow: hidden;
+                overflow: visible;
                 display: flex;
-                align-items: center;
+                align-items: flex-end;
                 justify-content: center;
+                flex-shrink: 0;
             }
 
             .clean-bev-cupbox .cup-wrapper {
-                transform: scale(0.46) !important;
-                transform-origin: center center !important;
-                width: 150px !important;
-                height: 220px !important;
+                transform: none !important;
+                transform-origin: center bottom !important;
+                width: 112px !important;
+                height: 168px !important;
                 margin: 0 !important;
+                position: relative !important;
+                overflow: visible !important;
+                flex: 0 0 auto !important;
             }
 
             .clean-bev-cupbox .cup-body {
-                width: 130px !important;
-                height: 185px !important;
+                width: 100px !important;
+                height: 146px !important;
+                left: 50% !important;
+                right: auto !important;
+                bottom: 0 !important;
+                transform: translateX(-50%) !important;
+                position: absolute !important;
+            }
+
+            .clean-bev-cupbox .cup-whip-img {
+                left: 50%;
+                margin-left: -30px;
             }
 
             .clean-bev-summary {
@@ -23063,10 +23077,13 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
 
     function getMiniCupOnly(itemObj) {
         const html = getCupHTML(itemObj);
+        const start = html.indexOf('<div class="cup-wrapper');
+        const end = html.indexOf('<div class="flex flex-col justify-center');
+        const cup = (start >= 0 && end > start) ? html.slice(start, end) : html;
 
         return `
             <div class="clean-bev-cupbox">
-                ${html}
+                ${cup}
             </div>
         `;
     }
@@ -23363,34 +23380,53 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             .clean-bev-preview {
                 width: 100%;
                 display: grid;
-                grid-template-columns: 92px 1fr;
+                grid-template-columns: 128px 1fr;
                 gap: 0.55em;
                 align-items: center;
-                padding: 0.55em;
+                padding: 0.65em 0.7em;
                 border-radius: 1.25em;
                 background: rgba(255,255,255,0.72);
                 border: 1.5px solid rgba(150,120,80,0.18);
                 box-shadow: 0 8px 18px rgba(120,80,35,0.08);
-                min-height: 118px;
-                overflow: hidden;
+                min-height: 188px;
+                overflow: visible;
             }
 
             .clean-bev-cupbox {
-                width: 92px;
-                height: 112px;
+                width: 128px;
+                height: 188px;
                 position: relative;
-                overflow: hidden;
+                overflow: visible;
                 display: flex;
-                align-items: center;
+                align-items: flex-end;
                 justify-content: center;
+                flex-shrink: 0;
             }
 
             .clean-bev-cupbox .cup-wrapper {
-                transform: scale(0.46) !important;
-                transform-origin: center center !important;
-                width: 150px !important;
-                height: 220px !important;
+                transform: none !important;
+                transform-origin: center bottom !important;
+                width: 112px !important;
+                height: 168px !important;
                 margin: 0 !important;
+                position: relative !important;
+                overflow: visible !important;
+                flex: 0 0 auto !important;
+            }
+
+            .clean-bev-cupbox .cup-body {
+                width: 100px !important;
+                height: 146px !important;
+                left: 50% !important;
+                right: auto !important;
+                bottom: 0 !important;
+                transform: translateX(-50%) !important;
+                position: absolute !important;
+            }
+
+            .clean-bev-cupbox .cup-whip-img {
+                left: 50%;
+                margin-left: -30px;
             }
 
             .clean-bev-summary {
