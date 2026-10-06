@@ -583,6 +583,14 @@ def serve_use_metrics_script():
     return FileResponse(script, media_type="application/javascript")
 
 
+@app.get("/kiosk_customer.js")
+def serve_kiosk_customer():
+    script = BASE_DIR / "kiosk_customer.js"
+    if not script.exists():
+        raise HTTPException(status_code=404, detail="kiosk_customer.js not found")
+    return FileResponse(script, media_type="application/javascript")
+
+
 # ============================================================
 # STT API
 # ============================================================

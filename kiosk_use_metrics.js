@@ -47,7 +47,7 @@
         const v = compact(variant);
         const c = compact(canonical);
         if (!store || !v || !c || v === c) return false;
-        if (v.length < 4 || YESNO.test(v)) return false;
+        if (v.length < 2 || YESNO.test(v)) return false;
         if (String(variant).length > 40 || String(canonical).length > 40) return false;
         store[v] = String(canonical).trim();
         const keys = Object.keys(store);
@@ -182,7 +182,7 @@
             const heard = String(variant || "").trim();
             const heardCompact = compact(heard);
             if (!target || !heard || heardCompact === compact(target)) return;
-            if (heardCompact.length < 4 || YESNO.test(heardCompact)) {
+            if (heardCompact.length < 2 || YESNO.test(heardCompact)) {
                 record({
                     kind: "learn",
                     outcome: "loss",
