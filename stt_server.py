@@ -14,6 +14,27 @@ from threading import Lock
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+
+import av
+
+_av_open = av.open
+
+
+def _open_audio_compat(*args, **kwargs):
+    """PyAV 16부터 av.open()의 metadata_errors 인자가 빠졌다.
+    faster-whisper 1.2.1은 그 인자를 계속 넘기므로, 거부될 때만 빼고 다시 연다.
+    """
+    try:
+        return _av_open(*args, **kwargs)
+    except TypeError as exc:
+        if "metadata_errors" not in kwargs or "metadata_errors" not in str(exc):
+            raise
+        kwargs.pop("metadata_errors", None)
+        return _av_open(*args, **kwargs)
+
+
+av.open = _open_audio_compat
+
 from faster_whisper import WhisperModel
 
 
