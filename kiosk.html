@@ -35346,6 +35346,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     if (typeof previousSpeak === "function" && !previousSpeak.__kioskLastSpokenWrap) {
         const wrappedSpeak = function (text) {
             if (text) window.__kioskLastSpoken = String(text);
+            window.__kioskTtsHeardUntil = Date.now();
             const self = this;
             const args = arguments;
             const run = function () { return previousSpeak.apply(self, args); };
@@ -35503,14 +35504,34 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         drain();
     }
 
-    function isMuted() {
-        const until = window.__TTS_FINAL_MIC_OFF_UNTIL || 0;
-        if (until && Date.now() >= until) {
-            window.__TTS_FINAL_MIC_OFF = false;
-            window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
-            return false;
+    function ttsBlocking() {
+        let synth = false;
+        try {
+            synth = !!(window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending));
+        } catch (e) {}
+        if (synth) {
+            window.__kioskTtsHeardUntil = Date.now();
+            return true;
         }
-        return !!window.__TTS_FINAL_MIC_OFF || Date.now() < until || window.isTtsSpeaking === true;
+        return Date.now() - (window.__kioskTtsHeardUntil || 0) < 800;
+    }
+
+    function discardRecorder() {
+        speaking = false;
+        silenceStart = 0;
+        speechStart = 0;
+        if (!recorder || recorder.state !== "recording") {
+            armRecorder();
+            return;
+        }
+        const old = recorder;
+        recorder = null;
+        recordChunks = [];
+        old.onstop = function () {
+            recordChunks = [];
+            armRecorder();
+        };
+        try { old.stop(); } catch (e) { armRecorder(); }
     }
 
     async function drain() {
@@ -35527,13 +35548,13 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             });
             const result = await response.json();
             const text = String((result && result.text) || "").trim();
-            if (text && typeof window.processVoiceCommand === "function") {
-                const assist = Assist.classify(text, menus());
-                if (!assist && isMuted()) {
-                    console.log("[kiosk] TTS 중 일반 발화는 무시:", text);
-                } else {
-                    window.processVoiceCommand(text);
-                }
+            if (!text) return;
+            if (ttsBlocking()) {
+                console.log("[kiosk] TTS 중 음성 차단:", text);
+                return;
+            }
+            if (typeof window.processVoiceCommand === "function") {
+                window.processVoiceCommand(text);
             }
         } catch (e) {
             console.error("[kiosk] transcribe", e);
@@ -35544,6 +35565,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 
     function finishPhrase() {
+        const blocked = ttsBlocking();
         if (!recorder || recorder.state !== "recording") {
             speaking = false;
             armRecorder();
@@ -35556,14 +35578,32 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         old.onstop = function () {
             const chunks = recordChunks.slice();
             recordChunks = [];
-            enqueue(new Blob(chunks, { type: "audio/webm" }));
+            if (!blocked) enqueue(new Blob(chunks, { type: "audio/webm" }));
+            else console.log("[kiosk] TTS 중 녹음은 인식하지 않습니다.");
             armRecorder();
         };
         try { old.stop(); } catch (e) { armRecorder(); }
     }
 
+    let holdForTts = false;
+
     function vad() {
         if (!engineOn) return;
+        const blocked = ttsBlocking();
+        if (blocked) {
+            if (!holdForTts) {
+                holdForTts = true;
+                discardRecorder();
+            }
+            requestAnimationFrame(vad);
+            return;
+        }
+        if (holdForTts) {
+            holdForTts = false;
+            discardRecorder();
+            requestAnimationFrame(vad);
+            return;
+        }
         const now = Date.now();
         const level = volume();
 
