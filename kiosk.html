@@ -25603,6 +25603,26 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }) || null;
     }
 
+    function lastVisible(selector) {
+        const wrapper = getWrapper();
+
+        if (!wrapper) return null;
+
+        const list = Array.from(wrapper.querySelectorAll(selector)).filter(el => {
+            const rect = el.getBoundingClientRect();
+            const style = getComputedStyle(el);
+
+            return (
+                style.display !== "none" &&
+                style.visibility !== "hidden" &&
+                rect.width > 8 &&
+                rect.height > 8
+            );
+        });
+
+        return list.length ? list[list.length - 1] : null;
+    }
+
     function syncZoomClass() {
         const level = getZoomLevel();
 
@@ -25664,17 +25684,30 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
             case "category_select":
                 target =
-                    firstVisible("#controls-area .glass-panel") ||
-                    firstVisible("#controls-area .status-giant");
-                if (target) focusElement(target, "top");
+                    lastVisible("#controls-area .status-giant") ||
+                    lastVisible("#controls-area .glass-panel");
+                if (target) focusElement(target, "bottom");
                 else resetPan();
                 break;
 
             case "menu_grid":
+                target = document.querySelector(".highlighted-menu");
+                if (target) {
+                    focusElement(target, "center");
+                    break;
+                }
                 target =
-                    document.querySelector(".highlighted-menu") ||
-                    firstVisible(".menu-card");
-                if (target) focusElement(target, "top");
+                    lastVisible("#controls-area .status-giant") ||
+                    lastVisible(".menu-card");
+                if (target) focusElement(target, "bottom");
+                else resetPan();
+                break;
+
+            case "taste_select_prompt":
+                target =
+                    lastVisible("#controls-area .glass-panel") ||
+                    lastVisible("#controls-area .status-giant");
+                if (target) focusElement(target, "bottom");
                 else resetPan();
                 break;
 
@@ -25686,10 +25719,18 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 else resetPan();
                 break;
 
+            case "cup_size":
+                target =
+                    lastVisible("#controls-area .glass-panel") ||
+                    lastVisible("#controls-area .status-giant") ||
+                    document.getElementById("ai-prompt");
+                if (target) focusElement(target, "bottom");
+                else resetPan();
+                break;
+
             case "temp":
             case "upsell":
             case "quantity":
-            case "cup_size":
             case "beverage_option_prompt":
             case "add_more_prompt":
             case "place":
@@ -25717,10 +25758,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             case "summary":
             case "summary_add_quantity":
                 target =
-                    firstVisible("#controls-area .status-giant") ||
-                    firstVisible(".summary-item") ||
-                    firstVisible("#controls-area .glass-panel");
-                if (target) focusElement(target, "center");
+                    lastVisible("#controls-area .status-giant") ||
+                    lastVisible(".summary-item") ||
+                    lastVisible("#controls-area .glass-panel");
+                if (target) focusElement(target, "bottom");
                 else resetPan();
                 break;
 

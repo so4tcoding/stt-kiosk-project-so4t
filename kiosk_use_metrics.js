@@ -342,36 +342,95 @@
             return true;
         }
 
+        function currentZoom() {
+            let lexical = 0;
+            try { lexical = Number(zoomLevel) || 0; } catch (e) {}
+            return Math.max(0, lexical, Number(window.zoomLevel) || 0);
+        }
+
+        function rememberZoom(level) {
+            level = Math.max(0, Math.min(3, Number(level) || 0));
+            window.zoomLevel = level;
+            try { zoomLevel = level; } catch (e) {}
+            return level;
+        }
+
+        function clearZoomChrome() {
+            [
+                "readable-zoom", "readable-zoom-level-1", "readable-zoom-level-2", "readable-zoom-level-3", "readable-focus-bottom",
+                "fast-readable-zoom", "fast-readable-zoom-level-1", "fast-readable-zoom-level-2", "fast-readable-zoom-level-3",
+                "final-zoom-active", "final-zoom-level-1", "final-zoom-level-2", "final-zoom-level-3"
+            ].forEach(function (name) {
+                document.body.classList.remove(name);
+            });
+            const badge = document.getElementById("magnifier-badge");
+            if (badge) badge.classList.add("hidden");
+            const main = document.getElementById("main-content");
+            if (main) {
+                main.style.overflowY = "hidden";
+                main.scrollTop = 0;
+            }
+        }
+
+        function showZoomedView(mode) {
+            const run = function () {
+                if ((Number(window.zoomLevel) || 0) <= 0) return;
+                if (typeof window.finalZoomFocusImportant === "function") window.finalZoomFocusImportant();
+                if (mode === "bottom" && typeof window.finalZoomMoveBottom === "function") window.finalZoomMoveBottom();
+            };
+            try { run(); } catch (e) {}
+            setTimeout(run, 180);
+            setTimeout(run, 420);
+        }
+
+        function resetZoomView() {
+            rememberZoom(0);
+            try { clearZoomChrome(); } catch (e) {}
+            const wrapper = document.getElementById("fit-wrapper");
+            if (wrapper) {
+                wrapper.style.removeProperty("transform");
+                wrapper.style.removeProperty("transition");
+            }
+            if (typeof fitToScreen === "function") {
+                try { fitToScreen(); } catch (e) {}
+            }
+        }
+
         function applyKnownPhrase(text) {
             const stage = typeof currentStageName === "undefined" ? "" : currentStageName;
             const raw = plain(text);
             if (!raw || !stage) return false;
 
-            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게|더키워/.test(raw))) {
-                try {
-                    if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
-                    zoomLevel = Math.min(4, (Number(zoomLevel) || 0) + 1);
-                    if (typeof updateZoomUI === "function") updateZoomUI();
-                } catch (e) {}
-                if (typeof speakText === "function") speakText("화면을 확대했습니다.");
+            if (!/소리/.test(raw) && /원래대로|원래크기|기본크기|확대해제|화면원래|원래로/.test(raw)) {
+                try { resetZoomView(); } catch (e) {}
+                if (typeof speakText === "function") speakText("화면을 원래대로 돌렸습니다.");
                 return true;
             }
 
-            if (!/소리/.test(raw) && ((/글씨|글자|화면/.test(raw) && /줄여|작게|축소/.test(raw)) || /더작게|작게해/.test(raw))) {
+            if (!/소리/.test(raw) && ((/글씨|글자|화면/.test(raw) && /줄여|작게|축소/.test(raw)) || /더작게|작게해|화면축소/.test(raw) || /^축소(해|해줘|해주세요|요)?$/.test(raw))) {
                 try {
-                    if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
-                    zoomLevel = Math.max(0, (Number(zoomLevel) || 0) - 1);
-                    if (typeof updateZoomUI === "function") updateZoomUI();
+                    const next = rememberZoom(currentZoom() - 1);
+                    if (next > 0) showZoomedView();
+                    else resetZoomView();
                 } catch (e) {}
                 if (typeof speakText === "function") speakText("화면을 줄였습니다.");
                 return true;
             }
 
+            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게|더키워/.test(raw))) {
+                try {
+                    rememberZoom(currentZoom() + 1);
+                    showZoomedView();
+                } catch (e) {}
+                if (typeof speakText === "function") speakText("화면을 확대했습니다.");
+                return true;
+            }
+
             if (/아래보여|밑에보여|밑으로|아랫부분|밑부분|아래쪽/.test(raw) && !/왼쪽|오른쪽|번째|거/.test(raw)) {
                 try {
-                    if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
-                    if ((Number(zoomLevel) || 0) <= 0) zoomLevel = 1;
-                    if (typeof updateZoomUI === "function") updateZoomUI("bottom");
+                    if (currentZoom() <= 0) rememberZoom(1);
+                    else rememberZoom(currentZoom());
+                    showZoomedView("bottom");
                 } catch (e) {}
                 if (typeof speakText === "function") speakText("아래쪽 내용을 보여드리겠습니다.");
                 return true;
