@@ -407,7 +407,7 @@
                     speakText("카드가 안 되면 현금으로 말씀해 주세요.");
                     return true;
                 }
-                if (/현금없|현찰없|돈없/.test(raw) && typeof speakText === "function") {
+                if (/현금없|현찰없|돈없|모자/.test(raw) && /현금|돈|현찰/.test(raw) && typeof speakText === "function") {
                     speakText("현금이 없으면 카드로 말씀해 주세요.");
                     return true;
                 }
@@ -419,7 +419,7 @@
                     selectPayment("현금 결제");
                     return true;
                 }
-                if ((/페이|간편결제|삼성페|카카오|네이버페|찍어|만원|천원|거스름/.test(raw)) && typeof speakText === "function") {
+                if ((/페이|간편결제|삼성페|카카오|네이버페|찍어|만원|천원|거스름|수표|상품권|외상|나중에|나눠|분할/.test(raw)) && typeof speakText === "function") {
                     speakText("카드나 현금만 됩니다. 카드 또는 현금을 말씀해 주세요.");
                     return true;
                 }
@@ -611,6 +611,11 @@
                 if (typeof transitionTo === "function" && typeof renderCategorySelect === "function") {
                     transitionTo("category_select", renderCategorySelect);
                 }
+                return true;
+            }
+
+            if (/menu_grid/.test(stage) && /가운데|한가운데/.test(raw) && typeof speakText === "function") {
+                speakText("가운데는 애매합니다. 몇 번째인지 말씀해 주세요.");
                 return true;
             }
 

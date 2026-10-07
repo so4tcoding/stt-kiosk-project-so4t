@@ -1109,7 +1109,17 @@
             {group:"시작",prep:"welcome",text:"초밥 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"시작",prep:"welcome",text:"도시락 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"시작",prep:"welcome",text:"감자탕 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
-            {group:"시작",prep:"welcome",text:"미숫가루 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}}
+            {group:"시작",prep:"welcome",text:"미숫가루 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"결제",prep:"pay",text:"현금이 모자라요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"수표로 할게요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"상품권 있어요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"외상으로 할게요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"나중에 계산할게요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"나눠서 결제할게요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"메뉴",prep:"grid:음료",text:"가운데 거",intended:"",expect:{type:"spoken",value:"번째",stage:"menu_grid"}},
+            {group:"메뉴",prep:"grid:국밥",text:"한가운데",intended:"",expect:{type:"spoken",value:"번째",stage:"menu_grid"}},
+            {group:"결제",prep:"pay",text:"그냥 카드",intended:"카드",expect:{type:"pay",value:"카드"}},
+            {group:"결제",prep:"pay",text:"분할 결제",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}}
         ];
     }
 
