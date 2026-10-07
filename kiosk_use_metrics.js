@@ -373,12 +373,12 @@
                     return true;
                 }
                 const tastes = [
-                    { name: "달콤", words: ["달콤", "달달", "단거", "단맛"] },
+                    { name: "달콤", words: ["달콤", "달달", "단거", "단맛", "달아"] },
                     { name: "상큼", words: ["상큼", "새콤", "신거", "신맛"] },
                     { name: "구수", words: ["구수"] },
                     { name: "고소", words: ["고소"] },
-                    { name: "얼큰", words: ["얼큰", "매운", "매콤"] },
-                    { name: "짭짤", words: ["짭짤", "짠"] }
+                    { name: "얼큰", words: ["얼큰", "매운", "매콤", "매우", "매워"] },
+                    { name: "짭짤", words: ["짭짤", "짠", "짜요"] }
                 ];
                 const hit = tastes.filter(function (taste) {
                     return taste.words.some(function (word) {

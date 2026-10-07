@@ -302,7 +302,27 @@
             { group: "결제", prep: "place", text: "포장이고", intended: "포장", expect: { type: "place", value: "포장" } },
             { group: "결제", prep: "place", text: "매장이고", intended: "매장에서", expect: { type: "place", value: "매장" } },
             { group: "결제", prep: "pay", text: "카드입니다", intended: "카드", expect: { type: "pay", value: "카드" } },
-            { group: "결제", prep: "pay", text: "현금입니다", intended: "현금", expect: { type: "pay", value: "현금" } }
+            { group: "결제", prep: "pay", text: "현금입니다", intended: "현금", expect: { type: "pay", value: "현금" } },
+            { group: "메뉴", prep: "grid:음료", text: "3번", intended: "세번째", expect: { type: "spoken", value: "레몬", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "4번", intended: "네번째", expect: { type: "spoken", value: "쿠키", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "콜라로 할게요", intended: "콜라", expect: { type: "itemStage", item: "콜라", stage: "quantity" } },
+            { group: "메뉴", prep: "grid:음료", text: "주스로 할게요", intended: "오렌지 주스", expect: { type: "itemStage", item: "오렌지", stage: "quantity" } },
+            { group: "메뉴", prep: "grid:커피", text: "라떼로 할게요", intended: "카페라떼", expect: { type: "itemStage", item: "카페라떼", stage: "temp" } },
+            { group: "메뉴", prep: "grid:커피", text: "아메리카노로", intended: "아메리카노", expect: { type: "itemStage", item: "아메리카노", stage: "temp" } },
+            { group: "온도", prep: "temp:아메리카노", text: "따뜻하게 해 주이소", intended: "핫", expect: { type: "hot" } },
+            { group: "온도", prep: "temp:아메리카노", text: "차갑게 해 주이소", intended: "아이스", expect: { type: "ice" } },
+            { group: "온도", prep: "temp:아메리카노", text: "뜨거워요", intended: "핫", expect: { type: "hot" } },
+            { group: "온도", prep: "temp:아메리카노", text: "시원해요", intended: "아이스", expect: { type: "ice" } },
+            { group: "용량", prep: "cup:콜라", text: "큰 걸로 주이소", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "용량", prep: "cup:콜라", text: "작은 걸로 주이소", intended: "스몰", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "수량", prep: "qty:돼지국밥", text: "두 개 주이소", intended: "두 개", expect: { type: "countLeave", count: 2, item: "돼지" } },
+            { group: "결제", prep: "more", text: "계산 주이소", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "결제", prep: "place", text: "포장 주이소", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "결제", prep: "pay", text: "카드 주이소", intended: "카드", expect: { type: "pay", value: "카드" } },
+            { group: "추천", prep: "taste", text: "달아요", intended: "달콤", expect: { type: "gridHas", value: "덮밥", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "매워요", intended: "얼큰", expect: { type: "gridHas", value: "소고기", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "짜요", intended: "짭짤", expect: { type: "gridHas", value: "한우", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "고소해요", intended: "고소", expect: { type: "gridHas", value: "치즈", stage: "menu_grid" } }
         ];
     }
 
