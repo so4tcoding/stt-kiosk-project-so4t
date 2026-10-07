@@ -239,7 +239,7 @@
             if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명/.test(raw)) return 4;
             if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명/.test(raw)) return 3;
             if (/두잔|두개|둘이|두그릇|두명|두사람|2잔|2개|2명/.test(raw)) return 2;
-            if (/한잔|한개|한그릇|한명|혼자|한사람|1잔|1개|1명/.test(raw)) return 1;
+            if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명/.test(raw)) return 1;
             return 0;
         }
 
@@ -302,6 +302,16 @@
             const raw = plain(text);
             if (!raw || !stage) return false;
 
+            if (/글씨작|글자가작|글씨가작|작아보|잘안보/.test(raw) && !/소리/.test(raw)) {
+                try {
+                    if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
+                    zoomLevel = Math.min(4, (Number(zoomLevel) || 0) + 1);
+                    if (typeof updateZoomUI === "function") updateZoomUI();
+                } catch (e) {}
+                if (typeof speakText === "function") speakText("화면을 확대했습니다.");
+                return true;
+            }
+
             if (/소리키워|소리크게|소리올려|크게말해|말크게/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
@@ -334,7 +344,7 @@
             }
 
             if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
-                if (/포장|들고|가져|가지고|밖에서/.test(raw)) {
+                if (/포장|들고|가져|가지고|밖에서|밖에/.test(raw)) {
                     orderState.place = "포장해서 가기";
                     transitionTo("summary", renderSummary);
                     return true;
@@ -349,7 +359,7 @@
             if (stage === "taste_select_prompt") {
                 const tastes = [
                     { name: "달콤", words: ["달콤", "달달", "단거", "단맛"] },
-                    { name: "상큼", words: ["상큼", "새콤"] },
+                    { name: "상큼", words: ["상큼", "새콤", "신거", "신맛"] },
                     { name: "구수", words: ["구수"] },
                     { name: "고소", words: ["고소"] },
                     { name: "얼큰", words: ["얼큰", "매운", "매콤"] },
