@@ -972,7 +972,32 @@
             {group:"시작",prep:"welcome",text:"예예",intended:"",expect:{type:"stage",value:"open_order_prompt"}},
             {group:"시작",prep:"welcome",text:"네네",intended:"",expect:{type:"stage",value:"open_order_prompt"}},
             {group:"메뉴",prep:"grid:커피",text:"아아로 할게요",intended:"아메리카노",expect:{type:"ice"}},
-            {group:"메뉴",prep:"welcome",text:"뜨아 주세요",intended:"아메리카노",expect:{type:"hot"}}
+            {group:"메뉴",prep:"welcome",text:"뜨아 주세요",intended:"아메리카노",expect:{type:"hot"}},
+            {group:"시작",prep:"welcome",text:"밥 좀 주이소",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"공기 좀 주이소",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"추천",prep:"welcome",text:"추천 주이소",intended:"추천해줘",expect:{type:"stage",value:"taste_select_prompt"}},
+            {group:"뒤로",prep:"qty:오렌지 주스",text:"뒤로 가 보이소",intended:"이전으로",expect:{type:"back",item:"오렌지"}},
+            {group:"메뉴",prep:"confirm:딸기 라떼",text:"맞심더",intended:"딸기 라떼",expect:{type:"itemStage",item:"딸기",stage:"quantity"}},
+            {group:"메뉴",prep:"confirm:오렌지 주스",text:"그지요",intended:"오렌지 주스",expect:{type:"itemStage",item:"오렌지",stage:"quantity"}},
+            {group:"메뉴",prep:"confirm:콜라",text:"아니예",intended:"",expect:{type:"ignore"}},
+            {group:"결제",prep:"sum",text:"결제해 보이소",intended:"결제",expect:{type:"stage",value:"payment"}},
+            {group:"메뉴",prep:"grid:커피",text:"아아 두 잔",intended:"아메리카노",expect:{type:"countLeave",count:2,item:"아메리카노"}},
+            {group:"메뉴",prep:"welcome",text:"뜨아 두 잔",intended:"아메리카노",expect:{type:"countLeave",count:2,item:"아메리카노"}},
+            {group:"메뉴",prep:"grid:음료",text:"오렌지쥬스 두 잔",intended:"오렌지 주스",expect:{type:"count",count:2,stage:"cup_size",item:"오렌지"}},
+            {group:"메뉴",prep:"welcome",text:"레모네이드 주이소",intended:"레몬 에이드",expect:{type:"itemStage",item:"레몬",stage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"순댓국 주이소",intended:"순대국밥",expect:{type:"itemStage",item:"순대",stage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"싸이다 주이소",intended:"사이다",expect:{type:"itemStage",item:"사이다",stage:"quantity"}},
+            {group:"온도",prep:"temp:카페라떼",text:"아이스로 보이소",intended:"아이스",expect:{type:"ice"}},
+            {group:"온도",prep:"temp:아메리카노",text:"차갑게 해 보이소",intended:"아이스",expect:{type:"ice"}},
+            {group:"세트",prep:"upsell:치즈버거",text:"단품으로 보이소",intended:"단품",expect:{type:"single"}},
+            {group:"세트",prep:"upsell:불고기버거",text:"세트로 보이소",intended:"세트",expect:{type:"set"}},
+            {group:"용량",prep:"cup:콜라",text:"작은 걸로 보이소",intended:"스몰",expect:{type:"stage",value:"add_more_prompt"}},
+            {group:"단계",prep:"opt",text:"시럽 없이 보이소",intended:"1단계",expect:{type:"sugar",value:1}},
+            {group:"수량",prep:"qty:돼지국밥",text:"곱빼기 주이소",intended:"두 개",expect:{type:"countLeave",count:2,item:"돼지"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"다섯 식구요",intended:"다섯 개",expect:{type:"count",count:5,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:한우 불고기",text:"한 식구요",intended:"한 개",expect:{type:"countLeave",count:1,item:"한우"}},
+            {group:"안내",prep:"welcome",text:"소리 좀 키워 보이소",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"직원 좀 불러 보이소",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}}
         ];
     }
 

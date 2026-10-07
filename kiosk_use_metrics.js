@@ -488,7 +488,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이/.test(raw) || /^밥(주세요|좀|주이소)?$/.test(raw)) && typeof speakText === "function") {
+            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -805,7 +805,7 @@
                 return true;
             }
 
-            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거|이걸로|그걸로|이거지|그지/.test(raw) && !/아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거|말고|아이가/.test(raw) && typeof selectSpecificItem === "function") {
+            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거|이걸로|그걸로|이거지|그지|맞심/.test(raw) && !/아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거|말고|아이가/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem(pendingMenuName);
                 return afterSelect(raw);
             }
