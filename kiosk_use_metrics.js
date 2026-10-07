@@ -472,7 +472,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /목말라|목마르/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+            if (stage === "welcome" && /목말라|목마르|갈증/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                 selectedCategory = "음료";
                 currentGridMenus = customMenus.filter(function (menu) { return menu.category === "음료"; });
                 currentGridTitle = "음료 메뉴판";
@@ -665,7 +665,7 @@
                     if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
-                if (/미지근/.test(raw) && typeof speakText === "function") {
+                if (/미지근|연하|진하/.test(raw) && typeof speakText === "function") {
                     speakText("뜨거운 것과 아이스 중에서 말씀해 주세요.");
                     return true;
                 }
@@ -714,9 +714,9 @@
                 let level = 0;
                 if (/낮게|싱겁|덜달|안달|없이|달지않|빼|없애|내려/.test(raw)) level = 1;
                 else if (/조금|적게/.test(raw)) level = 2;
-                else if (/적당|그냥|보통/.test(raw)) level = 3;
-                else if (/많이/.test(raw)) level = 4;
+                else if (/많이/.test(raw) && !/달게|달콤/.test(raw)) level = 4;
                 else if (/달게|달콤|가득|달아|올려/.test(raw)) level = 5;
+                else if (/적당|그냥|보통/.test(raw)) level = 3;
                 if (!level) return false;
                 if (!tempItem.beverageOptions) tempItem.beverageOptions = {};
                 tempItem.beverageOptions[optionList[optionStepIndex].key] = level;
@@ -729,14 +729,14 @@
                 return true;
             }
 
-            if (stage === "menu_confirm" && /아니|틀려|틀리|틀립|다시골|다른걸|다른거/.test(raw)) {
+            if (stage === "menu_confirm" && /아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거/.test(raw)) {
                 pendingMenuName = "";
                 currentStageName = "menu_grid";
                 if (typeof renderMenuGrid === "function") renderMenuGrid();
                 return true;
             }
 
-            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거|이걸로|그걸로|이거지/.test(raw) && !/아니|틀려|틀리|틀립|다시골|다른걸|다른거/.test(raw) && typeof selectSpecificItem === "function") {
+            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거|이걸로|그걸로|이거지/.test(raw) && !/아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem(pendingMenuName);
                 return afterSelect(raw);
             }
