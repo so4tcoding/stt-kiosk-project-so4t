@@ -12028,8 +12028,8 @@ window.isTtsSpeaking = window.isTtsSpeaking || false;
 
 // 환경에 따라 조절 가능
 const WHISPER_VAD_THRESHOLD = 0.025;
-const WHISPER_SILENCE_MS = 750;
-const WHISPER_MIN_RECORD_MS = 500;
+const WHISPER_SILENCE_MS = 320;
+const WHISPER_MIN_RECORD_MS = 260;
 const WHISPER_MAX_RECORD_MS = 4500;
 const WHISPER_RESTART_DELAY_MS = 150;
 
@@ -21264,7 +21264,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
         safetyTimer = setTimeout(() => {
             window.__ttsHardBlock = false;
             window.isTtsSpeaking = false;
-            window.__ttsBlockUntil = Date.now() + 900;
+            window.__ttsBlockUntil = 0;
             document.body.classList.remove("tts-speaking");
         }, estimatedMs + 1500);
 
@@ -21279,7 +21279,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
             */
             window.__ttsHardBlock = false;
             window.isTtsSpeaking = false;
-            window.__ttsBlockUntil = Date.now() + 900;
+            window.__ttsBlockUntil = 0;
 
             document.body.classList.remove("tts-speaking");
 
@@ -22921,7 +22921,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
         let safetyTimer = setTimeout(() => {
             window.isTtsSpeaking = false;
             window.__ttsHardBlock = false;
-            window.__ttsBlockUntil = Date.now() + 900;
+            window.__ttsBlockUntil = 0;
             document.body.classList.remove("tts-speaking");
         }, Math.max(2500, message.length * 210) + 1200);
 
@@ -22940,7 +22940,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
 
             window.isTtsSpeaking = false;
             window.__ttsHardBlock = false;
-            window.__ttsBlockUntil = Date.now() + 900;
+            window.__ttsBlockUntil = 0;
 
             try {
                 sendCommandToArduino("LED_ON");
@@ -22958,7 +22958,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
 
             window.isTtsSpeaking = false;
             window.__ttsHardBlock = false;
-            window.__ttsBlockUntil = Date.now() + 900;
+            window.__ttsBlockUntil = 0;
 
             if (onEndCallback) {
                 onEndCallback();
@@ -23654,7 +23654,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             document.body.classList.remove("tts-speaking");
             window.isTtsSpeaking = false;
             window.__ttsHardBlock = false;
-            window.__ttsBlockUntil = Date.now() + 900;
+            window.__ttsBlockUntil = 0;
             if (runCallback && typeof job.onEndCallback === "function") {
                 try { job.onEndCallback(); } catch (e) {}
             }
@@ -27468,7 +27468,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     async function startHybrid(){
         if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
             clearTimeout(restartTimer);
-            restartTimer = setTimeout(startHybrid, 400);
+            restartTimer = setTimeout(startHybrid, 50);
             return;
         }
 
@@ -27529,7 +27529,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 running = false;
 
                 clearTimeout(restartTimer);
-                restartTimer = setTimeout(startHybrid, 700);
+                restartTimer = setTimeout(startHybrid, 80);
             };
 
             rec.start();
@@ -33953,29 +33953,23 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }
     }
 
+    function ttsLive() {
+        if (synthActive()) return true;
+        if (window.isTtsSpeaking === true) return true;
+        return false;
+    }
+
     window.__kioskTtsBlocking = function () {
-        const until = window.__TTS_FINAL_MIC_OFF_UNTIL || 0;
-        const cap = until ? until + 2000 : 0;
-        if (synthActive() && (!cap || now() < cap)) {
-            window.__kioskTtsHeardUntil = now();
-            window.__TTS_FINAL_MIC_OFF = true;
-            return true;
-        }
-        return now() - (window.__kioskTtsHeardUntil || 0) < 800;
+        return ttsLive();
     };
 
     function isMuted() {
-        if (window.__kioskTtsBlocking()) return true;
-
-        const until = window.__TTS_FINAL_MIC_OFF_UNTIL || 0;
-
-        if (until && now() >= until) {
-            window.__TTS_FINAL_MIC_OFF = false;
-            window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
-            return false;
-        }
-
-        return !!window.__TTS_FINAL_MIC_OFF || now() < until;
+        if (ttsLive()) return true;
+        window.__TTS_FINAL_MIC_OFF = false;
+        window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
+        window.__kioskTTSBusy = false;
+        window.__kioskTTSBusyUntil = 0;
+        return false;
     }
 
     function secondsLeft() {
@@ -34101,22 +34095,28 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         return false;
     }
 
+    function releaseMicAfterTts() {
+        if (ttsLive()) {
+            window.__TTS_FINAL_MIC_OFF_RESTART_TIMER = setTimeout(releaseMicAfterTts, 50);
+            return;
+        }
+        window.__TTS_FINAL_MIC_OFF = false;
+        window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
+        window.__kioskTtsHeardUntil = 0;
+        window.__kioskTTSBusy = false;
+        window.__kioskTTSBusyUntil = 0;
+        window.__ttsBlockUntil = 0;
+        clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
+        startRecognitionAfterTTS();
+    }
+
     function muteMicForTTS(text, reason) {
-        const ms = estimateMs(text);
-        const until = now() + ms + 800;
-
-        window.__kioskTtsHeardUntil = now();
         window.__TTS_FINAL_MIC_OFF = true;
-        window.__TTS_FINAL_MIC_OFF_UNTIL = Math.max(window.__TTS_FINAL_MIC_OFF_UNTIL || 0, until);
-
         window.__kioskTTSBusy = true;
-        window.__kioskTTSBusyUntil = Math.max(window.__kioskTTSBusyUntil || 0, until);
 
         window.__lastTTSFinalMicOff = {
             at: new Date().toISOString(),
             text: rawText(text).slice(0, 160),
-            ms,
-            until: window.__TTS_FINAL_MIC_OFF_UNTIL,
             reason: reason || "tts"
         };
 
@@ -34124,28 +34124,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         stopRecognitionOnce(reason || "tts_start");
 
-        clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-        window.__TTS_FINAL_MIC_OFF_INTERVAL = setInterval(function(){
-            if (!isMuted()) {
-                clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-            }
-        }, 400);
-
         clearTimeout(window.__TTS_FINAL_MIC_OFF_RESTART_TIMER);
-        window.__TTS_FINAL_MIC_OFF_RESTART_TIMER = setTimeout(function tryRestartAfterTts(){
-            if (window.__kioskTtsBlocking && window.__kioskTtsBlocking()) {
-                window.__TTS_FINAL_MIC_OFF_RESTART_TIMER = setTimeout(tryRestartAfterTts, 300);
-                return;
-            }
-
-            window.__TTS_FINAL_MIC_OFF = false;
-            window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
-            window.__kioskTTSBusy = false;
-            window.__kioskTTSBusyUntil = 0;
-
-            clearInterval(window.__TTS_FINAL_MIC_OFF_INTERVAL);
-            startRecognitionAfterTTS();
-        }, ms + 900);
+        window.__TTS_FINAL_MIC_OFF_RESTART_TIMER = setTimeout(releaseMicAfterTts, 50);
 
         return window.__lastTTSFinalMicOff;
     }
@@ -35825,7 +35805,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             window.__kioskTtsHeardUntil = Date.now();
             return true;
         }
-        return Date.now() - (window.__kioskTtsHeardUntil || 0) < 800;
+        return false;
     }
 
     function discardRecorder() {

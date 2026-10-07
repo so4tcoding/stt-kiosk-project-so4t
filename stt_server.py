@@ -627,12 +627,12 @@ async def transcribe_audio(file: UploadFile = File(...)):
                 tmp_path,
                 language="ko",
                 task="transcribe",
-                beam_size=3,
-                best_of=3,
+                beam_size=1,
+                best_of=1,
                 vad_filter=True,
                 vad_parameters={
-                    "min_silence_duration_ms": 500,
-                    "speech_pad_ms": 200
+                    "min_silence_duration_ms": 200,
+                    "speech_pad_ms": 80
                 },
                 initial_prompt=INITIAL_PROMPT,
                 condition_on_previous_text=False,
