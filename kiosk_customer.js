@@ -322,7 +322,21 @@
             { group: "추천", prep: "taste", text: "달아요", intended: "달콤", expect: { type: "gridHas", value: "덮밥", stage: "menu_grid" } },
             { group: "추천", prep: "taste", text: "매워요", intended: "얼큰", expect: { type: "gridHas", value: "소고기", stage: "menu_grid" } },
             { group: "추천", prep: "taste", text: "짜요", intended: "짭짤", expect: { type: "gridHas", value: "한우", stage: "menu_grid" } },
-            { group: "추천", prep: "taste", text: "고소해요", intended: "고소", expect: { type: "gridHas", value: "치즈", stage: "menu_grid" } }
+            { group: "추천", prep: "taste", text: "고소해요", intended: "고소", expect: { type: "gridHas", value: "치즈", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "셔요", intended: "상큼", expect: { type: "gridHas", value: "레몬", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "시어요", intended: "상큼", expect: { type: "gridHas", value: "레몬", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "구수해요", intended: "구수", expect: { type: "gridHas", value: "아메리카노", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "담백해요", intended: "", expect: { type: "spoken", value: "달콤", stage: "taste_select_prompt" } },
+            { group: "추천", prep: "taste", text: "순해요", intended: "", expect: { type: "spoken", value: "달콤", stage: "taste_select_prompt" } },
+            { group: "단계", prep: "opt", text: "안 달아요", intended: "1단계", expect: { type: "sugar", value: 1 } },
+            { group: "단계", prep: "opt", text: "너무 달아", intended: "5단계", expect: { type: "sugar", value: 5 } },
+            { group: "단계", prep: "opt", text: "적당해요", intended: "3단계", expect: { type: "sugar", value: 3 } },
+            { group: "단계", prep: "opt", text: "그냥요", intended: "3단계", expect: { type: "sugar", value: 3 } },
+            { group: "용량", prep: "cup:콜라", text: "그냥 큰 거", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "결제", prep: "more", text: "이대로 계산", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "결제", prep: "place", text: "그대로 먹을게", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "메뉴", prep: "grid:음료", text: "5번", intended: "다섯번째", expect: { type: "spoken", value: "콜라", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "6번", intended: "여섯번째", expect: { type: "itemStage", item: "사이다", stage: "quantity" } }
         ];
     }
 
