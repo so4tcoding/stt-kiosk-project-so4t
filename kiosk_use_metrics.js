@@ -492,13 +492,37 @@
                 return true;
             }
 
+            if ((stage === "welcome" || stage === "open_order_prompt") && /커피/.test(raw) && !/아메리카노|라떼|디카페인|에스프레소/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                selectedCategory = "커피";
+                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "커피"; });
+                currentGridTitle = "커피 메뉴판";
+                transitionTo("menu_grid", renderMenuGrid);
+                return true;
+            }
+
+            if ((stage === "welcome" || stage === "open_order_prompt") && /음료/.test(raw) && !/콜라|사이다|주스|에이드|쉐이크|딸기/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                selectedCategory = "음료";
+                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "음료"; });
+                currentGridTitle = "음료 메뉴판";
+                transitionTo("menu_grid", renderMenuGrid);
+                return true;
+            }
+
+            if ((stage === "welcome" || stage === "open_order_prompt") && /디저트|후식/.test(raw) && !/케이크|아이스크림/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                selectedCategory = "디저트";
+                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "디저트"; });
+                currentGridTitle = "디저트 메뉴판";
+                transitionTo("menu_grid", renderMenuGrid);
+                return true;
+            }
+
             if (stage === "welcome" && /맛있어|맛있는거|뭐가좋|추천해/.test(raw) && typeof renderTasteSelectPrompt === "function") {
                 currentStageName = "taste_select_prompt";
                 renderTasteSelectPrompt();
                 return true;
             }
 
-            if ((stage === "welcome" || stage === "open_order_prompt") && /매운|얼큰|매콤/.test(raw) && /국/.test(raw) && !/안매|안맵/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+            if ((stage === "welcome" || stage === "open_order_prompt") && /매운|얼큰|매콤/.test(raw) && /국/.test(raw) && !/안매|안맵|덜매/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                 const matched = customMenus.filter(function (menu) {
                     return /얼큰|매운|매콤/.test(String(menu.taste || "") + String(menu.name || ""));
                 });
@@ -542,7 +566,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /맵|매운|매워/.test(raw) && /못|싫/.test(raw) && typeof speakText === "function") {
+            if (stage === "welcome" && (/안매|안맵|덜매/.test(raw) || (/맵|매운|매워/.test(raw) && /못|싫/.test(raw))) && typeof speakText === "function") {
                 speakText("순한 맛은 따로 없습니다. 달콤, 상큼, 구수, 고소, 얼큰, 짭짤한 맛 중에서 골라주세요.");
                 return true;
             }

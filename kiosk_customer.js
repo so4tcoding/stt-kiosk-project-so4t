@@ -1119,7 +1119,15 @@
             {group:"메뉴",prep:"grid:음료",text:"가운데 거",intended:"",expect:{type:"spoken",value:"번째",stage:"menu_grid"}},
             {group:"메뉴",prep:"grid:국밥",text:"한가운데",intended:"",expect:{type:"spoken",value:"번째",stage:"menu_grid"}},
             {group:"결제",prep:"pay",text:"그냥 카드",intended:"카드",expect:{type:"pay",value:"카드"}},
-            {group:"결제",prep:"pay",text:"분할 결제",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}}
+            {group:"결제",prep:"pay",text:"분할 결제",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"시작",prep:"welcome",text:"안 매운 거 주세요",intended:"",expect:{type:"spoken",value:"달콤",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"덜 매운 국",intended:"",expect:{type:"spoken",value:"달콤",stage:"welcome"}},
+            {group:"메뉴",prep:"welcome",text:"커피 추천해 줘",intended:"커피",expect:{type:"category",value:"커피",notStage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"음료 추천해 줘",intended:"음료",expect:{type:"category",value:"음료",notStage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"디저트 추천해 줘",intended:"디저트",expect:{type:"category",value:"디저트",notStage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"순한 음료",intended:"음료",expect:{type:"category",value:"음료",notStage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"국밥 추천",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
+            {group:"메뉴",prep:"open",text:"햄버거 추천",intended:"햄버거",expect:{type:"category",value:"햄버거",notStage:"quantity"}}
         ];
     }
 
