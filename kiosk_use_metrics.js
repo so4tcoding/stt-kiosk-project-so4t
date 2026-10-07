@@ -368,7 +368,7 @@
             }
 
             if (stage === "taste_select_prompt") {
-                if (/덜맵|안맵|안매|순한|순해|싱거|담백|안짜|안셔|안시|안달|달지않/.test(raw) && typeof speakText === "function") {
+                if (/덜맵|안맵|안매|맵지않|순한|순해|싱거|담백|안짜|안셔|안시|안달|달지않/.test(raw) && typeof speakText === "function") {
                     speakText("달콤, 상큼, 구수, 고소, 얼큰, 짭짤한 맛 중에서 골라주세요.");
                     return true;
                 }
@@ -450,7 +450,7 @@
                 return true;
             }
 
-            if (/menu_grid/.test(stage) && /6번|육번/.test(raw) && Array.isArray(currentGridMenus) && currentGridMenus[5] && typeof selectSpecificItem === "function") {
+            if (/menu_grid/.test(stage) && /6번|육번|여섯번째|여섯째/.test(raw) && Array.isArray(currentGridMenus) && currentGridMenus[5] && typeof selectSpecificItem === "function") {
                 selectSpecificItem(currentGridMenus[5].name);
                 return afterSelect(raw);
             }
@@ -460,12 +460,14 @@
                     selectSpecificItem("아메리카노");
                     tempItem.temp = "아이스(ICE)";
                     askQuantity();
+                    if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
                 if (/핫커피|뜨거운커피/.test(raw)) {
                     selectSpecificItem("아메리카노");
                     tempItem.temp = "핫(HOT)";
                     askQuantity();
+                    if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
             }
