@@ -221,6 +221,108 @@
             });
         }
 
+        function plain(text) {
+            return String(text || "").toLowerCase().replace(/[\s.,?!~]/g, "");
+        }
+
+        function applyKnownPhrase(text) {
+            const stage = typeof currentStageName === "undefined" ? "" : currentStageName;
+            const raw = plain(text);
+            if (!raw || !stage) return false;
+
+            if (stage === "welcome" && /주문할래|먹을래|시작할게/.test(raw)) {
+                startOrder();
+                return true;
+            }
+
+            if (/오렌쥐쥬스|오렌쥐주스|오렌지쥬스/.test(raw) && /menu_grid|open_order_prompt|category_select/.test(stage)) {
+                selectSpecificItem("오렌지 주스");
+                return true;
+            }
+
+            if (stage === "quantity") {
+                let count = 0;
+                if (/두잔|둘이/.test(raw)) count = 2;
+                else if (/세잔/.test(raw)) count = 3;
+                if (count) {
+                    tempItem.count = count;
+                    const menu = customMenus.find(function (item) { return item.name === tempItem.item; });
+                    if (menu && menu.category === "음료" && typeof transitionTo === "function" && typeof askCupSize === "function") {
+                        transitionTo("cup_size", askCupSize);
+                    } else if (menu && menu.category === "커피" && typeof transitionTo === "function" && typeof renderBeverageOptionPrompt === "function") {
+                        transitionTo("beverage_option_prompt", renderBeverageOptionPrompt);
+                    } else if (typeof transitionTo === "function" && typeof renderAddMorePrompt === "function") {
+                        transitionTo("add_more_prompt", renderAddMorePrompt);
+                    }
+                    return true;
+                }
+            }
+
+            if (stage === "add_more_prompt" && /이걸로/.test(raw)) {
+                if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
+                if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
+                    transitionTo("place", renderPlaceSelect);
+                }
+                return true;
+            }
+
+            if (stage === "temp") {
+                if (/뜨겁|따뜻|핫|hot/.test(raw)) {
+                    tempItem.temp = "핫(HOT)";
+                    askQuantity();
+                    return true;
+                }
+                if (/아이스|차갑|시원|ice/.test(raw)) {
+                    tempItem.temp = "아이스(ICE)";
+                    askQuantity();
+                    return true;
+                }
+            }
+
+            if (stage === "upsell") {
+                if (/세트|같이/.test(raw)) {
+                    tempItem.isSet = true;
+                    askQuantity();
+                    return true;
+                }
+                if (/단품|버거만|햄버거만/.test(raw)) {
+                    tempItem.isSet = false;
+                    askQuantity();
+                    return true;
+                }
+            }
+
+            if (stage === "cup_size" && /작은|작거|스몰|200|이백/.test(raw) && !/큰|라지|중간|미디엄|500|350/.test(raw)) {
+                tempItem.cupSize = "200ml";
+                let base = "";
+                try { base = classifyDrinkBase(tempItem.item); } catch (e) {}
+                if (base === "carbonated" && typeof transitionTo === "function" && typeof renderAddMorePrompt === "function") {
+                    transitionTo("add_more_prompt", renderAddMorePrompt);
+                } else if (typeof transitionTo === "function" && typeof renderBeverageOptionPrompt === "function") {
+                    transitionTo("beverage_option_prompt", renderBeverageOptionPrompt);
+                }
+                return true;
+            }
+
+            if (stage === "beverage_option_step" && Array.isArray(optionList) && optionList[optionStepIndex]) {
+                let level = 0;
+                if (/달게|달콤/.test(raw)) level = 5;
+                else if (/낮게|싱겁|덜달|안달/.test(raw)) level = 1;
+                if (!level) return false;
+                if (!tempItem.beverageOptions) tempItem.beverageOptions = {};
+                tempItem.beverageOptions[optionList[optionStepIndex].key] = level;
+                optionStepIndex += 1;
+                if (optionStepIndex < optionList.length && typeof renderBeverageOptionStep === "function") {
+                    renderBeverageOptionStep();
+                } else if (typeof transitionTo === "function" && typeof renderBeverageResult === "function") {
+                    transitionTo("beverage_result", renderBeverageResult);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         window.processVoiceCommand = function measuredProcessVoiceCommand(text) {
             if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
                 return previous.apply(this, arguments);
@@ -232,7 +334,8 @@
             const intent = String(window.__kioskCustomerIntent || "").trim();
             let result;
             try {
-                result = previous.call(this, spoken);
+                if (applyKnownPhrase(spoken)) result = true;
+                else result = previous.call(this, spoken);
             } finally {
                 const after = capture();
                 const outcome = judgeUse(before, after);

@@ -13,6 +13,7 @@ function kind(text) {
 }
 
 assert.strictEqual(kind("이게 뭐야"), "help");
+assert.strictEqual(kind("그게 뭐냐고"), "help");
 assert.strictEqual(kind("이게 뭔데"), "help");
 assert.strictEqual(kind("이거 뭐야"), "help");
 assert.strictEqual(kind("여기 뭐 하는 건데"), "help");

@@ -29383,7 +29383,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function parseCupSizeHard(text){
         const c = compact(text);
 
-        if (/200|이백|이백미리|이백밀리|이백밀리리터|스몰|작은컵|작은거|소형/.test(c)) {
+        if (/200|이백|이백미리|이백밀리|이백밀리리터|스몰|작은컵|작은거|작거|소형/.test(c)) {
             return "200ml";
         }
 
@@ -29672,7 +29672,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function parseCupSizeV2(text){
         const c = compact(text);
 
-        if (/200|이백|이백미리|이백밀리|이백밀리리터|스몰|작은컵|작은거|소형/.test(c)) {
+        if (/200|이백|이백미리|이백밀리|이백밀리리터|스몰|작은컵|작은거|작거|소형/.test(c)) {
             return "200ml";
         }
 
@@ -30032,6 +30032,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         const c = compact(text);
 
+        if (/달게|달콤/.test(c)) return 5;
+        if (/낮게|싱겁|덜달|안달/.test(c)) return 1;
         if (/5단계|오단계|오단게|다섯|가득|최대|많이많이|완전많이/.test(c)) return 5;
         if (/4단계|사단계|사단게|넷|많이/.test(c)) return 4;
         if (/3단계|삼단계|삼단게|셋|보통|기본|중간/.test(c)) return 3;
@@ -35588,7 +35590,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (decision.kind === "hear") {
             bumpVolume();
             const last = String(window.__kioskLastSpoken || "").trim();
-            say(last ? ("다시 말씀드릴게요. " + last) : guide);
+            say(last ? ("소리를 키웠습니다. 다시 말씀드릴게요. " + last) : ("소리를 키웠습니다. " + guide));
             return true;
         }
 

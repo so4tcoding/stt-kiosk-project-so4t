@@ -47,7 +47,15 @@
             { group: "무시", prep: "grid:음료", text: "안녕하세요 날씨 좋네요", intended: "", expect: { type: "ignore" } },
             { group: "용량", prep: "cup:콜라", text: "라지", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
             { group: "결제", prep: "place", text: "매장에서 먹을게요", intended: "매장에서", expect: { type: "place", value: "매장" } },
-            { group: "결제", prep: "more", text: "아니요", intended: "아니요", expect: { type: "stage", value: "place" } }
+            { group: "결제", prep: "more", text: "아니요", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "온도", prep: "temp:아메리카노", text: "뜨겁게요", intended: "핫", expect: { type: "hot" } },
+            { group: "온도", prep: "temp:아메리카노", text: "아이스로 주세요", intended: "아이스", expect: { type: "ice" } },
+            { group: "세트", prep: "upsell:불고기버거", text: "세트로 주세요", intended: "세트", expect: { type: "set" } },
+            { group: "세트", prep: "upsell:불고기버거", text: "단품으로 주세요", intended: "단품", expect: { type: "single" } },
+            { group: "단계", prep: "opt", text: "당도 낮게", intended: "1단계", expect: { type: "sugar", value: 1 } },
+            { group: "단계", prep: "opt", text: "달게 해주세요", intended: "5단계", expect: { type: "sugar", value: 5 } },
+            { group: "용량", prep: "cup:콜라", text: "작은 거로", intended: "스몰", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "안내", prep: "grid:음료", text: "안 들려", intended: "안 들려", expect: { type: "spoken", value: "소리", stage: "menu_grid" } }
         ];
     }
 
@@ -71,10 +79,15 @@
         if (expect.type === "gridHas") return after.stage === expect.stage && String(after.grid || "").indexOf(expect.value) >= 0;
         if (expect.type === "ignore") return after.stage === "menu_grid" && !after.item;
         if (expect.type === "place") return after.stage === "summary" && String(after.place || "").indexOf(expect.value) >= 0 && /원/.test(after.spoken || "");
+        if (expect.type === "hot") return after.stage === "quantity" && /핫/.test(after.temp || "");
+        if (expect.type === "ice") return after.stage === "quantity" && /아이스/.test(after.temp || "");
+        if (expect.type === "set") return after.stage === "quantity" && after.set === true;
+        if (expect.type === "single") return after.stage === "quantity" && after.set === false;
+        if (expect.type === "pay") return String(after.pay || "").indexOf(expect.value || "") >= 0 && expect.value;
         return false;
     }
 
-    function run() {
+    function run(list) {
         if (typeof window.__kioskCustomerSay !== "function") {
             console.log("[고객] 사용 기록이 아직 없습니다.");
             return null;
@@ -114,6 +127,9 @@
                 sugar: sugar,
                 step: optionStepIndex,
                 place: (orderState && orderState.place) || "",
+                temp: (tempItem && tempItem.temp) || "",
+                set: !!(tempItem && tempItem.isSet),
+                pay: (orderState && orderState.pay) || "",
                 spoken: String(window.__kioskLastSpoken || "")
             };
         }
@@ -181,11 +197,39 @@
                 tempItem.item = "오렌지 주스";
                 tempItem.count = 1;
                 currentStageName = "add_more_prompt";
+                return;
+            }
+            if (kind.indexOf("temp:") === 0) {
+                tempItem.item = kind.slice(5);
+                currentStageName = "temp";
+                return;
+            }
+            if (kind.indexOf("upsell:") === 0) {
+                tempItem.item = kind.slice(7);
+                currentStageName = "upsell";
+                return;
+            }
+            if (kind === "pay") {
+                tempItem.item = "오렌지 주스";
+                tempItem.count = 1;
+                tempItem.temp = "기본";
+                commitTempItemToCartIfValid();
+                orderState.place = "매장에서 먹기";
+                currentStageName = "payment";
+                return;
+            }
+            if (kind === "sum") {
+                tempItem.item = "오렌지 주스";
+                tempItem.count = 1;
+                tempItem.temp = "기본";
+                commitTempItemToCartIfValid();
+                orderState.place = "매장에서 먹기";
+                currentStageName = "summary";
             }
         }
 
         const report = { total: 0, passed: 0, learned: 0, missed: [], rows: [] };
-        steps().forEach(function (step) {
+        (list && list.length ? list : steps()).forEach(function (step) {
             hush();
             prepare(step.prep);
             window.__kioskCustomerSay(step.text, step.intended || "");
@@ -225,7 +269,10 @@
         return report;
     }
 
-    if (typeof window !== "undefined") window.__kioskRunCustomer = run;
+    if (typeof window !== "undefined") {
+        window.__kioskRunCustomer = function () { return run(steps()); };
+        window.__kioskTryCustomer = function (extra) { return run(extra); };
+    }
 
     return { steps: steps, passes: passes, run: run };
 });
