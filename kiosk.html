@@ -7471,6 +7471,7 @@ var addLearningCluster = window.addLearningCluster || function() {
         const wait = delay !== null ? delay : restartBackoff;
 
         recoveryTimer = setTimeout(() => {
+            if (window.__kioskHybridRunning || window.__kioskHybridStarting) return;
             if (!canStartSpeech()) {
                 // TTS 중이면 조금 뒤 다시
                 if (window.speechSynthesis && window.speechSynthesis.speaking) {
@@ -7745,6 +7746,7 @@ var addLearningCluster = window.addLearningCluster || function() {
         if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF) return;
         if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) return;
         if (window.speechSynthesis && window.speechSynthesis.speaking) return;
+        if (window.__kioskHybridRunning || window.__kioskHybridStarting) return;
 
         if (!isListening && !isStarting) {
             console.log("🛠️ Watchdog: 음성인식 꺼짐 감지 → 복구");
@@ -27542,37 +27544,74 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }
     }
 
+    let wantHybrid = false;
+    let starting = false;
+    let listenGen = 0;
+
+    function markHybrid(on) {
+        window.__kioskHybridRunning = !!on;
+        try {
+            isListening = !!on;
+            if (on) isStarting = false;
+        } catch (e) {}
+    }
+
+    function releaseStart(gen) {
+        if (gen !== listenGen) return;
+        starting = false;
+        window.__kioskHybridStarting = false;
+    }
+
     async function startHybrid(){
+        wantHybrid = true;
+        if (running || starting) return;
+
+        const gen = ++listenGen;
+        starting = true;
+        window.__kioskHybridStarting = true;
+
         if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            releaseStart(gen);
             clearTimeout(restartTimer);
-            restartTimer = setTimeout(startHybrid, 50);
+            restartTimer = setTimeout(startHybrid, 200);
             return;
         }
 
-        await ensureAudioQueue();
+        try {
+            await ensureAudioQueue();
+        } catch (e) {}
+
+        if (gen !== listenGen || !wantHybrid || running) {
+            releaseStart(gen);
+            return;
+        }
 
         if (!SpeechRecognitionClass) {
+            releaseStart(gen);
             console.warn("Web Speech API 없음. Whisper 전용으로 동작합니다.");
             if (typeof startWhisperListening === "function") startWhisperListening();
             return;
         }
 
-        if (running) return;
-
         try {
-            rec = new SpeechRecognitionClass();
-            rec.lang = "ko-KR";
-            rec.continuous = true;
-            rec.interimResults = false;
+            const mine = new SpeechRecognitionClass();
+            rec = mine;
+            mine.lang = "ko-KR";
+            mine.continuous = true;
+            mine.interimResults = false;
 
-            try { rec.maxAlternatives = 5; } catch(e) {}
+            try { mine.maxAlternatives = 5; } catch(e) {}
 
-            rec.onstart = function(){
+            mine.onstart = function(){
+                if (rec !== mine || gen !== listenGen) return;
                 running = true;
+                releaseStart(gen);
+                markHybrid(true);
                 console.log("⚡ HYBRID 빠른 STT 시작");
             };
 
-            rec.onresult = function(event){
+            mine.onresult = function(event){
+                if (rec !== mine) return;
                 let candidates = [];
 
                 for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -27598,36 +27637,51 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 handleFast(candidates[0]);
             };
 
-            rec.onerror = function(e){
-                console.log("HYBRID 빠른 STT error:", e.error);
+            mine.onerror = function(e){
+                if (rec !== mine) return;
+                const err = e && e.error ? e.error : "";
+                if (err === "aborted" && !wantHybrid) return;
+                console.log("HYBRID 빠른 STT error:", err);
             };
 
-            rec.onend = function(){
+            mine.onend = function(){
+                if (rec !== mine) return;
                 running = false;
+                releaseStart(gen);
+                markHybrid(false);
+                if (!wantHybrid || gen !== listenGen) return;
 
                 clearTimeout(restartTimer);
-                restartTimer = setTimeout(startHybrid, 80);
+                restartTimer = setTimeout(startHybrid, 300);
             };
 
-            rec.start();
+            mine.start();
 
         } catch(e) {
             running = false;
+            releaseStart(gen);
             console.log("HYBRID 빠른 STT 시작 실패:", e);
 
+            if (!wantHybrid || gen !== listenGen) return;
             clearTimeout(restartTimer);
             restartTimer = setTimeout(startHybrid, 1500);
         }
     }
 
     function stopHybrid(){
+        listenGen++;
+        wantHybrid = false;
         clearTimeout(restartTimer);
+        window.__kioskHybridStarting = false;
 
+        const mine = rec;
         try {
-            if (rec) rec.stop();
+            if (mine) mine.stop();
         } catch(e) {}
 
         running = false;
+        starting = false;
+        markHybrid(false);
     }
 
     window.startHybridSTT = startHybrid;
