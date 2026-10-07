@@ -274,14 +274,14 @@
         </div>
 
         <div id="process-stepper" class="w-full px-5 mt-2 z-30 flex-shrink-0">
-            <div class="flex justify-between items-center text-[13px] sm:text-[14px] font-extrabold tracking-tight py-2 px-3 rounded-xl border border-[var(--card-border)] bg-white/40 backdrop-blur-md relative overflow-hidden shadow-sm">
+            <div class="flex justify-between items-center font-extrabold tracking-tight py-2 px-2 rounded-xl border border-[var(--card-border)] bg-white/40 backdrop-blur-md relative shadow-sm">
                 <div id="step-1" class="text-[#a99878] transition-all duration-300">① 메뉴</div>
                 <div class="text-[#c9bb9c]">➔</div>
-                <div id="step-2" class="text-[#a99878] transition-all duration-300">② 수량/옵션</div>
+                <div id="step-2" class="text-[#a99878] transition-all duration-300">② 수량</div>
                 <div class="text-[#c9bb9c]">➔</div>
-                <div id="step-3" class="text-[#a99878] transition-all duration-300">③ 장소선택</div>
+                <div id="step-3" class="text-[#a99878] transition-all duration-300">③ 장소</div>
                 <div class="text-[#c9bb9c]">➔</div>
-                <div id="step-4" class="text-[#a99878] transition-all duration-300">④ 결제방식</div>
+                <div id="step-4" class="text-[#a99878] transition-all duration-300">④ 결제</div>
                 <div class="text-[#c9bb9c]">➔</div>
                 <div id="step-5" class="text-[#a99878] transition-all duration-300">⑤ 완료</div>
             </div>
@@ -1569,7 +1569,7 @@
             });
             updateUI("주문 내역 확인", `총 합계: ${sum.toLocaleString()}원`, `
                 <div class="w-full glass-panel p-3 rounded-2xl mb-2 bg-white/60 max-h-[46vh] overflow-hidden">${html}</div>
-                <div class="text-xs font-bold text-[#8a7a63] mt-1 bg-white/40 p-2 rounded-xl text-center">"불고기버거 추가해줘" 또는 "감자튀김 빼줘" 라고 말씀하세요.</div>
+                <div class="font-black text-center mt-1" style="font-size:1.2em">추가할 메뉴가 있으면 이름을 말씀해 주세요.</div>
             `);
             const itemSpeech = orderState.items.map(i => `${i.item} ${i.count}개`).join(", ");
             speakText(itemSpeech
@@ -8659,14 +8659,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
         const controls = document.getElementById("controls-area");
 
         if (controls) {
-            const helper = document.createElement("div");
-            helper.className = "text-xs font-bold text-[#8a7a63] mt-1 bg-white/50 p-2 rounded-xl text-center w-full";
-            helper.innerHTML = `
-                추가 예: "불고기버거 두 개 추가", "아메리카노 한 잔 더"<br>
-                변경 예: "불고기버거 빼줘" / 결제: "결제"
-            `;
-
-            controls.appendChild(helper);
+            controls.querySelectorAll(".text-xs").forEach(function (el) { el.remove(); });
             fitToScreen();
         }
     };
@@ -14836,23 +14829,20 @@ function isRepeatMenuCommand(text) {
             `
             <div class="w-full grid grid-cols-3 gap-2 mb-2">
                 <div class="glass-panel p-3 text-center font-black text-[#4a3f30]">
-                    <div class="text-3xl mb-1">🥤</div>
-                    200ml<br>
-                    <span class="text-xs text-[#8a7a63]">작은 우유갑 정도</span>
+                    <div style="font-size:1.35em">작은 잔</div>
+                    <div style="font-size:1.05em">200ml</div>
                 </div>
-                <div class="glass-panel p-4 text-center font-black text-[#4a3f30]">
-                    <div class="text-3xl mb-1">🥤</div>
-                    350ml<br>
-                    <span class="text-xs text-[#8a7a63]">캔 음료보다 조금 많음</span>
+                <div class="glass-panel p-3 text-center font-black text-[#4a3f30]">
+                    <div style="font-size:1.35em">중간 잔</div>
+                    <div style="font-size:1.05em">350ml</div>
                 </div>
-                <div class="glass-panel p-5 text-center font-black text-[#4a3f30]">
-                    <div class="text-3xl mb-1">🥤</div>
-                    500ml<br>
-                    <span class="text-xs text-[#8a7a63]">작은 생수병 정도</span>
+                <div class="glass-panel p-3 text-center font-black text-[#4a3f30]">
+                    <div style="font-size:1.35em">큰 잔</div>
+                    <div style="font-size:1.05em">500ml</div>
                 </div>
             </div>
-            <div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50 !text-sm">
-                대답 예: "200ml", "350ml", "500ml"
+            <div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">
+                대답 예: "작은 잔", "중간 잔", "큰 잔"
             </div>
             `
         );
@@ -36009,6 +35999,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 <script src="/kiosk_use_metrics.js"></script>
 <script src="/kiosk_customer.js"></script>
 <script src="/kiosk_shop.js"></script>
+<script src="/kiosk_presbyopia.js"></script>
 
 </body>
 </html>
