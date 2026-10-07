@@ -14839,7 +14839,7 @@ function isRepeatMenuCommand(text) {
         const c = compact(text);
 
         if (/200|이백|스몰|작은|소형|작은컵|작은거/.test(c)) return "200ml";
-        if (/350|삼백오십|미디엄|중간|보통|중형/.test(c)) return "350ml";
+        if (/350|삼백오십|미디엄|중간장|중간잔|중간|보통|중형/.test(c)) return "350ml";
         if (/500|오백|라지|큰|대형|큰컵|큰거/.test(c)) return "500ml";
 
         return "";
@@ -19387,7 +19387,8 @@ console.log("✅ FINAL_SINGLE_CLEAN_INTEGRATION 적용 완료");
           숫자 직접 입력/인식
           예: 3개, 50개, 7번째
         */
-        const digitMatch = raw.match(/([0-9]+)\s*(개|잔|그릇|인분|명|병|컵|번|번째|째)?/);
+        const withoutCup = raw.replace(/[0-9]+\s*(ml|밀리리터|밀리|미리|엠엘)/gi, " ");
+        const digitMatch = withoutCup.match(/([0-9]+)\s*(개|잔|그릇|인분|명|병|컵|번|번째|째)?/);
 
         if (digitMatch) {
             const n = parseInt(digitMatch[1], 10);
@@ -21078,8 +21079,10 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
 
         if (!clean) return 0;
 
-        // 1개, 2개, 10개, 50개
-        const digitMatch = raw.match(/([0-9]+)\s*(개|잔|그릇|인분|명|병|컵)?/);
+        const withoutCup = raw.replace(/[0-9]+\s*(ml|밀리리터|밀리|미리|엠엘)/gi, " ");
+
+        // 1개, 2개, 10개, 50개. 350ml, 500ml 같은 용량 숫자는 수량이 아니다.
+        const digitMatch = withoutCup.match(/([0-9]+)\s*(개|잔|그릇|인분|명|병|컵)?/);
         if (digitMatch) {
             const n = parseInt(digitMatch[1], 10);
             if (!Number.isNaN(n) && n > 0) {
@@ -24309,6 +24312,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function processDirectOption(text) {
         const raw = norm(text);
 
+        try {
+            if (/^(quantity|cup_size|beverage_option_prompt|beverage_option_step|beverage_result|add_more_prompt|place|summary|summary_add_quantity|payment)$/.test(String(currentStageName || ""))) {
+                return false;
+            }
+        } catch (e) {}
+
         if (!hasAnyDirectOptionIntent(raw)) {
             return false;
         }
@@ -25148,6 +25157,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     function processDirectOptionOrder(text) {
         const raw = norm(text);
+
+        try {
+            if (/^(quantity|cup_size|beverage_option_prompt|beverage_option_step|beverage_result|add_more_prompt|place|summary|summary_add_quantity|payment)$/.test(String(currentStageName || ""))) {
+                return false;
+            }
+        } catch (e) {}
 
         if (!hasDirectOptionIntent(raw)) {
             return false;
@@ -26751,7 +26766,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
         if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
         const heard = String(text || "").replace(/\s+/g, "");
-        if (/작은잔|작은전|중간잔|큰잔|작잔/.test(heard) || /작잔|작전|큰잔|중간잔/.test(c)) return true;
+        if (/작은잔|작은전|중간잔|중간장|큰잔|작잔/.test(heard) || /작잔|작전|큰잔|중간잔|중간장/.test(c)) return true;
         if (/집가서먹|집에서먹|집에가서먹/.test(heard) || /집서먹|집에서먹|집가서먹/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
@@ -27201,7 +27216,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
         if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
         const heard = String(text || "").replace(/\s+/g, "");
-        if (/작은잔|작은전|중간잔|큰잔|작잔/.test(heard) || /작잔|작전|큰잔|중간잔/.test(c)) return true;
+        if (/작은잔|작은전|중간잔|중간장|큰잔|작잔/.test(heard) || /작잔|작전|큰잔|중간잔|중간장/.test(c)) return true;
         if (/집가서먹|집에서먹|집에가서먹/.test(heard) || /집서먹|집에서먹|집가서먹/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
@@ -32132,6 +32147,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const n = normalizeNumberText(c);
 
         if (!c) return null;
+        if (/이대로|그대로|이상태|다시/.test(c)) return null;
 
         /*
           explicit:
@@ -32182,7 +32198,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             "큰컵", "큰 컵",
             "큰사이즈", "큰 사이즈",
             "큰거", "큰 것",
-            "대", "대자"
+            "대자"
         ];
 
         function includesAny(list) {
@@ -32226,8 +32242,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
           명확한 단위 표현은 언제든 라우팅.
           별칭 표현은 컵사이즈 화면일 때만 라우팅.
         */
+        let stage = "";
+        try { stage = String(currentStageName || ""); } catch (e) {}
+        if (stage && stage !== "cup_size") return false;
         if (r.explicit) return true;
-        if (isCupSizeContext()) return true;
+        if (stage === "cup_size" || isCupSizeContext()) return true;
 
         return false;
     }
