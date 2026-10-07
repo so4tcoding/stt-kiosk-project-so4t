@@ -591,6 +591,16 @@ def serve_kiosk_customer():
     return FileResponse(script, media_type="application/javascript")
 
 
+@app.get("/kiosk_{script_name}.js")
+def serve_kiosk_script(script_name: str):
+    if not script_name or script_name.replace("_", "").isalnum() is False or script_name != script_name.lower():
+        raise HTTPException(status_code=404, detail="not found")
+    script = (BASE_DIR / f"kiosk_{script_name}.js").resolve()
+    if script.parent != BASE_DIR.resolve() or not script.is_file():
+        raise HTTPException(status_code=404, detail="not found")
+    return FileResponse(script, media_type="application/javascript")
+
+
 # ============================================================
 # STT API
 # ============================================================

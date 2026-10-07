@@ -346,6 +346,16 @@
     <div id="voice-result"></div>
 
     <script>
+        (function () {
+            try {
+                var synth = window.speechSynthesis;
+                if (!synth || window.__kioskNativeSpeak) return;
+                window.__kioskNativeSpeak = synth.speak.bind(synth);
+                window.__kioskNativeCancel = synth.cancel.bind(synth);
+            } catch (e) {}
+        })();
+    </script>
+    <script>
         /* ==========================================================================
            [자산 교체] 텍스트 이모지 → 만화체 2D 일러스트 매핑
            - 실사 사진 사용 금지. 화면에는 오직 <img> 일러스트만 렌더링한다.
@@ -35568,18 +35578,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     // 1. 브라우저의 말하기 엔진(speak)을 가로채서 톤과 속도를 강제로 덮어씌움
     if (!window._deepVoicePatched) {
-        const origSpeak = window.speechSynthesis.speak;
-        window.speechSynthesis.speak = function(utterance) {
-            // 기본값: 톤 0.7 (낮고 묵직하게), 속도 0.85 (조금 느리고 또박또박하게)
-            const savedPitch = parseFloat(localStorage.getItem('kiosk_tts_pitch')) || 0.7;
-            const savedRate = parseFloat(localStorage.getItem('kiosk_tts_rate')) || 0.85;
-            
-            utterance.pitch = savedPitch;
-            utterance.rate = savedRate;
-            
-            origSpeak.call(window.speechSynthesis, utterance);
-        };
         window._deepVoicePatched = true;
+        console.log("[목소리] 낮은 톤으로 덮어쓰지 않습니다.");
     }
 
     // 2. 관리자 패널(G키)에 톤과 속도를 직접 조절할 수 있는 슬라이더 추가
@@ -35589,10 +35589,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             const sliderHtml = `
                 <div class="mt-3 mb-3 bg-black/40 p-3 rounded-lg border border-white/10">
                     <label class="text-[#e8d9c0] text-[13px] font-bold block mb-2">🎚️ 목소리 톤 (낮게 ~ 높게)</label>
-                    <input type="range" id="tts-pitch-slider" min="0.1" max="1.5" step="0.1" value="${localStorage.getItem('kiosk_tts_pitch') || 0.7}" class="w-full mb-4" style="pointer-events: auto;">
+                    <input type="range" id="tts-pitch-slider" min="0.1" max="1.5" step="0.1" value="${localStorage.getItem('kiosk_tts_pitch') || 1}" class="w-full mb-4" style="pointer-events: auto;">
                     
                     <label class="text-[#e8d9c0] text-[13px] font-bold block mb-2">⏱️ 말하기 속도 (느리게 ~ 빠르게)</label>
-                    <input type="range" id="tts-rate-slider" min="0.5" max="1.5" step="0.05" value="${localStorage.getItem('kiosk_tts_rate') || 0.85}" class="w-full" style="pointer-events: auto;">
+                    <input type="range" id="tts-rate-slider" min="0.5" max="1.5" step="0.05" value="${localStorage.getItem('kiosk_tts_rate') || 0.94}" class="w-full" style="pointer-events: auto;">
                 </div>
             `;
             
@@ -35633,11 +35633,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const voices = window.speechSynthesis.getVoices();
         if (voices.length === 0) return;
         
-        // 1순위: 엣지 자연스러운 여성 (SunHi) / 2순위: 구글 여성 / 3순위: 윈도우 기본 여성(Heami)
-        let bestVoice = voices.find(v => v.name.includes('SunHi') && v.name.includes('Natural')) ||
+        let bestVoice = voices.find(v => v.name.includes('SunHi') && /Natural|Neural/i.test(v.name)) ||
                         voices.find(v => v.name.includes('Google') && v.lang.includes('ko')) ||
-                        voices.find(v => v.name.includes('Heami'));
-                        
+                        voices.find(v => /SunHi|Yuna|InJoon/i.test(v.name));
+
         if (bestVoice && !localStorage.getItem('kiosk_manual_tts_voice')) {
             window.selectedFemaleVoice = bestVoice;
             localStorage.setItem('kiosk_manual_tts_voice', bestVoice.voiceURI);
@@ -36159,6 +36158,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 <script src="/kiosk_reach.js"></script>
 <script src="/kiosk_age_learn.js"></script>
 <script src="/kiosk_order_fix.js"></script>
+<script src="/kiosk_voice.js"></script>
 
 </body>
 </html>

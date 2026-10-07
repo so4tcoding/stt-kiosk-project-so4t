@@ -132,36 +132,9 @@
         return "다시 말씀해 주세요.";
     }
 
-    function bestVoice() {
-        let voices = [];
-        try { voices = window.speechSynthesis.getVoices() || []; } catch (e) {}
-        const ko = voices.filter(function (v) { return /ko/i.test(v.lang || ""); });
-        function score(v) {
-            const n = v.name || "";
-            if (/SunHi/i.test(n) && /Natural|Neural/i.test(n)) return 0;
-            if (/SunHi/i.test(n)) return 1;
-            if (/Google/i.test(n) && /ko/i.test(v.lang || "")) return 2;
-            if (/Yuna/i.test(n)) return 3;
-            if (/InJoon/i.test(n)) return 4;
-            if (/Natural|Neural|Online/i.test(n)) return 5;
-            if (/Heami/i.test(n)) return 9;
-            return 6;
-        }
-        ko.sort(function (a, b) { return score(a) - score(b); });
-        return ko[0] || null;
-    }
-
     function install() {
         if (window.__kioskTalkInstalled) return;
         window.__kioskTalkInstalled = true;
-
-        try {
-            if (localStorage.getItem("kiosk_talk_voice") !== "3") {
-                localStorage.setItem("kiosk_tts_pitch", "1.05");
-                localStorage.setItem("kiosk_tts_rate", "0.92");
-                localStorage.setItem("kiosk_talk_voice", "3");
-            }
-        } catch (e) {}
 
         const previousCommand = window.processVoiceCommand;
         if (typeof previousCommand === "function" && !previousCommand.__kioskTalk) {
@@ -173,24 +146,6 @@
             window.processVoiceCommand = wrapped;
         }
 
-        if (!window.speechSynthesis || typeof window.speechSynthesis.speak !== "function") return;
-        if (window.speechSynthesis.speak.__kioskTalk) return;
-        const previousSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
-        const wrappedSpeak = function (utterance) {
-            try {
-                if (utterance && !utterance.__kioskTalk) {
-                    utterance.__kioskTalk = true;
-                    const heard = window.__kioskHeard || "";
-                    const qtyWord = window.__kioskQtyWord || "";
-                    utterance.text = talkLine(utterance.text, heard, qtyWord);
-                    const voice = bestVoice();
-                    if (voice) utterance.voice = voice;
-                }
-            } catch (e) {}
-            return previousSpeak(utterance);
-        };
-        wrappedSpeak.__kioskTalk = true;
-        window.speechSynthesis.speak = wrappedSpeak;
     }
 
     return { talkLine: talkLine, install: install };
