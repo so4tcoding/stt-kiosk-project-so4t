@@ -44,75 +44,89 @@
         const called = name ? polite(name) : "";
 
         if (/무슨 가게인가요|가게를 바꿔/.test(raw) || /국밥집, 카페, 햄버거집, 꽃집/.test(raw)) {
-            return "안녕하세요. 어떤 가게에서 주문할까요. 국밥집, 카페, 햄버거집, 꽃집, 문구점, 선물가게, 이렇게 말씀해 주세요.";
+            return fit("국밥집, 카페, 햄버거집, 꽃집, 문구점, 선물가게.");
         }
-        if (/주문 시작이라고|주문을 시작하시려면|바로 주문하시려면/.test(raw)) {
-            return "안녕하세요. 주문하시려면 주문할게요, 라고 말씀해 주세요. 사용법이 필요하면 사용법 알려줘, 라고 말씀해 주세요.";
+        if (/주문 시작이라고|주문을 시작하시려면|바로 주문하시려면|반갑습니다/.test(raw)) {
+            return fit("주문할게요, 라고 말씀해 주세요.");
         }
         if (/^쉽게 설명해드릴게요/.test(raw)) {
-            return "쉽게 말씀드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워, 라고 말씀해 주세요.";
+            return fit("메뉴 이름을 말씀해 주세요.");
+        }
+        if (/무엇을 드시고|메뉴를 아시면|메뉴 이름을 아시면|지금은 메뉴를 말하는|메뉴판 보여줘/.test(raw)) {
+            return fit("메뉴 이름을 말씀해 주세요.");
         }
         if (/메뉴 수량을 말씀|몇 잔인지|몇 개인지|수량을 정확히/.test(raw)) {
             const head = called ? called + ". " : "";
             return head + "몇 " + qtyUnit(qtyWord) + " 드릴까요.";
         }
         if (/작은 잔, 중간 잔, 큰 잔/.test(raw)) {
-            return "잔은 어떻게 드릴까요. 작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.";
+            return fit("작은 잔, 중간 잔, 큰 잔.");
         }
-        if (/^골라 주세요/.test(raw)) {
-            return raw.replace(/^골라 주세요\.?\s*/, "어떤 맛이 좋으세요. ");
+        if (/^골라 주세요|달콤, 상큼/.test(raw)) {
+            return fit("달콤, 상큼, 구수, 고소, 얼큰, 짭짤.");
         }
-        if (/세트로 하시려면/.test(raw)) {
-            return "세트로 드릴까요, 햄버거만 드릴까요. 세트로 하시려면 세트, 햄버거만이면 단품이라고 말씀해 주세요.";
+        if (/세트로 하시려면|세트로 드릴까요/.test(raw)) {
+            return fit("세트요, 단품이요.");
         }
-        if (/추가하실 메뉴가 있습니까/.test(raw)) {
-            return "더 필요하신 거 있으세요. 있으면 네, 없으면 아니요, 라고 말씀해 주세요.";
+        if (/추가하실 메뉴가 있습니까|있으면 네, 없으면 아니요|다른 꽃이 있으면|다른 문구가 있으면|다른 선물이 있으면|다른 음료가 있으면|다른 메뉴가 있으면/.test(raw)) {
+            return fit("더 있으면 네, 없으면 아니요.");
         }
-        if (/다른 꽃이 있으면/.test(raw)) {
-            return "다른 꽃도 필요하세요. 있으면 네, 없으면 아니요, 라고 말씀해 주세요.";
+        if (/여기서 드시|들고 가실지|포장해서/.test(raw)) {
+            return fit("포장이요, 여기서 먹을게요.");
         }
-        if (/다른 문구가 있으면/.test(raw)) {
-            return "다른 문구도 필요하세요. 있으면 네, 없으면 아니요, 라고 말씀해 주세요.";
+        if (/카드로 결제|카드로 하실|현금으로 결제/.test(raw)) {
+            return fit("카드요, 현금이요.");
         }
-        if (/다른 선물이 있으면/.test(raw)) {
-            return "다른 선물도 필요하세요. 있으면 네, 없으면 아니요, 라고 말씀해 주세요.";
+        if (/따뜻하게 드시고 싶으시면|따뜻한 것과 아이스|뜨거운 것과 아이스/.test(raw)) {
+            return fit("따뜻하게요, 차갑게요.");
         }
-        if (/여기서 드시|들고 가실지/.test(raw)) {
-            return "여기서 드시고 가실래요, 포장해 드릴까요. 여기서 먹을게요, 또는 들고 갈게요, 라고 말씀해 주세요.";
+        if (/조절하고 싶으시다면|추가할 게 없/.test(raw)) {
+            return fit("없으면 아니요.");
         }
-        if (/카드로 결제/.test(raw)) {
-            return "카드로 할까요, 현금으로 할까요. 카드요, 또는 현금이요, 라고 말씀해 주세요.";
-        }
-        if (/따뜻하게 드시고 싶으시면/.test(raw)) {
-            return "따뜻하게 드릴까요, 차갑게 드릴까요. 따뜻하게, 또는 차갑게, 라고 말씀해 주세요.";
-        }
-        const money = raw.match(/주문하신 총 금액은\s*(.+?)원입니다/);
-        if (money) {
-            return "다 고르셨어요. 총 " + money[1] + "원입니다. 맞으면 결제, 라고 말씀해 주세요.";
+        if (/주문하신 메뉴는|총 금액은|맞으시면 결제/.test(raw)) {
+            return fit("맞으면 결제라고 말씀해 주세요.");
         }
         const picked = raw.match(/선택하신 게\s*(.+?)\s*맞습니까/);
         if (picked) {
-            return polite(picked[1]) + ". 맞으면 네, 아니면 아니요, 라고 말씀해 주세요.";
+            return fit(polite(picked[1]) + ". 맞으면 네.");
         }
         if (/맛있게 드세요/.test(raw)) {
-            return "감사합니다. 맛있게 드세요.";
+            return fit("맛있게 드세요.");
         }
         if (/그 메뉴는 없습니다/.test(raw)) {
-            return /^아,/.test(raw) ? raw : "아, " + raw;
+            return fit("그 메뉴는 없습니다.");
         }
         if (/그 단어만으로는/.test(raw)) {
-            return "아, 그 단어만으로는 모르겠어요. 메뉴 이름을 말씀해 주세요.";
+            return fit("메뉴 이름을 말씀해 주세요.");
         }
         if (/화면을 확대했습니다/.test(raw)) return "네, 화면을 확대했습니다.";
         if (/화면을 줄였습니다/.test(raw)) return "네, 화면을 줄였습니다.";
         if (/화면을 원래대로 돌렸습니다/.test(raw)) return "네, 화면을 원래대로 돌렸습니다.";
         if (/^저희 매장에는/.test(raw)) {
-            return "무엇을 드릴까요. " + raw;
+            return fit("메뉴 이름을 말씀해 주세요.");
         }
         if (raw === "다시 한 번 말씀해주세요." || raw === "다시 한 번 말씀해 주세요.") {
-            return "죄송해요. 다시 한 번만 말씀해 주세요.";
+            return fit("다시 말씀해 주세요.");
         }
-        return raw;
+        return fit(raw);
+    }
+
+    function fit(line) {
+        const text = String(line || "").replace(/\s+/g, " ").trim();
+        if (/스몰|미디엄|라지|밀리리터/.test(text)) return "작은 잔, 중간 잔, 큰 잔.";
+        if (/카테고리/.test(text)) return "메뉴 이름을 말씀해 주세요.";
+        const sentences = text.split(/[.?!]/).filter(function (part) { return part.trim(); }).length;
+        if (text.length <= 46 && sentences < 3) return text;
+        if (/주문할게요/.test(text)) return "주문할게요, 라고 말씀해 주세요.";
+        if (/메뉴 이름/.test(text)) return "메뉴 이름을 말씀해 주세요.";
+        if (/결제/.test(text)) return "맞으면 결제라고 말씀해 주세요.";
+        if (/포장|먹을게요/.test(text)) return "포장이요, 여기서 먹을게요.";
+        if (/세트|단품/.test(text)) return "세트요, 단품이요.";
+        if (/없|네/.test(text)) return "더 있으면 네, 없으면 아니요.";
+        if (/따뜻|차갑/.test(text)) return "따뜻하게요, 차갑게요.";
+        if (/잔/.test(text)) return "작은 잔, 중간 잔, 큰 잔.";
+        if (/달콤|맛/.test(text)) return "달콤, 상큼, 구수, 고소, 얼큰, 짭짤.";
+        return "다시 말씀해 주세요.";
     }
 
     function bestVoice() {
