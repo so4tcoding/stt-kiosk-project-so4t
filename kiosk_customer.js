@@ -1155,7 +1155,16 @@
             {group:"시작",prep:"welcome",text:"더치커피 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"시작",prep:"grid:커피",text:"모카 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"menu_grid"}},
             {group:"시작",prep:"grid:커피",text:"카라멜 라떼 하나",intended:"",expect:{type:"spoken",value:"없",stage:"menu_grid"}},
-            {group:"시작",prep:"welcome",text:"녹차라떼 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}}
+            {group:"시작",prep:"welcome",text:"녹차라떼 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"세트",prep:"upsell:치즈버거",text:"치즈 추가해 줘",intended:"세트",expect:{type:"set"}},
+            {group:"세트",prep:"upsell:불고기버거",text:"빼 주세요",intended:"단품",expect:{type:"single"}},
+            {group:"세트",prep:"upsell:치즈버거",text:"그냥 버거",intended:"단품",expect:{type:"single"}},
+            {group:"세트",prep:"upsell:불고기버거",text:"세트 메뉴로",intended:"세트",expect:{type:"set"}},
+            {group:"세트",prep:"upsell:치즈버거",text:"세트 빼 줘",intended:"단품",expect:{type:"single"}},
+            {group:"시작",prep:"welcome",text:"초코 케이크",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"바닐라 아이스크림",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"메뉴",prep:"grid:음료",text:"제일 싼 거",intended:"",expect:{type:"spoken",value:"가격",stage:"menu_grid"}},
+            {group:"메뉴",prep:"grid:국밥",text:"제일 저렴한 거",intended:"",expect:{type:"spoken",value:"가격",stage:"menu_grid"}}
         ];
     }
 

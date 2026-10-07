@@ -538,7 +538,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|카푸치노|모카|카라멜|헤이즐|더치|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
+            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|카푸치노|모카|카라멜|헤이즐|더치|초코|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -643,6 +643,11 @@
                 if (typeof transitionTo === "function" && typeof renderCategorySelect === "function") {
                     transitionTo("category_select", renderCategorySelect);
                 }
+                return true;
+            }
+
+            if (/menu_grid/.test(stage) && /제일싸|제일저렴|싼거|저렴한/.test(raw) && typeof speakText === "function") {
+                speakText("싼 메뉴는 이름을 말씀해 주시면 가격을 알려드립니다.");
                 return true;
             }
 
@@ -861,14 +866,26 @@
 
             if (stage === "upsell") {
                 const choice = raw.indexOf("말고") === -1 ? raw : (raw.split("말고").pop() || "");
+                if (/빼/.test(choice) && !/추가/.test(choice)) {
+                    tempItem.isSet = false;
+                    askQuantity();
+                    if (countIn(raw)) return leaveQuantity(countIn(raw));
+                    return true;
+                }
                 if (/세트|같이/.test(choice)) {
                     tempItem.isSet = true;
                     askQuantity();
                     if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
-                if (/단품|버거만|햄버거만/.test(choice)) {
+                if (/단품|버거만|햄버거만|그냥버거|그냥햄버/.test(choice)) {
                     tempItem.isSet = false;
+                    askQuantity();
+                    if (countIn(raw)) return leaveQuantity(countIn(raw));
+                    return true;
+                }
+                if (/추가/.test(choice)) {
+                    tempItem.isSet = true;
                     askQuantity();
                     if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
