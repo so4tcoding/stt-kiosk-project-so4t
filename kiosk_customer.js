@@ -1020,7 +1020,23 @@
             {group:"온도",prep:"temp:아메리카노",text:"얼음 많이",intended:"아이스",expect:{type:"ice"}},
             {group:"용량",prep:"cup:오렌지 주스",text:"머그잔으로",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}},
             {group:"용량",prep:"cup:콜라",text:"텀블러에 담아 줘",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}},
-            {group:"용량",prep:"cup:사이다",text:"유리잔으로",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}}
+            {group:"용량",prep:"cup:사이다",text:"유리잔으로",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}},
+            {group:"용량",prep:"cup:콜라",text:"스몰",intended:"스몰",expect:{type:"stage",value:"add_more_prompt"}},
+            {group:"용량",prep:"cup:오렌지 주스",text:"미디엄",intended:"미디엄",expect:{type:"stage",value:"beverage_option_prompt"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"한 개",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"한 개요",intended:"한 개",expect:{type:"countLeave",count:1,item:"돼지"}},
+            {group:"결제",prep:"place",text:"여기서 드실게요",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"결제",prep:"place",text:"들고 가실게요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"포장해 가실게요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"매장에서 드실게요",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"결제",prep:"sum",text:"빼 줘",intended:"",expect:{type:"spoken",value:"메뉴",stage:"summary"}},
+            {group:"단계",prep:"opt",text:"다섯 단계",intended:"5단계",expect:{type:"sugar",value:5}},
+            {group:"단계",prep:"opt",text:"한 단계",intended:"1단계",expect:{type:"sugar",value:1}},
+            {group:"단계",prep:"opt",text:"두 단계",intended:"2단계",expect:{type:"sugar",value:2}},
+            {group:"단계",prep:"opt",text:"세 단계",intended:"3단계",expect:{type:"sugar",value:3}},
+            {group:"단계",prep:"opt",text:"네 단계",intended:"4단계",expect:{type:"sugar",value:4}},
+            {group:"뒤로",prep:"qty:오렌지 주스",text:"이전 화면으로",intended:"이전으로",expect:{type:"back",item:"오렌지"}},
+            {group:"안내",prep:"welcome",text:"소리 크게 해 주이소",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}}
         ];
     }
 

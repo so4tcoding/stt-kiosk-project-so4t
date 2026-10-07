@@ -837,6 +837,14 @@
                 return true;
             }
 
+            if (stage === "summary" && /빼/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
+                const named = customMenus.some(function (item) { return raw.indexOf(plain(item.name)) !== -1; });
+                if (!named) {
+                    speakText("어떤 메뉴를 뺄지 이름을 같이 말씀해 주세요.");
+                    return true;
+                }
+            }
+
             if (stage === "summary" && /얼마|가격/.test(raw) && typeof renderSummary === "function") {
                 renderSummary();
                 return true;
