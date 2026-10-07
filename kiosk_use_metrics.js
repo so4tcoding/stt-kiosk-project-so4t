@@ -458,7 +458,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /물주세요|물좀|맥주|소주|공기밥/.test(raw) && typeof speakText === "function") {
+            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|김치|라면/.test(raw) || /^밥(주세요|좀|주이소)?$/.test(raw)) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -493,7 +493,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담|계산|결제|그냥주문|다했|그거면|이거면|골랐/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담|계산|결제|그냥주문|다했|그거면|이거면|골랐|영수증/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);
@@ -658,11 +658,11 @@
 
             if (stage === "beverage_option_step" && Array.isArray(optionList) && optionList[optionStepIndex]) {
                 let level = 0;
-                if (/낮게|싱겁|덜달|안달|없이|달지않|빼|없애/.test(raw)) level = 1;
+                if (/낮게|싱겁|덜달|안달|없이|달지않|빼|없애|내려/.test(raw)) level = 1;
                 else if (/조금|적게/.test(raw)) level = 2;
                 else if (/적당|그냥|보통/.test(raw)) level = 3;
                 else if (/많이/.test(raw)) level = 4;
-                else if (/달게|달콤|가득|달아/.test(raw)) level = 5;
+                else if (/달게|달콤|가득|달아|올려/.test(raw)) level = 5;
                 if (!level) return false;
                 if (!tempItem.beverageOptions) tempItem.beverageOptions = {};
                 tempItem.beverageOptions[optionList[optionStepIndex].key] = level;
@@ -675,7 +675,14 @@
                 return true;
             }
 
-            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거/.test(raw) && !/아니|틀려/.test(raw) && typeof selectSpecificItem === "function") {
+            if (stage === "menu_confirm" && /아니|틀려|틀리|틀립/.test(raw)) {
+                pendingMenuName = "";
+                currentStageName = "menu_grid";
+                if (typeof renderMenuGrid === "function") renderMenuGrid();
+                return true;
+            }
+
+            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거/.test(raw) && !/아니|틀려|틀리|틀립/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem(pendingMenuName);
                 return afterSelect(raw);
             }
