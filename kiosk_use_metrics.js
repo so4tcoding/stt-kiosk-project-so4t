@@ -276,7 +276,7 @@
                 if (currentStageName === "temp") {
                     let picked = "";
                     if (/아이스|차갑|차가|시원/.test(raw)) picked = "아이스(ICE)";
-                    else if (/뜨겁|뜨끈|따뜻|핫|뜨거/.test(raw)) picked = "핫(HOT)";
+                    else if (/뜨겁|뜨끈|따뜻|따듯|뜨뜻|핫|뜨거/.test(raw)) picked = "핫(HOT)";
                     if (picked) {
                         tempItem.temp = picked;
                         askQuantity();
@@ -413,7 +413,7 @@
                     return true;
                 }
                 const choice = raw.indexOf("말고") === -1 ? raw : (raw.split("말고").pop() || "");
-                if (/포장|들고|가져|가지고|밖에서|밖에|나가|싸|테이크/.test(choice)) {
+                if (/포장|들고|가져|가지고|밖에서|밖에|나가|싸|테이크|집|회사/.test(choice)) {
                     orderState.place = "포장해서 가기";
                     transitionTo("summary", renderSummary);
                     return true;
@@ -496,7 +496,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
+            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -671,7 +671,7 @@
                 return true;
             }
 
-            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /바닐라|에스프레소/.test(raw) && typeof speakText === "function") {
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /바닐라|에스프레소|디카페인/.test(raw) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -741,11 +741,15 @@
                     if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
+                if (/샷추가|샷넣|디카페인/.test(raw) && typeof speakText === "function") {
+                    speakText("그 선택은 없습니다. 뜨거운 것과 아이스 중에서 말씀해 주세요.");
+                    return true;
+                }
                 if (/미지근|연하|진하/.test(raw) && typeof speakText === "function") {
                     speakText("뜨거운 것과 아이스 중에서 말씀해 주세요.");
                     return true;
                 }
-                if (/뜨겁|뜨끈|따뜻|핫|hot|뜨거/.test(choice)) {
+                if (/뜨겁|뜨끈|따뜻|따듯|뜨뜻|핫|hot|뜨거/.test(choice)) {
                     tempItem.temp = "핫(HOT)";
                     askQuantity();
                     if (countIn(raw)) return leaveQuantity(countIn(raw));
@@ -783,6 +787,11 @@
                 return finishCup("350ml");
             }
 
+            if (stage === "cup_size" && /머그|유리잔|텀블러/.test(raw) && typeof speakText === "function") {
+                speakText("그 잔은 없습니다. 작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.");
+                return true;
+            }
+
             if (stage === "cup_size" && /리터|1l|일리터/.test(raw) && typeof speakText === "function") {
                 speakText("1리터는 없습니다. 작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.");
                 return true;
@@ -794,7 +803,7 @@
 
             if (stage === "beverage_option_step" && Array.isArray(optionList) && optionList[optionStepIndex]) {
                 let level = 0;
-                if (/낮게|싱겁|덜달|안달|없이|달지않|빼|없애|내려/.test(raw)) level = 1;
+                if (/낮게|싱겁|덜달|안달|없이|달지않|빼|없애|내려|무설탕|설탕없/.test(raw)) level = 1;
                 else if (/조금|적게/.test(raw)) level = 2;
                 else if (/많이/.test(raw) && !/달게|달콤/.test(raw)) level = 4;
                 else if (/달게|달콤|가득|달아|올려/.test(raw)) level = 5;

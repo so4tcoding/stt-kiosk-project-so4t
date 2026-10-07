@@ -1005,7 +1005,22 @@
             {group:"안내",prep:"welcome",text:"더 키워 줘",intended:"확대",expect:{type:"spoken",value:"확대",stage:"welcome"}},
             {group:"안내",prep:"welcome",text:"작게 해 줘",intended:"줄",expect:{type:"spoken",value:"줄",stage:"welcome"}},
             {group:"수량",prep:"qty:오렌지 주스",text:"스무 잔",intended:"",expect:{type:"spoken",value:"열",stage:"quantity"}},
-            {group:"수량",prep:"qty:콜라",text:"백 잔",intended:"",expect:{type:"spoken",value:"열",stage:"quantity"}}
+            {group:"수량",prep:"qty:콜라",text:"백 잔",intended:"",expect:{type:"spoken",value:"열",stage:"quantity"}},
+            {group:"결제",prep:"place",text:"집에서 먹을게",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"집에서 먹을게요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"회사로 가져갈게",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"온도",prep:"temp:아메리카노",text:"따듯하게",intended:"핫",expect:{type:"hot"}},
+            {group:"온도",prep:"temp:아메리카노",text:"뜨뜻하게 해 주세요",intended:"핫",expect:{type:"hot"}},
+            {group:"온도",prep:"temp:아메리카노",text:"샷 추가해 줘",intended:"",expect:{type:"spoken",value:"아이스",stage:"temp"}},
+            {group:"온도",prep:"temp:카페라떼",text:"디카페인으로",intended:"",expect:{type:"spoken",value:"아이스",stage:"temp"}},
+            {group:"시작",prep:"welcome",text:"디카페인 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"메뉴",prep:"grid:커피",text:"디카페인 아메리카노",intended:"",expect:{type:"spoken",value:"없",stage:"menu_grid"}},
+            {group:"단계",prep:"opt",text:"무설탕으로",intended:"1단계",expect:{type:"sugar",value:1}},
+            {group:"단계",prep:"opt",text:"설탕 빼 주세요",intended:"1단계",expect:{type:"sugar",value:1}},
+            {group:"온도",prep:"temp:아메리카노",text:"얼음 많이",intended:"아이스",expect:{type:"ice"}},
+            {group:"용량",prep:"cup:오렌지 주스",text:"머그잔으로",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}},
+            {group:"용량",prep:"cup:콜라",text:"텀블러에 담아 줘",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}},
+            {group:"용량",prep:"cup:사이다",text:"유리잔으로",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}}
         ];
     }
 
