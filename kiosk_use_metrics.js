@@ -529,6 +529,11 @@
                 return true;
             }
 
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /순댓국/.test(raw) && typeof selectSpecificItem === "function") {
+                selectSpecificItem("순대국밥");
+                return afterSelect(raw);
+            }
+
             if (/menu_grid|open_order_prompt|category_select/.test(stage) && /특징|무슨맛|어떤맛|얼마|가격/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
                 const described = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
                     return plain(b).length - plain(a).length;
@@ -595,11 +600,13 @@
                 if (/뜨겁|뜨끈|따뜻|핫|hot|뜨거/.test(raw)) {
                     tempItem.temp = "핫(HOT)";
                     askQuantity();
+                    if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
                 if (/아이스|차갑|차가|시원|ice/.test(raw)) {
                     tempItem.temp = "아이스(ICE)";
                     askQuantity();
+                    if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
             }
