@@ -26732,6 +26732,9 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
         if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
         if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
+        const heard = String(text || "").replace(/\s+/g, "");
+        if (/작은잔|작은전|중간잔|큰잔|작잔/.test(heard) || /작잔|작전|큰잔|중간잔/.test(c)) return true;
+        if (/집가서먹|집에서먹|집에가서먹/.test(heard) || /집서먹|집에서먹|집가서먹/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -27178,6 +27181,9 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
         if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
         if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
+        const heard = String(text || "").replace(/\s+/g, "");
+        if (/작은잔|작은전|중간잔|큰잔|작잔/.test(heard) || /작잔|작전|큰잔|중간잔/.test(c)) return true;
+        if (/집가서먹|집에서먹|집에가서먹/.test(heard) || /집서먹|집에서먹|집가서먹/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
