@@ -1135,7 +1135,19 @@
             {group:"단계",prep:"opt",text:"단맛 나게",intended:"5단계",expect:{type:"sugar",value:5}},
             {group:"결제",prep:"place",text:"천천히 먹을게",intended:"매장에서",expect:{type:"place",value:"매장"}},
             {group:"시작",prep:"welcome",text:"배고파서 왔어요",intended:"네",expect:{type:"stage",value:"open_order_prompt"}},
-            {group:"온도",prep:"temp:아메리카노",text:"아이스로 하지 마세요",intended:"핫",expect:{type:"hot"}}
+            {group:"온도",prep:"temp:아메리카노",text:"아이스로 하지 마세요",intended:"핫",expect:{type:"hot"}},
+            {group:"용량",prep:"cup:콜라",text:"크게 주세요",intended:"라지",expect:{type:"stage",value:"add_more_prompt"}},
+            {group:"용량",prep:"cup:오렌지 주스",text:"작게 주세요",intended:"스몰",expect:{type:"stage",value:"beverage_option_prompt"}},
+            {group:"단계",prep:"opt",text:"달달하게 해 주이소",intended:"5단계",expect:{type:"sugar",value:5}},
+            {group:"단계",prep:"opt",text:"새콤하게",intended:"",expect:{type:"spoken",value:"단계",stage:"beverage_option_step"}},
+            {group:"시작",prep:"welcome",text:"먹고 싶어요",intended:"네",expect:{type:"stage",value:"open_order_prompt"}},
+            {group:"메뉴",prep:"confirm:딸기 라떼",text:"그거로 주이소",intended:"딸기 라떼",expect:{type:"itemStage",item:"딸기",stage:"quantity"}},
+            {group:"메뉴",prep:"confirm:콜라",text:"이걸로 주이소",intended:"콜라",expect:{type:"itemStage",item:"콜라",stage:"quantity"}},
+            {group:"온도",prep:"temp:아메리카노",text:"얼음 적게",intended:"아이스",expect:{type:"ice"}},
+            {group:"결제",prep:"place",text:"가져가고 싶어요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"먹고 싶어요",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"용량",prep:"cup:사이다",text:"중간 정도",intended:"미디엄",expect:{type:"stage",value:"add_more_prompt"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"뜨겁게 한 그릇",intended:"한 개",expect:{type:"countLeave",count:1,item:"돼지"}}
         ];
     }
 

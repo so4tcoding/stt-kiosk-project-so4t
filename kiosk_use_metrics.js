@@ -581,6 +581,14 @@
                 return true;
             }
 
+            if (stage === "welcome" && /불고기/.test(raw) && !/한우|덮밥|버거/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                selectedCategory = "불고기";
+                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "불고기"; });
+                currentGridTitle = "불고기 메뉴판";
+                transitionTo("menu_grid", renderMenuGrid);
+                return true;
+            }
+
             if (stage === "welcome" && /햄버거/.test(raw) && !/치즈|불고기/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                 selectedCategory = "햄버거";
                 currentGridMenus = customMenus.filter(function (menu) { return menu.category === "햄버거"; });
@@ -594,7 +602,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러|배고파|배고프|배고픕|주문부탁|예예|네네/.test(raw)) {
+            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러|배고파|배고프|배고픕|주문부탁|예예|네네|먹고싶/.test(raw)) {
                 startOrder();
                 return true;
             }
@@ -867,7 +875,7 @@
                 }
             }
 
-            if (stage === "cup_size" && /큰걸|큰컵|큰거|큰잔|라지|큰/.test(raw)) {
+            if (stage === "cup_size" && /큰걸|큰컵|큰거|큰잔|라지|큰|크게/.test(raw)) {
                 return finishCup("500ml");
             }
 
@@ -894,7 +902,7 @@
                 if (/낮게|싱겁|덜달|안달|없이|달지않|빼|없애|내려|무설탕|설탕없/.test(raw)) level = 1;
                 else if (/조금|적게/.test(raw)) level = 2;
                 else if (/많이/.test(raw) && !/달게|달콤/.test(raw)) level = 4;
-                else if (/달게|달콤|가득|달아|올려|단맛/.test(raw)) level = 5;
+                else if (/달게|달콤|가득|달아|올려|단맛|달달/.test(raw)) level = 5;
                 else if (/적당|그냥|보통/.test(raw)) level = 3;
                 if (!level) return false;
                 if (!tempItem.beverageOptions) tempItem.beverageOptions = {};
