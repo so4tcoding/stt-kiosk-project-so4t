@@ -458,7 +458,12 @@
                 return true;
             }
 
-            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡/.test(raw) || /^밥(주세요|좀|주이소)?$/.test(raw)) && typeof speakText === "function") {
+            if (stage === "welcome" && /직원|불러줘|화장실/.test(raw) && typeof speakText === "function") {
+                speakText("직원 호출은 없습니다. 주문은 여기서 말씀해 주세요.");
+                return true;
+            }
+
+            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지/.test(raw) || /^밥(주세요|좀|주이소)?$/.test(raw)) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -547,6 +552,11 @@
                 return true;
             }
 
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /싸이다/.test(raw) && typeof selectSpecificItem === "function") {
+                selectSpecificItem("사이다");
+                return afterSelect(raw);
+            }
+
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /순댓국/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem("순대국밥");
                 return afterSelect(raw);
@@ -608,6 +618,18 @@
                         else if (len === bestLen && len >= 2) hits.push(item);
                     });
                     if (hits.length === 1 && bestLen >= 2) {
+                        let shortOk = bestLen >= 3;
+                        if (!shortOk) {
+                            const key = plain(hits[0].name);
+                            for (let n = 0; n + bestLen <= key.length; n++) {
+                                const slice = key.slice(n, n + bestLen);
+                                if (raw.indexOf(slice) !== -1 && /^(콜라|라떼|주스|순대|백반|수육|덮밥|아메|딸기|레몬|국밥|버거|커피|한우|쿠키)$/.test(slice)) {
+                                    shortOk = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!shortOk) continue;
                         selectSpecificItem(hits[0].name);
                         return afterSelect(raw);
                     }
