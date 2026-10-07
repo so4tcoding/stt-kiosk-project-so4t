@@ -30035,7 +30035,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         const c = compact(text);
 
-        if (/낮게|싱겁|덜달|안달/.test(c)) return 1;
+        if (/낮게|싱겁|덜달|안달|달지않/.test(c)) return 1;
         if (/달게|달콤/.test(c)) return 5;
         if (/5단계|오단계|오단게|다섯|가득|최대|많이많이|완전많이/.test(c)) return 5;
         if (/4단계|사단계|사단게|넷|많이/.test(c)) return 4;
