@@ -1,6 +1,7 @@
 #uvicorn stt_server:app --host 0.0.0.0 --port 8000
 import os
 import csv
+import json
 import io
 import uuid
 import time
@@ -14,6 +15,27 @@ from threading import Lock
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+
+import av
+
+_av_open = av.open
+
+
+def _open_audio_compat(*args, **kwargs):
+    """PyAV 16부터 av.open()의 metadata_errors 인자가 빠졌다.
+    faster-whisper 1.2.1은 그 인자를 계속 넘기므로, 거부될 때만 빼고 다시 연다.
+    """
+    try:
+        return _av_open(*args, **kwargs)
+    except TypeError as exc:
+        if "metadata_errors" not in kwargs or "metadata_errors" not in str(exc):
+            raise
+        kwargs.pop("metadata_errors", None)
+        return _av_open(*args, **kwargs)
+
+
+av.open = _open_audio_compat
+
 from faster_whisper import WhisperModel
 
 
@@ -21,7 +43,11 @@ from faster_whisper import WhisperModel
 # 기본 설정
 # ============================================================
 
-ADMIN_PASSWORD = "0302"
+ADMIN_PASSWORD = os.environ.get("KIOSK_ADMIN_PASSWORD", "0302")
+if "KIOSK_ADMIN_PASSWORD" not in os.environ:
+    print("[STT] KIOSK_ADMIN_PASSWORD 가 없습니다. 출품 환경에서는 환경 변수로 비밀번호를 지정하세요.")
+
+SAVE_RAW_AUDIO = os.environ.get("KIOSK_SAVE_RAW_AUDIO", "0") == "1"
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -61,7 +87,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -109,12 +135,33 @@ INITIAL_PROMPT = (
 # 모델 로딩
 # ============================================================
 
+def resolve_model_path(raw: str) -> str:
+    path = Path(raw)
+
+    if not path.exists() or not path.is_dir():
+        return raw
+
+    if (path / "model.bin").is_file():
+        return str(path)
+
+    found = list(path.rglob("model.bin"))
+    if found:
+        return str(found[0].parent)
+
+    raise SystemExit(
+        f"[STT] model.bin 이 없습니다: {path}\n"
+        "학습된 CTranslate2 가중치를 이 폴더에 넣거나, "
+        "기본 모델로 시작하려면 WHISPER_MODEL=base 를 지정하세요."
+    )
+
+
 def load_whisper_model(model_path: str):
-    print(f"[STT] Loading model: {model_path}")
+    resolved = resolve_model_path(model_path)
+    print(f"[STT] Loading model: {resolved}")
     print(f"[STT] CPU threads: {CPU_THREADS}")
 
     return WhisperModel(
-        model_path,
+        resolved,
         device="cpu",
         compute_type="int8",
         cpu_threads=CPU_THREADS,
@@ -122,6 +169,7 @@ def load_whisper_model(model_path: str):
     )
 
 
+MODEL_PATH = resolve_model_path(MODEL_PATH)
 model = load_whisper_model(MODEL_PATH)
 
 
@@ -142,9 +190,39 @@ def reload_whisper_model(model_path: str):
 # 공통 유틸
 # ============================================================
 
+def supplied_password(request: Request, password: str = "") -> str:
+    header = (request.headers.get("x-admin-password") or "").strip()
+    return header or (password or "").strip()
+
+
 def check_password(password: str):
     if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="wrong password")
+
+
+def require_admin(request: Request, password: str = ""):
+    check_password(supplied_password(request, password))
+
+
+def safe_collect_audio(filename: str) -> Path:
+    name = Path(filename).name
+    if not name or name != filename or name in {".", ".."}:
+        raise HTTPException(status_code=400, detail="bad filename")
+
+    root = COLLECT_AUDIO_DIR.resolve()
+    path = (root / name).resolve()
+    if path.parent != root:
+        raise HTTPException(status_code=400, detail="bad filename")
+    return path
+
+
+def safe_extract_zip(archive: zipfile.ZipFile, dest: Path):
+    root = dest.resolve()
+    for info in archive.infolist():
+        target = (root / info.filename).resolve()
+        if target != root and root not in target.parents:
+            raise HTTPException(status_code=400, detail="unsafe zip path")
+    archive.extractall(root)
 
 
 def normalize_kiosk_text(text: str) -> str:
@@ -434,6 +512,85 @@ def favicon():
     return {"ok": True}
 
 
+@app.get("/kiosk_assist.js")
+def serve_kiosk_assist():
+    script = BASE_DIR / "kiosk_assist.js"
+    if not script.exists():
+        raise HTTPException(status_code=404, detail="kiosk_assist.js not found")
+    return FileResponse(script, media_type="application/javascript")
+
+
+USE_METRICS_PATH = BASE_DIR / "kiosk_use_metrics" / "events.jsonl"
+
+
+def _append_use_metric(event):
+    USE_METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with USE_METRICS_PATH.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+
+def _read_use_metrics():
+    if not USE_METRICS_PATH.exists():
+        return []
+    events = []
+    for line in USE_METRICS_PATH.read_text(encoding="utf-8").splitlines()[-500:]:
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return events
+
+
+@app.post("/api/use-metrics")
+async def post_use_metric(request: Request):
+    body = await request.json()
+    kind = body.get("kind")
+    outcome = body.get("outcome")
+    if kind not in ("use", "learn"):
+        raise HTTPException(status_code=400, detail="kind")
+    if outcome not in ("success", "failure", "loss"):
+        raise HTTPException(status_code=400, detail="outcome")
+    event = {
+        "kind": kind,
+        "outcome": outcome,
+        "text": str(body.get("text") or "")[:80],
+        "canonical": str(body.get("canonical") or "")[:80],
+        "stage": str(body.get("stage") or "")[:40],
+        "at": body.get("at") or datetime.utcnow().isoformat(timespec="seconds") + "Z",
+    }
+    _append_use_metric(event)
+    return {"ok": True}
+
+
+@app.get("/api/use-metrics")
+def get_use_metrics():
+    return {"events": _read_use_metrics()}
+
+
+@app.get("/metrics")
+def metrics_page():
+    page = BASE_DIR / "metrics.html"
+    if not page.exists():
+        raise HTTPException(status_code=404, detail="metrics.html not found")
+    return FileResponse(page)
+
+
+@app.get("/kiosk_use_metrics.js")
+def serve_use_metrics_script():
+    script = BASE_DIR / "kiosk_use_metrics.js"
+    if not script.exists():
+        raise HTTPException(status_code=404, detail="kiosk_use_metrics.js not found")
+    return FileResponse(script, media_type="application/javascript")
+
+
+@app.get("/kiosk_customer.js")
+def serve_kiosk_customer():
+    script = BASE_DIR / "kiosk_customer.js"
+    if not script.exists():
+        raise HTTPException(status_code=404, detail="kiosk_customer.js not found")
+    return FileResponse(script, media_type="application/javascript")
+
+
 # ============================================================
 # STT API
 # ============================================================
@@ -470,12 +627,12 @@ async def transcribe_audio(file: UploadFile = File(...)):
                 tmp_path,
                 language="ko",
                 task="transcribe",
-                beam_size=3,
-                best_of=3,
+                beam_size=1,
+                best_of=1,
                 vad_filter=True,
                 vad_parameters={
-                    "min_silence_duration_ms": 500,
-                    "speech_pad_ms": 200
+                    "min_silence_duration_ms": 200,
+                    "speech_pad_ms": 80
                 },
                 initial_prompt=INITIAL_PROMPT,
                 condition_on_previous_text=False,
@@ -502,9 +659,11 @@ async def transcribe_audio(file: UploadFile = File(...)):
                 "filtered": "repeated_hallucination"
             }
 
-        sample_id = save_raw_training_sample(audio_bytes, text)
+        sample_id = ""
+        if SAVE_RAW_AUDIO:
+            sample_id = save_raw_training_sample(audio_bytes, text)
 
-        print(f"[STT] text={text} / elapsed={elapsed}s / sample_id={sample_id}")
+        print(f"[STT] text={text} / elapsed={elapsed}s / saved={bool(sample_id)}")
 
         return {
             "text": text,
@@ -1608,8 +1767,8 @@ async function login(){
     password=document.getElementById("passwordInput").value.trim();
     participant=document.getElementById("participantInput").value.trim();
 
-    if(password!=="0302"){
-        alert("비밀번호가 틀렸습니다.");
+    if(!password){
+        alert("비밀번호를 입력하세요.");
         return;
     }
 
@@ -1624,7 +1783,14 @@ async function login(){
     rebuildPromptOrder();
 
     try{
-        const res=await fetch(`/api/progress?password=$${encodeURIComponent(password)}&participant=$${encodeURIComponent(participant)}`);
+        const res=await fetch("/api/progress?participant="+encodeURIComponent(participant), {
+            headers: {"X-Admin-Password": password}
+        });
+
+        if(res.status===403){
+            alert("비밀번호가 틀렸습니다.");
+            return;
+        }
 
         if(res.ok){
             const data=await res.json();
@@ -1941,7 +2107,9 @@ function getPw(){
 
 async function loadList(){
     const pw=getPw();
-    const res=await fetch(`/api/list?password=${encodeURIComponent(pw)}`);
+    const res=await fetch("/api/list", {
+        headers: {"X-Admin-Password": pw}
+    });
 
     if(!res.ok){
         alert("비밀번호가 틀렸거나 오류입니다.");
@@ -1973,11 +2141,33 @@ async function loadList(){
 <td>${row.dialect||""}</td>
 <td>${row.round_index||""}</td>
 <td>${row.created_at||""}</td>
-<td><a class="btn" href="/download/audio/$${filename}?password=$${encodeURIComponent(pw)}">다운</a></td>
+<td><button class="btn" type="button">다운</button></td>
 `;
+
+        const btn=tr.querySelector("button");
+        if(btn){
+            btn.addEventListener("click", function(){
+                downloadWithAuth("/download/audio/"+encodeURIComponent(filename), filename);
+            });
+        }
 
         tbody.appendChild(tr);
     }
+}
+
+async function downloadWithAuth(url, filename){
+    const pw=getPw();
+    const res=await fetch(url, {headers: {"X-Admin-Password": pw}});
+    if(!res.ok){
+        alert("비밀번호가 틀렸거나 파일을 찾지 못했습니다.");
+        return;
+    }
+    const blob=await res.blob();
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=filename || "download";
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
 }
 
 function downloadZip(){
@@ -1988,7 +2178,7 @@ function downloadZip(){
         return;
     }
 
-    location.href=`/download/all.zip?password=${encodeURIComponent(pw)}`;
+    downloadWithAuth("/download/all.zip", "kiosk_voice_collection.zip");
 }
 </script>
 </body>
@@ -2018,7 +2208,7 @@ def collect_admin():
 @app.post("/api/upload")
 async def collect_upload_audio(
     request: Request,
-    password: str = Form(...),
+    password: str = Form(default=""),
     participant: str = Form(...),
     sentence: str = Form(...),
     intent: str = Form(default="UNKNOWN"),
@@ -2031,7 +2221,7 @@ async def collect_upload_audio(
     round_index: str = Form(...),
     file: UploadFile = File(...)
 ):
-    check_password(password)
+    require_admin(request, password)
 
     audio_bytes = await file.read()
 
@@ -2084,8 +2274,8 @@ async def collect_upload_audio(
 
 
 @app.get("/api/progress")
-def collect_get_progress(password: str, participant: str):
-    check_password(password)
+def collect_get_progress(request: Request, participant: str, password: str = ""):
+    require_admin(request, password)
     ensure_collection_header()
 
     count = 0
@@ -2116,8 +2306,8 @@ def collect_get_progress(password: str, participant: str):
 
 
 @app.get("/api/list")
-def collect_list_files(password: str):
-    check_password(password)
+def collect_list_files(request: Request, password: str = ""):
+    require_admin(request, password)
     ensure_collection_header()
 
     rows = []
@@ -2134,8 +2324,8 @@ def collect_list_files(password: str):
 
 
 @app.get("/download/all.zip")
-def collect_download_all(password: str):
-    check_password(password)
+def collect_download_all(request: Request, password: str = ""):
+    require_admin(request, password)
     ensure_collection_header()
 
     zip_buffer = io.BytesIO()
@@ -2159,10 +2349,10 @@ def collect_download_all(password: str):
 
 
 @app.get("/download/audio/{filename}")
-def collect_download_audio(filename: str, password: str):
-    check_password(password)
+def collect_download_audio(request: Request, filename: str, password: str = ""):
+    require_admin(request, password)
 
-    audio_path = COLLECT_AUDIO_DIR / filename
+    audio_path = safe_collect_audio(filename)
 
     if not audio_path.exists():
         raise HTTPException(status_code=404, detail="file not found")
@@ -2175,8 +2365,8 @@ def collect_download_audio(filename: str, password: str):
 # ============================================================
 
 @app.get("/admin/model-info")
-def admin_model_info(password: str):
-    check_password(password)
+def admin_model_info(request: Request, password: str = ""):
+    require_admin(request, password)
 
     return {
         "model_path": MODEL_PATH,
@@ -2188,10 +2378,11 @@ def admin_model_info(password: str):
 
 @app.post("/admin/upload-model")
 async def admin_upload_model(
-    password: str = Form(...),
+    request: Request,
+    password: str = Form(default=""),
     file: UploadFile = File(...)
 ):
-    check_password(password)
+    require_admin(request, password)
 
     if not file.filename.lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="zip 파일만 업로드 가능합니다.")
@@ -2218,9 +2409,11 @@ async def admin_upload_model(
     with open(zip_path, "wb") as f:
         f.write(model_bytes)
 
+    swapped = False
+
     try:
         with zipfile.ZipFile(zip_path, "r") as z:
-            z.extractall(extract_dir)
+            safe_extract_zip(z, extract_dir)
 
         actual_model_dir = find_ct2_model_dir(extract_dir)
 
@@ -2233,6 +2426,7 @@ async def admin_upload_model(
             ACTIVE_MODEL_DIR.rename(backup_dir)
 
         new_dir.rename(ACTIVE_MODEL_DIR)
+        swapped = True
 
         with model_lock:
             reload_whisper_model(str(ACTIVE_MODEL_DIR))
@@ -2243,15 +2437,18 @@ async def admin_upload_model(
             "model_path": str(ACTIVE_MODEL_DIR)
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
-        try:
-            if ACTIVE_MODEL_DIR.exists():
-                shutil.rmtree(ACTIVE_MODEL_DIR)
+        if swapped:
+            try:
+                if ACTIVE_MODEL_DIR.exists():
+                    shutil.rmtree(ACTIVE_MODEL_DIR)
 
-            if backup_dir.exists():
-                backup_dir.rename(ACTIVE_MODEL_DIR)
-        except Exception as restore_error:
-            print("[MODEL RESTORE ERROR]", restore_error)
+                if backup_dir.exists():
+                    backup_dir.rename(ACTIVE_MODEL_DIR)
+            except Exception as restore_error:
+                print("[MODEL RESTORE ERROR]", restore_error)
 
         raise HTTPException(status_code=500, detail=str(e))
 

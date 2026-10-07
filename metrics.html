@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>키오스크 사용 측정</title>
+    <style>
+        body { margin: 0; font-family: "Noto Sans KR", sans-serif; background: #f6f1e7; color: #4a3f30; }
+        main { max-width: 880px; margin: 0 auto; padding: 28px 18px 48px; }
+        h1 { font-size: 28px; margin-bottom: 6px; }
+        p { line-height: 1.5; }
+        .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+        .card { background: white; border-radius: 16px; padding: 14px; }
+        .card b { display: block; font-size: 28px; margin-top: 4px; }
+        canvas { width: 100%; background: white; border-radius: 16px; }
+        ul { padding-left: 18px; }
+        @media (max-width: 700px) { .cards { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+<main>
+    <h1>키오스크를 쓸 때마다 잰 비율</h1>
+    <p id="empty">아직 기록이 없습니다. 키오스크에서 말을 하면 이 화면에 쌓입니다.</p>
+    <section class="cards" id="cards" hidden>
+        <div class="card">성공률<b id="success">0%</b></div>
+        <div class="card">실패률<b id="failure">0%</b></div>
+        <div class="card">학습 성공률<b id="learn">0%</b></div>
+        <div class="card">로스율<b id="loss">0%</b></div>
+    </section>
+    <canvas id="chart" width="840" height="320" hidden></canvas>
+    <h2>학습된 말</h2>
+    <ul id="words"><li>없습니다.</li></ul>
+</main>
+<script src="/kiosk_use_metrics.js"></script>
+<script>
+    function draw(summary) {
+        const canvas = document.getElementById("chart");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const rows = [
+            ["성공률", summary.successRate, "#2a9d8f"],
+            ["실패률", summary.failureRate, "#e76f51"],
+            ["학습 성공률", summary.learnSuccessRate, "#457b9d"],
+            ["로스율", summary.lossRate, "#8a7a63"]
+        ];
+        rows.forEach(function (row, index) {
+            const y = 36 + index * 70;
+            ctx.fillStyle = "#4a3f30";
+            ctx.font = "18px sans-serif";
+            ctx.fillText(row[0], 16, y);
+            ctx.fillStyle = "#f3efe6";
+            ctx.fillRect(150, y - 18, 560, 28);
+            ctx.fillStyle = row[2];
+            ctx.fillRect(150, y - 18, 560 * (row[1] / 100), 28);
+            ctx.fillStyle = "#4a3f30";
+            ctx.fillText(row[1] + "%", 724, y);
+        });
+    }
+
+    fetch("/api/use-metrics").then(function (res) { return res.json(); }).then(function (data) {
+        const summary = (window.KioskUseMetrics || {}).summarize
+            ? window.KioskUseMetrics.summarize(data.events || [])
+            : null;
+        if (!summary || !summary.useTotal && !summary.learnTotal) return;
+        document.getElementById("empty").hidden = true;
+        document.getElementById("cards").hidden = false;
+        document.getElementById("chart").hidden = false;
+        document.getElementById("success").textContent = summary.successRate + "%";
+        document.getElementById("failure").textContent = summary.failureRate + "%";
+        document.getElementById("learn").textContent = summary.learnSuccessRate + "%";
+        document.getElementById("loss").textContent = summary.lossRate + "%";
+        try {
+            const taught = JSON.parse(localStorage.getItem("kiosk_taught_phrases_v1") || "{}");
+            const seen = {};
+            summary.learnedWords.forEach(function (word) {
+                seen[word.text + "→" + (word.canonical || "")] = true;
+            });
+            Object.keys(taught).forEach(function (key) {
+                const row = taught[key];
+                if (!row || !row.text) return;
+                const id = row.text + "→" + (row.canonical || "");
+                if (seen[id]) return;
+                seen[id] = true;
+                summary.learnedWords.push(row);
+            });
+        } catch (e) {}
+        const words = document.getElementById("words");
+        words.innerHTML = "";
+        if (!summary.learnedWords.length) {
+            words.innerHTML = "<li>없습니다.</li>";
+        } else {
+            summary.learnedWords.forEach(function (word) {
+                const li = document.createElement("li");
+                li.textContent = word.text + " → " + word.canonical;
+                words.appendChild(li);
+            });
+        }
+        draw(summary);
+    }).catch(function () {});
+</script>
+</body>
+</html>
