@@ -67,7 +67,13 @@
             { group: "용량", prep: "cup:사이다", text: "보통 사이즈", intended: "미디엄", expect: { type: "stage", value: "add_more_prompt" } },
             { group: "결제", prep: "pay", text: "카드로 계산", intended: "카드", expect: { type: "pay", value: "카드" } },
             { group: "추천", prep: "taste", text: "얼큰한 맛", intended: "얼큰", expect: { type: "gridHas", value: "소고기", stage: "menu_grid" } },
-            { group: "추천", prep: "taste", text: "담백한 거", intended: "", expect: { type: "spoken", value: "달콤", stage: "taste_select_prompt" } }
+            { group: "추천", prep: "taste", text: "담백한 거", intended: "", expect: { type: "spoken", value: "달콤", stage: "taste_select_prompt" } },
+            { group: "메뉴", prep: "grid:커피", text: "아이스 아메리카노", intended: "아메리카노", expect: { type: "ice" } },
+            { group: "메뉴", prep: "grid:햄버거", text: "치즈버거 세트", intended: "치즈버거", expect: { type: "set" } },
+            { group: "용량", prep: "cup:사이다", text: "큰 걸로", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "단계", prep: "opt", text: "당도 가득", intended: "5단계", expect: { type: "sugar", value: 5 } },
+            { group: "수량", prep: "qty:오렌지 주스", text: "2잔", intended: "두 개", expect: { type: "count", count: 2, stage: "cup_size", item: "오렌지" } },
+            { group: "안내", prep: "grid:커피", text: "소리 키워 줘", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } }
         ];
     }
 

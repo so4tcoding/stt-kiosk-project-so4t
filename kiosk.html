@@ -27723,7 +27723,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
-        if (/화면확대|글씨크게|글자크게|크게보|잘안보|안보|돋보기|키워|더크게/.test(c)) {
+        if (/화면확대|글씨크게|글자크게|크게보|잘안보|안보|돋보기|키워|더크게/.test(c) && !/소리/.test(c)) {
             try {
                 if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
                 zoomLevel = Math.min((Number(zoomLevel) || 0) + 1, 3);
@@ -29827,7 +29827,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return false;
         }
 
-        if (/안들려|잘안들려|소리키워|소리크게/.test(c)) {
+        const louder = /안들려|잘안들려|소리키워|소리크게/.test(c);
+        if (louder) {
             try {
                 if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                 ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
@@ -29844,7 +29845,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }
 
         const msg = explainCurrentStage(true);
-        say(msg);
+        say(louder ? ("소리를 키웠습니다. " + msg) : msg);
         return true;
     }
 
@@ -30244,7 +30245,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
-        if (/화면확대|글씨크게|글자크게|크게보|잘안보|안보|돋보기|키워|더크게/.test(c)) {
+        if (/화면확대|글씨크게|글자크게|크게보|잘안보|안보|돋보기|키워|더크게/.test(c) && !/소리/.test(c)) {
             localZoomLevel = Math.min(3, localZoomLevel + 1);
             applyZoom();
             say("화면을 크게 보여드리겠습니다.");

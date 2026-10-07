@@ -226,10 +226,10 @@
         }
 
         function countIn(raw) {
-            if (/네잔|네개/.test(raw)) return 4;
-            if (/세잔|세개/.test(raw)) return 3;
-            if (/두잔|두개|둘이/.test(raw)) return 2;
-            if (/한잔|한개/.test(raw)) return 1;
+            if (/네잔|네개|4잔|4개/.test(raw)) return 4;
+            if (/세잔|세개|3잔|3개/.test(raw)) return 3;
+            if (/두잔|두개|둘이|2잔|2개/.test(raw)) return 2;
+            if (/한잔|한개|1잔|1개/.test(raw)) return 1;
             return 0;
         }
 
@@ -262,6 +262,16 @@
             const stage = typeof currentStageName === "undefined" ? "" : currentStageName;
             const raw = plain(text);
             if (!raw || !stage) return false;
+
+            if (/소리키워|소리크게|소리올려/.test(raw)) {
+                try {
+                    if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
+                    ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
+                    ttsEnabled = true;
+                } catch (e) {}
+                if (typeof speakText === "function") speakText("소리를 키웠습니다.");
+                return true;
+            }
 
             if (stage === "payment") {
                 if (/카드/.test(raw) && typeof selectPayment === "function") {
@@ -331,6 +341,30 @@
                     const key = plain(names[i]);
                     if (key.length >= 2 && raw.indexOf(key) !== -1) {
                         selectSpecificItem(names[i]);
+                        if (currentStageName === "temp") {
+                            if (/아이스|차갑|시원/.test(raw)) {
+                                tempItem.temp = "아이스(ICE)";
+                                askQuantity();
+                                return true;
+                            }
+                            if (/뜨겁|따뜻|핫/.test(raw)) {
+                                tempItem.temp = "핫(HOT)";
+                                askQuantity();
+                                return true;
+                            }
+                        }
+                        if (currentStageName === "upsell") {
+                            if (/세트|같이/.test(raw)) {
+                                tempItem.isSet = true;
+                                askQuantity();
+                                return true;
+                            }
+                            if (/단품/.test(raw)) {
+                                tempItem.isSet = false;
+                                askQuantity();
+                                return true;
+                            }
+                        }
                         if (currentStageName === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
                         return true;
                     }
@@ -363,6 +397,10 @@
                 }
             }
 
+            if (stage === "cup_size" && /큰걸|큰컵|큰거|라지/.test(raw)) {
+                return finishCup("500ml");
+            }
+
             if (stage === "cup_size" && /보통사이즈|중간사이즈|미디엄/.test(raw) && !/큰|라지|작은|스몰/.test(raw)) {
                 return finishCup("350ml");
             }
@@ -373,7 +411,7 @@
 
             if (stage === "beverage_option_step" && Array.isArray(optionList) && optionList[optionStepIndex]) {
                 let level = 0;
-                if (/달게|달콤/.test(raw)) level = 5;
+                if (/달게|달콤|가득/.test(raw)) level = 5;
                 else if (/많이/.test(raw)) level = 4;
                 else if (/낮게|싱겁|덜달|안달/.test(raw)) level = 1;
                 if (!level) return false;
