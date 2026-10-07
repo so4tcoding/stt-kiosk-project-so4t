@@ -236,6 +236,7 @@
         }
 
         function countIn(raw) {
+            if (/여섯잔|여섯개|여섯그릇|여섯명|6잔|6개|6명/.test(raw)) return 6;
             if (/다섯잔|다섯개|다섯그릇|다섯명|5잔|5개|5명/.test(raw)) return 5;
             if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명/.test(raw)) return 4;
             if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명/.test(raw)) return 3;
@@ -429,6 +430,11 @@
             if (stage === "welcome" && /맛있어|맛있는거|뭐가좋|추천해/.test(raw) && typeof renderTasteSelectPrompt === "function") {
                 currentStageName = "taste_select_prompt";
                 renderTasteSelectPrompt();
+                return true;
+            }
+
+            if (stage === "welcome" && /처음인데|처음이야|첫주문/.test(raw)) {
+                previous("사용법 알려줘");
                 return true;
             }
 
