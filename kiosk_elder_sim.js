@@ -9,6 +9,7 @@
     if (typeof window !== "undefined") {
         window.KioskElderSim = api;
         window.__kioskRunElderSim = api.run;
+        window.__kioskRunAgedSim = api.runAged;
     }
     root.KioskElderSim = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
@@ -241,7 +242,7 @@
         if (before.stage === "quantity" && after.count && after.count !== goal.count) {
             return "'" + said + "'라고 했으나 " + after.count + goal.unit + "로 담김";
         }
-        if (said === "뭐라고요" && /소리를 키웠/.test(spoken)) return "'뭐라고요'라고 했더니 소리를 키우고 화면은 그대로임";
+        if (/뭐라고|안 들려|안들려/.test(said) && /소리를 키우/.test(spoken)) return "'" + said + "'라고 했더니 소리를 키우고 화면은 그대로임";
         if (before.stage === after.stage && /선택했습니다|키웠습니다|대답하지 않으셔도/.test(spoken)) {
             return "말은 알아들었으나 화면이 안 넘어감. 나온 말: " + spoken.slice(0, 42);
         }
@@ -251,14 +252,21 @@
         return screenName(before.stage) + "에서 " + screenName(after.stage) + "로 넘어갔지만 주문이 끝나지 않음";
     }
 
-    function runOne(index) {
-        const rand = mulberry32(24000 + index * 131);
-        const shopId = SHOPS[index % SHOPS.length];
+    function ageFilter(aged) {
+        if (!aged || typeof window === "undefined") return null;
+        return window.KioskAgeFilter || null;
+    }
+
+    function runOne(index, aged) {
+        const filter = ageFilter(aged);
+        const rand = mulberry32(filter ? filter.seed(index) : (24000 + index * 131));
+        const shopId = filter ? SHOPS[filter.shopSlot(index)] : SHOPS[index % SHOPS.length];
         resetOrder(shopId);
         const names = (typeof customMenus !== "undefined" ? customMenus : []).map(function (menu) { return menu.name; }).filter(Boolean);
         const menu = names[Math.floor(rand() * names.length)] || "돼지국밥";
         const hearing = 0.15 + rand() * 0.85;
         const clarity = rand();
+        const agedBot = filter ? filter.profile(rand) : null;
         const goal = {
             id: index + 1,
             shopId: shopId,
@@ -271,7 +279,7 @@
             takeout: rand() < 0.55,
             card: rand() < 0.62
         };
-        const bot = { hearing: hearing, clarity: clarity, maxChars: Math.round(36 + hearing * 80) };
+        const bot = agedBot || { hearing: hearing, clarity: clarity, maxChars: Math.round(36 + hearing * 80) };
         window.__kioskLastSpoken = "고객님, 반갑습니다! 주문을 시작하시려면 네, 키오스크 사용법이 궁금하시면 사용법 알려줘 라고 말씀해주세요.";
         const turns = [];
         let ttsFails = 0;
@@ -283,8 +291,23 @@
             const state = snapshot();
             if (done(goal, state)) { ok = true; break; }
             const prompt = heardLine(state.spoken, lastHeard, shopId);
-            const gotIt = understands(prompt, bot);
-            const said = gotIt ? (clarity < 0.38 ? messyLine(goal, state.stage, rand) : clearLine(goal, state.stage)) : confusedSay(rand);
+            const gotIt = filter ? filter.understands(prompt, bot) : understands(prompt, bot);
+            let said;
+            if (filter && !bot.visionSaid && bot.vision < 0.18 && state.stage === "welcome") {
+                bot.visionSaid = true;
+                said = "글씨가 안 보여요";
+            } else if (filter && !bot.volumeSaid && bot.volume < 0.2) {
+                bot.volumeSaid = true;
+                said = "안 들려요";
+            } else if (!gotIt) {
+                said = filter ? filter.confused(rand) : confusedSay(rand);
+            } else if (filter && bot.diction < 0.5) {
+                said = filter.dialect(goal, state.stage, rand);
+            } else if (!filter && clarity < 0.38) {
+                said = messyLine(goal, state.stage, rand);
+            } else {
+                said = clearLine(goal, state.stage);
+            }
             const result = say(said);
             lastHeard = said;
             const after = result.after;
@@ -330,13 +353,21 @@
                 next: screenName(state.stage)
             });
         }
-        return { id: goal.id, shop: goal.shopName, menu: goal.menu, ok: ok, hearing: Math.round(bot.hearing * 100), clarity: Math.round(bot.clarity * 100), ttsFails: ttsFails, wordFails: wordFails, turns: turns };
+        return { id: goal.id, shop: goal.shopName, menu: goal.menu, ok: ok, hearing: Math.round(bot.hearing * 100), vision: bot.vision ? Math.round(bot.vision * 100) : null, volume: bot.volume ? Math.round(bot.volume * 100) : null, clarity: Math.round((bot.diction || bot.clarity) * 100), ttsFails: ttsFails, wordFails: wordFails, turns: turns };
     }
 
-    function run(count) {
+    function average(rows, key) {
+        const nums = rows.map(function (row) { return row[key]; }).filter(function (n) { return typeof n === "number"; });
+        if (!nums.length) return null;
+        return Math.round(nums.reduce(function (sum, n) { return sum + n; }, 0) / nums.length);
+    }
+
+    function run(count, aged) {
         const n = count || 500;
+        if (aged && typeof window !== "undefined" && window.KioskAgeFilter) window.KioskAgeFilter.applyVisual();
         const rows = [];
-        for (let i = 0; i < n; i++) rows.push(runOne(i));
+        try {
+        for (let i = 0; i < n; i++) rows.push(runOne(i, aged));
         const success = rows.filter(function (row) { return row.ok; }).length;
         const failRows = rows.filter(function (row) { return !row.ok; });
         const ttsOnly = failRows.filter(function (row) { return row.ttsFails > 0 && row.wordFails === 0; }).length;
@@ -369,8 +400,19 @@
             wordOnly: wordOnly,
             both: both,
             byShop: byShop,
-            table: table
+            table: table,
+            aged: !!aged,
+            avgHearing: average(rows, "hearing"),
+            avgVision: average(rows, "vision"),
+            avgVolume: average(rows, "volume")
         };
+        } finally {
+            if (aged && typeof window !== "undefined" && window.KioskAgeFilter) window.KioskAgeFilter.clearVisual();
+        }
+    }
+
+    function runAged(count) {
+        return run(count, true);
     }
 
     function trace(shopId, lines) {
@@ -382,5 +424,5 @@
         });
     }
 
-    return { run: run, runOne: runOne, trace: trace };
+    return { run: run, runOne: runOne, trace: trace, runAged: runAged };
 });
