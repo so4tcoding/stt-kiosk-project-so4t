@@ -85,9 +85,12 @@
         function hush() {
             window.__kioskTtsBlocking = function () { return false; };
             window.__kioskTtsHeardUntil = 0;
+            window.__TTS_FINAL_MIC_OFF = false;
+            window.__TTS_FINAL_MIC_OFF_UNTIL = 0;
             window.isTtsSpeaking = false;
             window.__ttsHardBlock = false;
             window.__ttsBlockUntil = 0;
+            try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
             window.speakText = function (text) {
                 if (text) window.__kioskLastSpoken = String(text);
                 window.isTtsSpeaking = false;
