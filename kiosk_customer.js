@@ -794,7 +794,32 @@
             { group: "메뉴", prep: "confirm:레몬 에이드", text: "틀립니다", intended: "", expect: { type: "ignore" } },
             { group: "메뉴", prep: "grid:국밥", text: "순댓국 두 그릇", intended: "순대국밥", expect: { type: "countLeave", count: 2, item: "순대" } },
             { group: "메뉴", prep: "grid:커피", text: "카페라테 하나", intended: "카페라떼", expect: { type: "itemStage", item: "카페라떼", stage: "temp" } },
-            { group: "메뉴", prep: "grid:음료", text: "싸이다 하나", intended: "사이다", expect: { type: "count", count: 1, stage: "cup_size", item: "사이다" } }
+            { group: "메뉴", prep: "grid:음료", text: "싸이다 하나", intended: "사이다", expect: { type: "count", count: 1, stage: "cup_size", item: "사이다" } },
+,
+            {group: "시작", prep: "welcome", text: "우동 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "짜장면 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "짬뽕 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "비빔밥 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "냉면 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "삼겹살 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "갈비 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "피자 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "치킨 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "김밥 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "떡볶이 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "녹차 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "홍차 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "밀크티 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "호떡 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "시작", prep: "welcome", text: "김치찌개 주세요", intended: "", expect: {type: "spoken", value: "없", stage: "welcome"}},
+            {group: "온도", prep: "temp:아메리카노", text: "아이스로 부탁합니다", intended: "아이스", expect: {type: "ice"}},
+            {group: "온도", prep: "temp:아메리카노", text: "뜨겁게 부탁합니다", intended: "핫", expect: {type: "hot"}},
+            {group: "용량", prep: "cup:콜라", text: "스몰로 부탁합니다", intended: "스몰", expect: {type: "stage", value: "add_more_prompt"}},
+            {group: "용량", prep: "cup:콜라", text: "라지로 부탁합니다", intended: "라지", expect: {type: "stage", value: "add_more_prompt"}},
+            {group: "용량", prep: "cup:사이다", text: "미디엄으로 부탁합니다", intended: "미디엄", expect: {type: "stage", value: "add_more_prompt"}},
+            {group: "결제", prep: "more", text: "계산 부탁합니다", intended: "아니요", expect: {type: "stage", value: "place"}},
+            {group: "결제", prep: "sum", text: "결제 부탁합니다", intended: "결제", expect: {type: "stage", value: "payment"}},
+            {group: "결제", prep: "more", text: "추가 부탁해요", intended: "네", expect: {type: "stage", value: "category_select"}}
         ];
     }
 
