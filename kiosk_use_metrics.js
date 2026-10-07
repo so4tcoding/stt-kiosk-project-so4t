@@ -236,6 +236,7 @@
         }
 
         function countIn(raw) {
+            if (/일곱잔|일곱개|일곱그릇|일곱명|7잔|7개|7명/.test(raw)) return 7;
             if (/여섯잔|여섯개|여섯그릇|여섯명|6잔|6개|6명/.test(raw)) return 6;
             if (/다섯잔|다섯개|다섯그릇|다섯명|5잔|5개|5명/.test(raw)) return 5;
             if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명/.test(raw)) return 4;
@@ -315,6 +316,16 @@
                 return true;
             }
 
+            if (!/소리/.test(raw) && (/글씨|글자|화면/.test(raw) && /줄여|작게|축소/.test(raw))) {
+                try {
+                    if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
+                    zoomLevel = Math.max(0, (Number(zoomLevel) || 0) - 1);
+                    if (typeof updateZoomUI === "function") updateZoomUI();
+                } catch (e) {}
+                if (typeof speakText === "function") speakText("화면을 줄였습니다.");
+                return true;
+            }
+
             if (/아래보여|밑에보여|밑으로|아랫부분|밑부분/.test(raw) && !/왼쪽|오른쪽|번째/.test(raw)) {
                 try {
                     if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
@@ -325,7 +336,7 @@
                 return true;
             }
 
-            if ((/소리/.test(raw) && /키워|높여|올려|크게/.test(raw)) || /크게말해|말크게|볼륨올/.test(raw)) {
+            if ((/소리/.test(raw) && /키워|높여|올려|크게|켜/.test(raw) && !/꺼/.test(raw)) || /크게말해|말크게|볼륨올/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
@@ -433,6 +444,17 @@
                 return true;
             }
 
+            if ((stage === "welcome" || stage === "open_order_prompt") && /매운|얼큰|매콤/.test(raw) && /국/.test(raw) && !/안매|안맵/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                const matched = customMenus.filter(function (menu) {
+                    return /얼큰|매운|매콤/.test(String(menu.taste || "") + String(menu.name || ""));
+                });
+                selectedCategory = "추천 맛";
+                currentGridMenus = matched.length ? matched : customMenus.filter(function (menu) { return menu.category === "국밥"; });
+                currentGridTitle = "얼큰한 맛 추천 메뉴";
+                transitionTo("menu_grid", renderMenuGrid);
+                return true;
+            }
+
             if (stage === "welcome" && /처음인데|처음이야|첫주문/.test(raw)) {
                 previous("사용법 알려줘");
                 return true;
@@ -499,7 +521,7 @@
                 return true;
             }
 
-            if (/menu_grid|open_order_prompt|category_select/.test(stage) && /특징|무슨맛|어떤맛/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
+            if (/menu_grid|open_order_prompt|category_select/.test(stage) && /특징|무슨맛|어떤맛|얼마|가격/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
                 const described = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
                     return plain(b).length - plain(a).length;
                 });
