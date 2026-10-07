@@ -236,10 +236,10 @@
         }
 
         function countIn(raw) {
-            if (/네잔|네개|네그릇|4잔|4개/.test(raw)) return 4;
-            if (/세잔|세개|세그릇|3잔|3개/.test(raw)) return 3;
-            if (/두잔|두개|둘이|두그릇|2잔|2개/.test(raw)) return 2;
-            if (/한잔|한개|한그릇|1잔|1개/.test(raw)) return 1;
+            if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명/.test(raw)) return 4;
+            if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명/.test(raw)) return 3;
+            if (/두잔|두개|둘이|두그릇|두명|두사람|2잔|2개|2명/.test(raw)) return 2;
+            if (/한잔|한개|한그릇|한명|혼자|한사람|1잔|1개|1명/.test(raw)) return 1;
             return 0;
         }
 
@@ -312,7 +312,7 @@
                 return true;
             }
 
-            if (/소리줄|소리낮|소리작게/.test(raw)) {
+            if (/소리줄|소리낮|소리작게|소리내려/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.max(1, (Number(ttsVolumeLevel) || 3) - 1);
@@ -327,8 +327,21 @@
                     selectPayment("신용/체크 카드");
                     return true;
                 }
-                if (/현금|현찰/.test(raw) && typeof selectPayment === "function") {
+                if (/현금|현찰|돈으로/.test(raw) && typeof selectPayment === "function") {
                     selectPayment("현금 결제");
+                    return true;
+                }
+            }
+
+            if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
+                if (/포장|들고|가져|가지고|밖에서/.test(raw)) {
+                    orderState.place = "포장해서 가기";
+                    transitionTo("summary", renderSummary);
+                    return true;
+                }
+                if (/매장|여기서|먹고|안에서/.test(raw)) {
+                    orderState.place = "매장에서 먹기";
+                    transitionTo("summary", renderSummary);
                     return true;
                 }
             }
@@ -384,7 +397,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|없어요|없어|그만|이게다|추가안|안할래/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);
@@ -397,6 +410,16 @@
                 isAddOnPhase = true;
                 if (typeof transitionTo === "function" && typeof renderCategorySelect === "function") {
                     transitionTo("category_select", renderCategorySelect);
+                }
+                return true;
+            }
+
+            if (/menu_grid|open_order_prompt|category_select/.test(stage) && /국물/.test(raw) && Array.isArray(customMenus)) {
+                selectedCategory = "국밥";
+                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "국밥"; });
+                currentGridTitle = "국밥 메뉴판";
+                if (typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                    transitionTo("menu_grid", renderMenuGrid);
                 }
                 return true;
             }
@@ -419,6 +442,30 @@
                 if (pieces.length === 1) {
                     selectSpecificItem(pieces[0].name);
                     return afterSelect(raw);
+                }
+                const pools = [];
+                if (Array.isArray(currentGridMenus) && currentGridMenus.length) pools.push(currentGridMenus);
+                pools.push(customMenus);
+                for (let p = 0; p < pools.length; p++) {
+                    let bestLen = 1;
+                    let hits = [];
+                    pools[p].forEach(function (item) {
+                        const key = plain(item.name);
+                        let len = 0;
+                        for (let size = Math.min(key.length, 12); size >= 2; size--) {
+                            let found = false;
+                            for (let n = 0; n + size <= key.length; n++) {
+                                if (raw.indexOf(key.slice(n, n + size)) !== -1) { found = true; break; }
+                            }
+                            if (found) { len = size; break; }
+                        }
+                        if (len > bestLen) { bestLen = len; hits = [item]; }
+                        else if (len === bestLen && len >= 2) hits.push(item);
+                    });
+                    if (hits.length === 1 && bestLen >= 2) {
+                        selectSpecificItem(hits[0].name);
+                        return afterSelect(raw);
+                    }
                 }
             }
 
@@ -462,7 +509,7 @@
 
             if (stage === "beverage_option_step" && Array.isArray(optionList) && optionList[optionStepIndex]) {
                 let level = 0;
-                if (/낮게|싱겁|덜달|안달/.test(raw)) level = 1;
+                if (/낮게|싱겁|덜달|안달|없이/.test(raw)) level = 1;
                 else if (/많이/.test(raw)) level = 4;
                 else if (/달게|달콤|가득/.test(raw)) level = 5;
                 if (!level) return false;
