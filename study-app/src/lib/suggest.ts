@@ -20,8 +20,13 @@ function tokens(text: string): string[] {
       continue
     }
     if (!single && merged.length > 0 && merged[merged.length - 1].length === 1) {
-      merged[merged.length - 1] += part
-      continue
+      const previous = merged[merged.length - 1]
+      const previousIsDigit = previous >= '0' && previous <= '9'
+      const nextIsLatin = /[a-z]/.test(part)
+      if (!(previousIsDigit && nextIsLatin)) {
+        merged[merged.length - 1] += part
+        continue
+      }
     }
     merged.push(part)
   }

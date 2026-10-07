@@ -56,6 +56,34 @@ if (literature.includes('spelling')) throw new Error(`literature spilled ${liter
 const songs = suggestUnitIds(korean, '제망매가\n속미인곡')
 if (!songs.includes('old-song') || songs.includes('modern-novel')) throw new Error(`songs ${songs.join(',')}`)
 
+const expOnly = suggestUnitIds(algebra, '1-1 지수와 로그')
+for (const id of ['exp-root', 'exp-law', 'log-prop', 'common-log']) {
+  if (!expOnly.includes(id)) throw new Error(`exp suggest missing ${id}`)
+}
+if (expOnly.includes('geo') || expOnly.includes('law')) throw new Error(`exp spilled ${expOnly.join(',')}`)
+const bothSeq = suggestUnitIds(algebra, '등차수열과 등비수열')
+if (!bothSeq.includes('seq') || !bothSeq.includes('geo')) throw new Error(`both seq ${bothSeq.join(',')}`)
+
+const science = getSubject('science')
+const climate = suggestUnitIds(science, '생태계평형과 기후 변화')
+if (!climate.includes('ecosystem') || !climate.includes('earth-env') || climate.includes('redox')) {
+  throw new Error(`climate ${climate.join(',')}`)
+}
+
+const english = getSubject('english')
+const art = suggestUnitIds(english, 'Lesson 2 Into the World of Art')
+if (!art.includes('art') || art.includes('travel')) throw new Error(`art ${art.join(',')}`)
+
+const history = getSubject('history')
+const march = suggestUnitIds(history, '3·1 운동, 대한 독립을 외치다')
+if (!march.includes('march-gov') || march.includes('korean-war')) throw new Error(`march ${march.join(',')}`)
+const colony = suggestUnitIds(history, '식민 통치가 시작되다')
+if (!colony.includes('colony-start')) throw new Error(`colony ${colony.join(',')}`)
+
+const social = getSubject('social')
+const rights = suggestUnitIds(social, '인권의 의미와 변화')
+if (!rights.includes('rights') || rights.includes('market')) throw new Error(`rights ${rights.join(',')}`)
+
 const subjectsToTry: SubjectId[] = ['algebra', 'science', 'korean', 'english', 'social', 'history']
 for (const subjectId of subjectsToTry) {
   const subject = getSubject(subjectId)
