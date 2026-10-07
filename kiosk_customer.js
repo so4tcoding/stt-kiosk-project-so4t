@@ -1062,7 +1062,17 @@
             {group:"결제",prep:"pay",text:"카드로 주시오",intended:"카드",expect:{type:"pay",value:"카드"}},
             {group:"수량",prep:"qty:오렌지 주스",text:"일 개",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"오렌지"}},
             {group:"수량",prep:"qty:돼지국밥",text:"이 개",intended:"두 개",expect:{type:"countLeave",count:2,item:"돼지"}},
-            {group:"수량",prep:"qty:한우 불고기",text:"삼 개",intended:"세 개",expect:{type:"countLeave",count:3,item:"한우"}}
+            {group:"수량",prep:"qty:한우 불고기",text:"삼 개",intended:"세 개",expect:{type:"countLeave",count:3,item:"한우"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"육 잔",intended:"여섯 개",expect:{type:"count",count:6,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:콜라",text:"칠 잔",intended:"일곱 개",expect:{type:"count",count:7,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"팔 개",intended:"여덟 개",expect:{type:"count",count:8,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"구 그릇",intended:"아홉 개",expect:{type:"countLeave",count:9,item:"돼지"}},
+            {group:"수량",prep:"qty:한우 불고기",text:"십 개",intended:"열 개",expect:{type:"countLeave",count:10,item:"한우"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"육 개요",intended:"여섯 개",expect:{type:"count",count:6,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"칠 그릇",intended:"일곱 개",expect:{type:"countLeave",count:7,item:"돼지"}},
+            {group:"수량",prep:"qty:한우 불고기",text:"팔 그릇",intended:"여덟 개",expect:{type:"countLeave",count:8,item:"한우"}},
+            {group:"수량",prep:"qty:콜라",text:"구 잔",intended:"아홉 개",expect:{type:"count",count:9,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"십 잔",intended:"열 개",expect:{type:"count",count:10,stage:"cup_size",item:"오렌지"}}
         ];
     }
 
