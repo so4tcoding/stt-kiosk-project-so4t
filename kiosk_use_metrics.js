@@ -302,7 +302,7 @@
             const raw = plain(text);
             if (!raw || !stage) return false;
 
-            if (/소리키워|소리크게|소리올려/.test(raw)) {
+            if (/소리키워|소리크게|소리올려|크게말해|말크게/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
@@ -348,15 +348,19 @@
 
             if (stage === "taste_select_prompt") {
                 const tastes = [
-                    { name: "달콤", words: ["달콤", "달달"] },
+                    { name: "달콤", words: ["달콤", "달달", "단거", "단맛"] },
                     { name: "상큼", words: ["상큼", "새콤"] },
                     { name: "구수", words: ["구수"] },
                     { name: "고소", words: ["고소"] },
-                    { name: "얼큰", words: ["얼큰"] },
-                    { name: "짭짤", words: ["짭짤"] }
+                    { name: "얼큰", words: ["얼큰", "매운", "매콤"] },
+                    { name: "짭짤", words: ["짭짤", "짠"] }
                 ];
                 const hit = tastes.filter(function (taste) {
-                    return taste.words.some(function (word) { return raw.indexOf(word) !== -1; });
+                    return taste.words.some(function (word) {
+                        if ((word === "매운" || word === "매콤") && /안매|안맵/.test(raw)) return false;
+                        if (word === "짠" && /안짠/.test(raw)) return false;
+                        return raw.indexOf(word) !== -1;
+                    });
                 })[0];
                 if (hit && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                     let matched = customMenus.filter(function (menu) {
@@ -379,7 +383,7 @@
                 }
             }
 
-            if (stage === "welcome" && /맛있어|맛있는거/.test(raw) && typeof renderTasteSelectPrompt === "function") {
+            if (stage === "welcome" && /맛있어|맛있는거|뭐가좋|추천해/.test(raw) && typeof renderTasteSelectPrompt === "function") {
                 currentStageName = "taste_select_prompt";
                 renderTasteSelectPrompt();
                 return true;

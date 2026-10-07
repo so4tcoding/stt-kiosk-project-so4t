@@ -113,7 +113,29 @@
             { group: "안내", prep: "grid:커피", text: "글씨 키워 줘", intended: "확대", expect: { type: "spoken", value: "확대", stage: "menu_grid" } },
             { group: "메뉴", prep: "open", text: "음료수", intended: "음료", expect: { type: "category", value: "음료" } },
             { group: "메뉴", prep: "open", text: "국물", intended: "국밥", expect: { type: "category", value: "국밥", notStage: "quantity" } },
-            { group: "수량", prep: "qty:오렌지 주스", text: "두 명이요", intended: "두 개", expect: { type: "count", count: 2, stage: "cup_size", item: "오렌지" } }
+            { group: "수량", prep: "qty:오렌지 주스", text: "두 명이요", intended: "두 개", expect: { type: "count", count: 2, stage: "cup_size", item: "오렌지" } },
+            { group: "결제", prep: "place", text: "포장으로", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "결제", prep: "place", text: "먹고 갈게", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "결제", prep: "pay", text: "현금으로 줄게", intended: "현금", expect: { type: "pay", value: "현금" } },
+            { group: "추천", prep: "taste", text: "매운 거", intended: "얼큰", expect: { type: "gridHas", value: "소고기", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "짠 거", intended: "짭짤", expect: { type: "gridHas", value: "한우", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "단 거", intended: "달콤", expect: { type: "gridHas", value: "덮밥", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "순한 거", intended: "", expect: { type: "spoken", value: "달콤", stage: "taste_select_prompt" } },
+            { group: "메뉴", prep: "grid:음료", text: "에이드", intended: "레몬 에이드", expect: { type: "itemStage", item: "레몬", stage: "quantity" } },
+            { group: "메뉴", prep: "grid:음료", text: "쉐이크", intended: "쿠키 쉐이크", expect: { type: "itemStage", item: "쿠키", stage: "quantity" } },
+            { group: "메뉴", prep: "grid:음료", text: "주스 한 잔", intended: "오렌지 주스", expect: { type: "count", count: 1, stage: "cup_size", item: "오렌지" } },
+            { group: "메뉴", prep: "grid:커피", text: "따뜻한 커피", intended: "커피", expect: { type: "spoken", value: "아메리카노", stage: "menu_grid" } },
+            { group: "메뉴", prep: "open", text: "버거", intended: "햄버거", expect: { type: "category", value: "햄버거", notStage: "quantity" } },
+            { group: "수량", prep: "qty:오렌지 주스", text: "세 명이요", intended: "세 개", expect: { type: "count", count: 3, stage: "cup_size", item: "오렌지" } },
+            { group: "수량", prep: "qty:오렌지 주스", text: "혼자 먹을게요", intended: "한 개", expect: { type: "count", count: 1, stage: "cup_size", item: "오렌지" } },
+            { group: "단계", prep: "opt", text: "안 달게", intended: "1단계", expect: { type: "sugar", value: 1 } },
+            { group: "단계", prep: "opt", text: "최대로", intended: "5단계", expect: { type: "sugar", value: 5 } },
+            { group: "안내", prep: "grid:커피", text: "크게 말해 줘", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } },
+            { group: "안내", prep: "grid:커피", text: "화면 좀 키워 줘", intended: "확대", expect: { type: "spoken", value: "확대", stage: "menu_grid" } },
+            { group: "시작", prep: "welcome", text: "뭐가 좋아", intended: "추천해줘", expect: { type: "stage", value: "taste_select_prompt" } },
+            { group: "시작", prep: "grid:국밥", text: "처음으로 돌아가", intended: "처음으로", expect: { type: "stage", value: "welcome" } },
+            { group: "결제", prep: "more", text: "그만할래", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "메뉴", prep: "grid:국밥", text: "국밥 하나", intended: "국밥", expect: { type: "category", value: "국밥", notStage: "quantity" } }
         ];
     }
 
