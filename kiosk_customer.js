@@ -1292,7 +1292,19 @@
             {group:"시작",prep:"welcome",text:"츄러스",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"시작",prep:"welcome",text:"약과",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"메뉴",prep:"welcome",text:"아아 한 잔",intended:"아메리카노",expect:{type:"countLeave",count:1,item:"아메리카노"}},
-            {group:"메뉴",prep:"welcome",text:"뜨아 한 잔",intended:"아메리카노",expect:{type:"countLeave",count:1,item:"아메리카노"}}
+            {group:"메뉴",prep:"welcome",text:"뜨아 한 잔",intended:"아메리카노",expect:{type:"countLeave",count:1,item:"아메리카노"}},
+            {group:"시작",prep:"welcome",text:"크로플",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"베이글",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"팝콘",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"인절미",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"경단",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"호두과자",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"청포도 에이드",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"라임 에이드",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"요거트",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"매실차",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"도너츠",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"핫초코",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}}
         ];
     }
 
