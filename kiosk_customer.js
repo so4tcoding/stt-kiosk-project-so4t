@@ -246,7 +246,20 @@
             { group: "용량", prep: "cup:콜라", text: "라지 사이즈", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
             { group: "용량", prep: "cup:콜라", text: "스몰 사이즈", intended: "스몰", expect: { type: "stage", value: "add_more_prompt" } },
             { group: "단계", prep: "opt", text: "당도 없이", intended: "1단계", expect: { type: "sugar", value: 1 } },
-            { group: "결제", prep: "place", text: "여기 먹을께", intended: "매장에서", expect: { type: "place", value: "매장" } }
+            { group: "결제", prep: "place", text: "여기 먹을께", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "메뉴", prep: "grid:커피", text: "따뜻한 아메리카노 하나", intended: "아메리카노", expect: { type: "countLeave", count: 1, item: "아메리카노" } },
+            { group: "메뉴", prep: "grid:커피", text: "아이스 아메리카노 두 잔", intended: "아메리카노", expect: { type: "countLeave", count: 2, item: "아메리카노" } },
+            { group: "메뉴", prep: "grid:햄버거", text: "치즈버거 세트 두 개", intended: "치즈버거", expect: { type: "countLeave", count: 2, item: "치즈" } },
+            { group: "메뉴", prep: "grid:햄버거", text: "불고기버거 단품 하나", intended: "불고기버거", expect: { type: "countLeave", count: 1, item: "불고기버거" } },
+            { group: "메뉴", prep: "open", text: "국밥 주이소", intended: "국밥", expect: { type: "category", value: "국밥", notStage: "quantity" } },
+            { group: "메뉴", prep: "open", text: "커피 주이소", intended: "커피", expect: { type: "category", value: "커피" } },
+            { group: "메뉴", prep: "grid:음료", text: "콜라 주이소", intended: "콜라", expect: { type: "itemStage", item: "콜라", stage: "quantity" } },
+            { group: "시작", prep: "welcome", text: "메뉴판 보여줘", intended: "메뉴판", expect: { type: "stage", value: "category_select" } },
+            { group: "결제", prep: "pay", text: "카드로 주이소", intended: "카드", expect: { type: "pay", value: "카드" } },
+            { group: "결제", prep: "place", text: "먹고갈께", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "결제", prep: "place", text: "가지고갈께", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "안내", prep: "grid:커피", text: "소리 더 키워", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } },
+            { group: "안내", prep: "grid:커피", text: "글자 더 크게", intended: "확대", expect: { type: "spoken", value: "확대", stage: "menu_grid" } }
         ];
     }
 
