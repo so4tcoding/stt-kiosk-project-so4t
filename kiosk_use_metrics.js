@@ -579,7 +579,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /사용법|사용방식|사용방법|도움말|알려줘/.test(raw)) {
+            if (stage === "welcome" && /사용법|사용방식|사용방법|도움말|설명좀|설명해|어떻게주문|알려줘/.test(raw)) {
                 previous("사용법 알려줘");
                 return true;
             }

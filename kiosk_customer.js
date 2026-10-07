@@ -1227,7 +1227,19 @@
             {group:"잔",prep:"cup:콜라",text:"유리병으로",intended:"",expect:{type:"spoken",value:"잔",stage:"cup_size"}},
             {group:"결제",prep:"more",text:"계산이요",intended:"아니요",expect:{type:"stage",value:"place"}},
             {group:"결제",prep:"place",text:"포장이요",intended:"포장",expect:{type:"place",value:"포장"}},
-            {group:"결제",prep:"place",text:"매장이요",intended:"매장에서",expect:{type:"place",value:"매장"}}
+            {group:"결제",prep:"place",text:"매장이요",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"수량",prep:"qty:콜라",text:"이 병",intended:"두 개",expect:{type:"count",count:2,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"삼 병",intended:"세 개",expect:{type:"count",count:3,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:콜라",text:"사 병",intended:"네 개",expect:{type:"count",count:4,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"오 병",intended:"다섯 개",expect:{type:"count",count:5,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:콜라",text:"칠 병",intended:"일곱 개",expect:{type:"count",count:7,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"팔 병",intended:"여덟 개",expect:{type:"count",count:8,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:콜라",text:"구 병",intended:"아홉 개",expect:{type:"count",count:9,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"십 병",intended:"열 개",expect:{type:"count",count:10,stage:"cup_size",item:"사이다"}},
+            {group:"메뉴",prep:"welcome",text:"국이요",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"국 좀 주세요",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
+            {group:"시작",prep:"welcome",text:"설명 좀",intended:"사용법",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"어떻게 주문해요",intended:"사용법",expect:{type:"spoken",value:"주문",stage:"welcome"}}
         ];
     }
 
