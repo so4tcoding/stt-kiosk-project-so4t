@@ -931,7 +931,27 @@
             {group:"시작",prep:"welcome",text:"순한 국 주세요",intended:"",expect:{type:"spoken",value:"달콤",stage:"welcome"}},
             {group:"수량",prep:"qty:오렌지 주스",text:"반 잔",intended:"",expect:{type:"spoken",value:"잔",stage:"quantity"}},
             {group:"용량",prep:"cup:오렌지 주스",text:"1리터",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}},
-            {group:"시작",prep:"welcome",text:"아이고 목마르다",intended:"음료",expect:{type:"category",value:"음료",notStage:"quantity"}}
+            {group:"시작",prep:"welcome",text:"아이고 목마르다",intended:"음료",expect:{type:"category",value:"음료",notStage:"quantity"}},
+            {group:"안내",prep:"welcome",text:"화면이 안 보여요",intended:"확대",expect:{type:"spoken",value:"확대",stage:"welcome"}},
+            {group:"안내",prep:"welcome",text:"글자가 흐려요",intended:"확대",expect:{type:"spoken",value:"확대",stage:"welcome"}},
+            {group:"안내",prep:"welcome",text:"귀가 어두워요",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}},
+            {group:"안내",prep:"welcome",text:"못 알아듣겠어",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"주차 어디야",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"영업시간 알려줘",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"번호표 뽑아 줘",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"알레르기 있어요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"맵게 못 먹어요",intended:"",expect:{type:"spoken",value:"달콤",stage:"welcome"}},
+            {group:"결제",prep:"place",text:"할인 돼요",intended:"",expect:{type:"spoken",value:"포장",stage:"place"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"세 식구요",intended:"세 개",expect:{type:"count",count:3,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"두 식구요",intended:"두 개",expect:{type:"countLeave",count:2,item:"돼지"}},
+            {group:"수량",prep:"qty:한우 불고기",text:"네 식구",intended:"네 개",expect:{type:"countLeave",count:4,item:"한우"}},
+            {group:"온도",prep:"temp:아메리카노",text:"따뜻한 걸로 두 잔",intended:"핫",expect:{type:"countLeave",count:2,item:"아메리카노"}},
+            {group:"세트",prep:"upsell:치즈버거",text:"세트 세 개",intended:"세트",expect:{type:"countLeave",count:3,item:"치즈"}},
+            {group:"시작",prep:"welcome",text:"천천히 주문할게요",intended:"네",expect:{type:"stage",value:"open_order_prompt"}},
+            {group:"안내",prep:"welcome",text:"글씨 더 크게 해 주이소",intended:"확대",expect:{type:"spoken",value:"확대",stage:"welcome"}},
+            {group:"안내",prep:"welcome",text:"소리 더 크게 해 주이소",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"우리 세 명이요",intended:"세 개",expect:{type:"count",count:3,stage:"cup_size",item:"오렌지"}},
+            {group:"시작",prep:"welcome",text:"몇 시까지 해요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}}
         ];
     }
 

@@ -236,6 +236,16 @@
         }
 
         function countIn(raw) {
+            if (/열식구|10식구/.test(raw)) return 10;
+            if (/아홉식구|9식구/.test(raw)) return 9;
+            if (/여덟식구|8식구/.test(raw)) return 8;
+            if (/일곱식구|7식구/.test(raw)) return 7;
+            if (/여섯식구|6식구/.test(raw)) return 6;
+            if (/다섯식구|5식구/.test(raw)) return 5;
+            if (/네식구|4식구/.test(raw)) return 4;
+            if (/세식구|3식구/.test(raw)) return 3;
+            if (/두식구|2식구/.test(raw)) return 2;
+            if (/한식구|1식구/.test(raw)) return 1;
             if (/열잔|열개|열그릇|열명|10잔|10개/.test(raw)) return 10;
             if (/아홉잔|아홉개|아홉그릇|아홉명|9잔|9개/.test(raw)) return 9;
             if (/여덟잔|여덟개|여덟그릇|여덟명|8잔|8개/.test(raw)) return 8;
@@ -309,7 +319,7 @@
             const raw = plain(text);
             if (!raw || !stage) return false;
 
-            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침/.test(raw))) {
+            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침/.test(raw))) {
                 try {
                     if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
                     zoomLevel = Math.min(4, (Number(zoomLevel) || 0) + 1);
@@ -349,7 +359,7 @@
                 return true;
             }
 
-            if (/못들|잘안들|안들려|뭐라고|귀가먹|귀안들/.test(raw)) {
+            if (/못들|잘안들|안들려|뭐라고|귀가먹|귀안들|귀어두|어두워|못알아/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
@@ -390,6 +400,10 @@
             }
 
             if (stage === "place" && typeof transitionTo === "function" && typeof renderSummary === "function") {
+                if (/할인|쿠폰/.test(raw) && typeof speakText === "function") {
+                    speakText("할인은 없습니다. 포장인지 매장인지 말씀해 주세요.");
+                    return true;
+                }
                 const choice = raw.indexOf("말고") === -1 ? raw : (raw.split("말고").pop() || "");
                 if (/포장|들고|가져|가지고|밖에서|밖에|나가|싸|테이크/.test(choice)) {
                     orderState.place = "포장해서 가기";
@@ -489,6 +503,21 @@
                 currentGridMenus = customMenus.filter(function (menu) { return menu.category === "음료"; });
                 currentGridTitle = "음료 메뉴판";
                 transitionTo("menu_grid", renderMenuGrid);
+                return true;
+            }
+
+            if (stage === "welcome" && /주차|영업|번호표|몇시/.test(raw) && typeof speakText === "function") {
+                speakText("주문만 할 수 있습니다. 메뉴를 말씀해 주세요.");
+                return true;
+            }
+
+            if (stage === "welcome" && /알러지|알레르기/.test(raw) && typeof speakText === "function") {
+                speakText("알레르기 확인은 안 됩니다. 주문할 메뉴를 말씀해 주세요.");
+                return true;
+            }
+
+            if (stage === "welcome" && /맵|매운|매워/.test(raw) && /못|싫/.test(raw) && typeof speakText === "function") {
+                speakText("순한 맛은 따로 없습니다. 달콤, 상큼, 구수, 고소, 얼큰, 짭짤한 맛 중에서 골라주세요.");
                 return true;
             }
 
