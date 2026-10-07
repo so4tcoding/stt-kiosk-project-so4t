@@ -1498,7 +1498,7 @@
                 tastes.map(t => `<div class="glass-panel p-3 text-center font-black text-[16px] ${t.color} bg-white/60"><div class="w-9 h-9 mx-auto mb-1">${illustrationTag(t.emoji, t.label)}</div>${t.label}</div>`).join('') +
                 `</div>`;
             updateUI("어떤 맛을 원하시나요?", "아래의 맛 중에서 하나를 골라보세요.", html);
-            speakText("메뉴를 고르기 어려우신가요? 달콤한 맛, 상큼한 맛, 구수한 맛, 고소한 맛, 얼큰한 맛, 짭짤한 맛 중에서 원하시는 맛이 있습니까?");
+            speakText("골라 주세요. 달콤, 상큼, 구수, 고소, 얼큰, 짭짤입니다.");
         }
         function renderBeverageOptionPrompt() {
             const m = customMenus.find(mm => mm.name === tempItem.item);
@@ -1981,7 +1981,7 @@
             `
         );
 
-        speakText("컵 용량을 말씀해주세요. 이백 밀리리터, 삼백오십 밀리리터, 오백 밀리리터 중에서 말씀하시면 됩니다.");
+        speakText("작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.");
     };
 
     /* ----------------------------------------------------------------------
@@ -2348,7 +2348,7 @@
                 return;
             }
 
-            speakText("이백 밀리리터, 삼백오십 밀리리터, 오백 밀리리터 중에서 말씀해주세요.");
+            speakText("작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.");
             return;
         }
 
@@ -2481,12 +2481,8 @@
         );
 
         const easyGuideText =
-            "쉽게 설명해드릴게요. " +
-            "이 키오스크는 화면을 누르지 않고 말로 주문합니다. " +
-            "먹고 싶은 메뉴 이름을 말씀하시고, 몇 개 주문할지 수량을 말씀하시면 됩니다. " +
-            "그 다음 매장인지 포장인지 말하고, 마지막으로 카드 또는 현금이라고 말씀하시면 주문이 끝납니다. " +
-            "중간에 잘못 골랐으면 이전 화면이라고 말씀하시면 됩니다. " +
-            "이제 주문을 시작하겠습니다.";
+            "쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다. " +
+            "글씨가 작으면 화면 확대, 소리가 작으면 소리 키워 라고 말씀해 주세요.";
 
         speakText(easyGuideText, function() {
             startOrder();
@@ -14844,7 +14840,7 @@ function isRepeatMenuCommand(text) {
             `
         );
 
-        speakText("컵 용량을 이백 밀리리터, 삼백오십 밀리리터, 오백 밀리리터 중에서 말씀해주세요.");
+        speakText("작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.");
     };
 
     /* ----------------------------------------------------------------------
@@ -22275,7 +22271,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
         } catch (e) {}
 
         speakText(
-            "주문을 시작하시겠습니까? 주문하시려면 주문 시작 또는 네 라고 말씀해주세요. 사용 방법이 궁금하시면 사용법 알려줘 라고 말씀해주세요."
+            "주문을 시작하시겠습니까? 메뉴 이름을 말씀해 주세요. 사용법이 필요하면 사용법 알려줘 라고 말씀해 주세요."
         );
     };
 
@@ -22454,7 +22450,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
                 return;
             }
 
-            speakText("주문하시려면 주문 시작 또는 네 라고 말씀해주세요. 사용 방법이 궁금하시면 사용법 알려줘 라고 말씀해주세요.");
+            speakText("메뉴 이름을 말씀해 주세요. 사용법이 필요하면 사용법 알려줘 라고 말씀해 주세요.");
             return;
         }
 
@@ -23014,7 +23010,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
             updateFloatingBasket();
         } catch (e) {}
 
-        speakText("주문을 시작하시겠습니까? 주문하시려면 주문 시작 또는 네 라고 말씀해주세요.");
+        speakText("메뉴 이름을 말씀해 주세요.");
     };
 
     /*
@@ -23681,7 +23677,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             updateFloatingBasket();
         } catch (e) {}
 
-        speakText("주문을 시작하시겠습니까? 주문하시려면 주문 시작 또는 네 라고 말씀해주세요.");
+        speakText("메뉴 이름을 말씀해 주세요.");
     };
 
     window.startOrder = startOrder = function recoveredStartOrder() {
@@ -34343,7 +34339,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             tastes.map(t => `<div class="glass-panel p-3 text-center font-black text-[16px] ${t.color} bg-white/60"><div class="w-9 h-9 mx-auto mb-1">${illustrationTag(t.emoji, t.label)}</div>${t.label}</div>`).join('') +
             `</div><div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2 !text-sm mt-1 w-full">💡 오늘의 추천: ${menuA}<br>⭐ 제일 맛있는 메뉴: ${menuB}</div>`;
         updateUI("어떤 맛을 원하시나요?", "원하시는 맛을 골라보세요.", html);
-        speakText(`오늘의 추천 메뉴는 ${menuA}이고, 제일 맛있는 메뉴는 ${menuB}입니다. 고르실 수 있는 맛은 달콤한 맛, 상큼한 맛, 구수한 맛, 고소한 맛, 얼큰한 맛, 짭짤한 맛이 있습니다. 어떤 맛이 드시고 싶으신가요?`);
+        speakText(`골라 주세요. 달콤, 상큼, 구수, 고소, 얼큰, 짭짤입니다. 오늘의 추천 메뉴는 ${menuA}이고, 제일 맛있는 메뉴는 ${menuB}입니다.`);
     };
 
     // 4. 관리자 창 스크롤 및 G키 연동
@@ -34371,17 +34367,17 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     // 5. 22종 마스터 TTS 관리창
     const ALL_TTS_CONFIG = [
         { id: 'tts_welcome', label: '1. 첫 인사', default: '첫 주문이신가요? 첫 주문이면 키오스크 사용 방식 알려줘 라고 말씀해주세요. 바로 주문하시려면 주문 시작이라고 말씀해주세요.' },
-        { id: 'tts_guide', label: '2. 사용법 안내', default: '쉽게 설명해드릴게요. 이 키오스크는 화면을 누르지 않고 말로 주문합니다. 먹고 싶은 메뉴 이름을 말씀하시고, 몇 개 주문할지 수량을 말씀하시면 됩니다. 그 다음 매장인지 포장인지 말하고, 마지막으로 카드 또는 현금이라고 말씀하시면 주문이 끝납니다. 중간에 잘못 골랐으면 이전 화면이라고 말씀하시면 됩니다. 이제 주문을 시작하겠습니다.' },
+        { id: 'tts_guide', label: '2. 사용법 안내', default: '쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워 라고 말씀해 주세요.' },
         { id: 'tts_cat', label: '3. 카테고리 선택 ({0}=카테고리명)', default: '저희 매장에는 {0} 카테고리가 있습니다. 무엇을 드시겠습니까?' },
         { id: 'tts_cat_add', label: '4. 카테고리 (추가 주문)', default: '추가로 주문하실 카테고리를 골라주세요. 추가 주문이 없으시면 결제라고 말씀해주세요.' },
         { id: 'tts_grid', label: '5. 메뉴 선택 ({0}=메뉴목록)', default: '{0} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?' },
         { id: 'tts_grid_add', label: '6. 메뉴 (추가 주문)', default: '어떤 메뉴를 추가하시겠습니까? 위치나 이름으로 말씀해주세요.' },
-        { id: 'tts_taste', label: '7. 맛 추천 안내 ({0}=메뉴1, {1}=메뉴2)', default: '오늘의 추천 메뉴는 {0}이고, 제일 맛있는 메뉴는 {1}입니다. 고르실 수 있는 맛은 달콤한 맛, 상큼한 맛, 구수한 맛, 고소한 맛, 얼큰한 맛, 짭짤한 맛이 있습니다. 어떤 맛이 드시고 싶으신가요?' },
+        { id: 'tts_taste', label: '7. 맛 추천 안내 ({0}=메뉴1, {1}=메뉴2)', default: '골라 주세요. 달콤, 상큼, 구수, 고소, 얼큰, 짭짤입니다. 오늘의 추천 메뉴는 {0}이고, 제일 맛있는 메뉴는 {1}입니다.' },
         { id: 'tts_confirm', label: '8. 선택 메뉴 확인 ({0}=메뉴명)', default: '선택하신 게 {0} 맞습니까? 맞으면 네, 틀리면 아니요 라고 대답해주세요.' },
         { id: 'tts_temp', label: '9. 온도 선택 (핫/아이스)', default: '따뜻하게 드시고 싶으시면 따뜻하게, 차갑게 드시고 싶으시면 차갑게 라고 말씀해주세요.' },
         { id: 'tts_upsell', label: '10. 세트/단품 선택', default: '콜라나 감자튀김을 같이 드시고 싶으시나요? 같이 드시고 싶으시면 네, 햄버거만 드시고 싶으시면 아니요 라고 말씀해주세요.' },
         { id: 'tts_qty', label: '11. 수량 선택', default: '메뉴 수량을 말씀해주세요.' },
-        { id: 'tts_cup', label: '12. 컵 사이즈 선택', default: '컵 용량을 말씀해주세요. 이백 밀리리터, 삼백오십 밀리리터, 오백 밀리리터 중에서 말씀하시면 됩니다.' },
+        { id: 'tts_cup', label: '12. 컵 사이즈 선택', default: '작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.' },
         { id: 'tts_bev_prompt2', label: '13. 커피 옵션 안내', default: '커피 샷 추가, 시럽, 얼음 양을 조절하고 싶으시다면 네, 추가할 게 없으시다면 아니요라고 해주세요.' },
         { id: 'tts_bev_prompt', label: '14. 일반 음료 옵션 안내 ({0}=옵션종류)', default: '{0} 양을 조절하고 싶으시다면 네, 추가할 게 없으시다면 아니요라고 해주세요.' },
         { id: 'tts_bev_step', label: '15. 음료 옵션 세부 조절 ({0}=옵션명)', default: '{0}, 1단계부터 5단계까지 조절 하실 수 있습니다. 몇 단계로 할까요?' },
@@ -35202,7 +35198,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     // 3. 첫 사용법 안내(가이드) 멘트를 "화면확대, 소리, 설명해줘" 포함 버전으로 강제 업데이트
     function updateInitialGuideTTS() {
-        const newGuideText = "쉽게 설명해드릴게요. 이 키오스크는 말로 주문합니다. 글씨가 작으면 화면 확대, 기기 소리가 작으면 소리 키워 라고 말씀해주세요. 이용 중 뭘 해야 할지 모를 때는 설명해 줘 라고 말씀하시면 화면을 안내해 드립니다. 자, 원하시는 메뉴를 말씀해주세요.";
+        const newGuideText = "쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워 라고 말씀해 주세요.";
         
         // 로컬 스토리지 업데이트
         localStorage.setItem('tts_guide', newGuideText);
@@ -35317,7 +35313,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
                         if (currentStageName === 'welcome') {
                             // 첫 화면에서는 전체 가이드 재생 (관리자가 바꾼 게 있으면 그걸로)
-                            const guideText = localStorage.getItem('tts_guide') || "쉽게 설명해드릴게요. 이 키오스크는 말로 주문합니다. 글씨가 작으면 화면 확대, 기기 소리가 작으면 소리 키워 라고 말씀해주세요. 이용 중 뭘 해야 할지 모를 때는 설명해 줘 라고 말씀하시면 화면을 안내해 드립니다. 자, 원하시는 메뉴를 말씀해주세요.";
+                            const guideText = localStorage.getItem('tts_guide') || "쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워 라고 말씀해 주세요.";
                             speakText(guideText);
                         } else {
                             // 다른 화면에서 "사용법 알려줘"라고 하면 현재 화면의 도우미를 대신 띄워줌

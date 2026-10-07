@@ -1312,7 +1312,24 @@
             {group:"결제",prep:"place",text:"앉아 먹을게요",intended:"매장에서",expect:{type:"place",value:"매장"}},
             {group:"온도",prep:"temp:아메리카노",text:"아이스로요",intended:"아이스",expect:{type:"ice"}},
             {group:"세트",prep:"upsell:치즈버거",text:"단품이요",intended:"단품",expect:{type:"single"}},
-            {group:"수량",prep:"qty:콜라",text:"한 잔만요",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"콜라"}}
+            {group:"수량",prep:"qty:콜라",text:"한 잔만요",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"콜라"}},
+            {group:"시작",prep:"welcome",text:"사과",intended:"",expect:{type:"spoken",value:"이름",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"배",intended:"",expect:{type:"spoken",value:"이름",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"배 하나 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"감",intended:"",expect:{type:"spoken",value:"이름",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"감 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"치즈",intended:"",expect:{type:"spoken",value:"이름",stage:"welcome"}},
+            {group:"메뉴",prep:"welcome",text:"치즈버거",intended:"치즈버거",expect:{type:"itemStage",item:"치즈",stage:"upsell"}},
+            {group:"시작",prep:"welcome",text:"캔",intended:"",expect:{type:"spoken",value:"이름",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"핫",intended:"",expect:{type:"spoken",value:"이름",stage:"welcome"}},
+            {group:"온도",prep:"welcome",text:"핫 아메리카노",intended:"핫",expect:{type:"hot"}},
+            {group:"시작",prep:"welcome",text:"아이스",intended:"",expect:{type:"spoken",value:"이름",stage:"welcome"}},
+            {group:"메뉴",prep:"welcome",text:"아이스 아메리카노 두 잔",intended:"아메리카노",expect:{type:"countLeave",count:2,item:"아메리카노"}},
+            {group:"메뉴",prep:"welcome",text:"아이스크림",intended:"소프트 아이스크림",expect:{type:"itemStage",item:"아이스크림",stage:"quantity"}},
+            {group:"시작",prep:"welcome",text:"물",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"추천",prep:"taste",text:"단",intended:"",expect:{type:"spoken",value:"달콤",stage:"taste_select_prompt"}},
+            {group:"시작",prep:"welcome",text:"단",intended:"",expect:{type:"spoken",value:"이름",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"추천",intended:"추천해줘",expect:{type:"spoken",value:"골라",stage:"taste_select_prompt"}}
         ];
     }
 
