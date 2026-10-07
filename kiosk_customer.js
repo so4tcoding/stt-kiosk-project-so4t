@@ -336,7 +336,20 @@
             { group: "결제", prep: "more", text: "이대로 계산", intended: "아니요", expect: { type: "stage", value: "place" } },
             { group: "결제", prep: "place", text: "그대로 먹을게", intended: "매장에서", expect: { type: "place", value: "매장" } },
             { group: "메뉴", prep: "grid:음료", text: "5번", intended: "다섯번째", expect: { type: "spoken", value: "콜라", stage: "menu_confirm" } },
-            { group: "메뉴", prep: "grid:음료", text: "6번", intended: "여섯번째", expect: { type: "itemStage", item: "사이다", stage: "quantity" } }
+            { group: "메뉴", prep: "grid:음료", text: "6번", intended: "여섯번째", expect: { type: "itemStage", item: "사이다", stage: "quantity" } },
+            { group: "시작", prep: "welcome", text: "주문 시작", intended: "네", expect: { type: "stage", value: "open_order_prompt" } },
+            { group: "시작", prep: "welcome", text: "키오스크 사용 방식 알려줘", intended: "사용법", expect: { type: "spoken", value: "주문", stage: "welcome" } },
+            { group: "결제", prep: "place", text: "들고 갈래요", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "결제", prep: "place", text: "여기서 먹을래요", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "온도", prep: "temp:아메리카노", text: "따뜻하게", intended: "핫", expect: { type: "hot" } },
+            { group: "온도", prep: "temp:아메리카노", text: "차갑게", intended: "아이스", expect: { type: "ice" } },
+            { group: "세트", prep: "upsell:불고기버거", text: "세트", intended: "세트", expect: { type: "set" } },
+            { group: "세트", prep: "upsell:불고기버거", text: "단품", intended: "단품", expect: { type: "single" } },
+            { group: "결제", prep: "more", text: "추가", intended: "네", expect: { type: "stage", value: "category_select" } },
+            { group: "결제", prep: "more", text: "결제", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "결제", prep: "more", text: "그냥 주문", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "결제", prep: "sum", text: "결제", intended: "결제", expect: { type: "stage", value: "payment" } },
+            { group: "결제", prep: "sum", text: "맞아", intended: "결제", expect: { type: "stage", value: "payment" } }
         ];
     }
 
