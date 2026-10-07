@@ -951,7 +951,28 @@
             {group:"안내",prep:"welcome",text:"글씨 더 크게 해 주이소",intended:"확대",expect:{type:"spoken",value:"확대",stage:"welcome"}},
             {group:"안내",prep:"welcome",text:"소리 더 크게 해 주이소",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}},
             {group:"수량",prep:"qty:오렌지 주스",text:"우리 세 명이요",intended:"세 개",expect:{type:"count",count:3,stage:"cup_size",item:"오렌지"}},
-            {group:"시작",prep:"welcome",text:"몇 시까지 해요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}}
+            {group:"시작",prep:"welcome",text:"몇 시까지 해요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"결제",prep:"sum",text:"그라요",intended:"맞아",expect:{type:"stage",value:"payment"}},
+            {group:"메뉴",prep:"confirm:딸기 라떼",text:"아이가",intended:"",expect:{type:"ignore"}},
+            {group:"메뉴",prep:"confirm:오렌지 주스",text:"그지예",intended:"오렌지 주스",expect:{type:"itemStage",item:"오렌지",stage:"quantity"}},
+            {group:"메뉴",prep:"grid:음료",text:"오렌지쥬스 하나",intended:"오렌지 주스",expect:{type:"count",count:1,stage:"cup_size",item:"오렌지"}},
+            {group:"메뉴",prep:"grid:커피",text:"아아 하나",intended:"아메리카노",expect:{type:"countLeave",count:1,item:"아메리카노"}},
+            {group:"메뉴",prep:"grid:커피",text:"뜨아 하나",intended:"아메리카노",expect:{type:"countLeave",count:1,item:"아메리카노"}},
+            {group:"메뉴",prep:"welcome",text:"콜라 주소",intended:"콜라",expect:{type:"itemStage",item:"콜라",stage:"quantity"}},
+            {group:"결제",prep:"more",text:"계산해 보이소",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"place",text:"포장해 보이소",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"pay",text:"카드로 해 보이소",intended:"카드",expect:{type:"pay",value:"카드"}},
+            {group:"온도",prep:"temp:아메리카노",text:"따뜻하게 해 보이소",intended:"핫",expect:{type:"hot"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"하나 주이소",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"오렌지"}},
+            {group:"결제",prep:"more",text:"됐심더",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"place",text:"여기 앉을라예",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"결제",prep:"place",text:"싸 갈라예",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"메뉴",prep:"grid:음료",text:"콜라 얼마고",intended:"",expect:{type:"spoken",value:"원",stage:"menu_grid"}},
+            {group:"결제",prep:"sum",text:"얼마 나왔능교",intended:"",expect:{type:"spoken",value:"원",stage:"summary"}},
+            {group:"시작",prep:"welcome",text:"예예",intended:"",expect:{type:"stage",value:"open_order_prompt"}},
+            {group:"시작",prep:"welcome",text:"네네",intended:"",expect:{type:"stage",value:"open_order_prompt"}},
+            {group:"메뉴",prep:"grid:커피",text:"아아로 할게요",intended:"아메리카노",expect:{type:"ice"}},
+            {group:"메뉴",prep:"welcome",text:"뜨아 주세요",intended:"아메리카노",expect:{type:"hot"}}
         ];
     }
 

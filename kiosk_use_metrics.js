@@ -539,14 +539,14 @@
                 return true;
             }
 
-            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러|배고파|배고프|배고픕|주문부탁/.test(raw)) {
+            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러|배고파|배고프|배고픕|주문부탁|예예|네네/.test(raw)) {
                 startOrder();
                 return true;
             }
 
-            if (/오렌쥐쥬스|오렌쥐주스|오렌지쥬스/.test(raw) && /menu_grid|open_order_prompt|category_select/.test(stage)) {
+            if (/오렌쥐쥬스|오렌쥐주스|오렌지쥬스/.test(raw) && /menu_grid|open_order_prompt|category_select|welcome/.test(stage)) {
                 selectSpecificItem("오렌지 주스");
-                return true;
+                return afterSelect(raw);
             }
 
             if (stage === "quantity" && /반잔|절반/.test(raw) && typeof speakText === "function") {
@@ -581,6 +581,22 @@
             if (/menu_grid/.test(stage) && /6번|육번|여섯번째|여섯째/.test(raw) && Array.isArray(currentGridMenus) && currentGridMenus[5] && typeof selectSpecificItem === "function") {
                 selectSpecificItem(currentGridMenus[5].name);
                 return afterSelect(raw);
+            }
+
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /뜨아/.test(raw) && typeof selectSpecificItem === "function") {
+                selectSpecificItem("아메리카노");
+                tempItem.temp = "핫(HOT)";
+                askQuantity();
+                if (countIn(raw)) return leaveQuantity(countIn(raw));
+                return true;
+            }
+
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /아아/.test(raw) && raw.indexOf("아메리카노") === -1 && typeof selectSpecificItem === "function") {
+                selectSpecificItem("아메리카노");
+                tempItem.temp = "아이스(ICE)";
+                askQuantity();
+                if (countIn(raw)) return leaveQuantity(countIn(raw));
+                return true;
             }
 
             if (/menu_grid|open_order_prompt|category_select/.test(stage) && typeof selectSpecificItem === "function") {
@@ -782,14 +798,14 @@
                 return true;
             }
 
-            if (stage === "menu_confirm" && /아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거|말고/.test(raw)) {
+            if (stage === "menu_confirm" && /아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거|말고|아이가/.test(raw)) {
                 pendingMenuName = "";
                 currentStageName = "menu_grid";
                 if (typeof renderMenuGrid === "function") renderMenuGrid();
                 return true;
             }
 
-            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거|이걸로|그걸로|이거지/.test(raw) && !/아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거|말고/.test(raw) && typeof selectSpecificItem === "function") {
+            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거|이걸로|그걸로|이거지|그지/.test(raw) && !/아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거|말고|아이가/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem(pendingMenuName);
                 return afterSelect(raw);
             }
@@ -804,7 +820,7 @@
                 return true;
             }
 
-            if (stage === "summary" && /그래/.test(raw)) {
+            if (stage === "summary" && /그래|그라/.test(raw)) {
                 previous("맞아");
                 return true;
             }
