@@ -7439,6 +7439,8 @@ var addLearningCluster = window.addLearningCluster || function() {
         // 지금은 "주문 중" 안정성을 우선해서 절전 모드에서는 자동 재시작 안 함.
         if (isActuallySleepMode()) return false;
 
+        if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF) return false;
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) return false;
         if (window.speechSynthesis && window.speechSynthesis.speaking) return false;
 
         return true;
@@ -7721,6 +7723,8 @@ var addLearningCluster = window.addLearningCluster || function() {
     watchdogTimer = setInterval(() => {
         if (forceStopped) return;
         if (isActuallySleepMode()) return;
+        if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF) return;
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) return;
         if (window.speechSynthesis && window.speechSynthesis.speaking) return;
 
         if (!isListening && !isStarting) {
@@ -9551,7 +9555,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
 
         if (!recognition) return;
 
-        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF || (window.speechSynthesis && window.speechSynthesis.speaking) || (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking())) {
             fastRecoveryTimer = setTimeout(() => {
                 fastStartRecognition(reason + " / TTS 후", 300);
             }, 400);
@@ -9565,7 +9569,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
         const wait = Math.max(delay, Math.max(0, MIN_RESTART_GAP - sinceLast));
 
         fastRecoveryTimer = setTimeout(() => {
-            if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF || (window.speechSynthesis && window.speechSynthesis.speaking) || (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking())) {
                 fastStartRecognition(reason + " / TTS 재대기", 300);
                 return;
             }
@@ -23623,21 +23627,34 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 const reason = event && event.error ? String(event.error) : "";
                 if (reason === "interrupted" || reason === "canceled" || reason === "cancelled") {
                     if (job.done) return;
-                    job.done = true;
                     clearTimeout(safetyTimer);
                     if (recoveredSmoothSpeakText._currentJob !== job) return;
+                    job.retries = (job.retries || 0) + 1;
+                    if (job.retries <= 2) {
+                        window.isTtsSpeaking = true;
+                        window.__ttsHardBlock = true;
+                        try { if (typeof window.stopHybridSTT === "function") window.stopHybridSTT(); } catch (e) {}
+                        try { if (typeof window.stopListening === "function") window.stopListening(); } catch (e) {}
+                        setTimeout(function () {
+                            if (job.done || recoveredSmoothSpeakText._currentJob !== job) return;
+                            playRecoveredUtterance(job);
+                        }, 180);
+                        return;
+                    }
+                    job.done = true;
                     recoveredSmoothSpeakText._queue.length = 0;
                     recoveredSmoothSpeakText._busy = false;
                     recoveredSmoothSpeakText._current = "";
                     window.isTtsSpeaking = false;
                     window.__ttsHardBlock = false;
-                    window.__ttsBlockUntil = Date.now() + 200;
+                    window.__ttsBlockUntil = 0;
                     document.body.classList.remove("tts-speaking");
                     return;
                 }
                 finishRecoveredUtterance(job, safetyTimer, true);
             };
 
+            try { if (window.speechSynthesis.paused) window.speechSynthesis.resume(); } catch (e) {}
             try { window.speechSynthesis.speak(utterance); } catch (e) {}
         }
 
