@@ -303,7 +303,7 @@
             const raw = plain(text);
             if (!raw || !stage) return false;
 
-            if (/글씨작|글자가작|글씨가작|작아보|잘안보/.test(raw) && !/소리/.test(raw)) {
+            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대/.test(raw)) || /작아보|잘안보/.test(raw))) {
                 try {
                     if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
                     zoomLevel = Math.min(4, (Number(zoomLevel) || 0) + 1);
@@ -333,7 +333,7 @@
                 return true;
             }
 
-            if (/소리줄|소리낮|소리작게|소리내려|볼륨내|볼륨낮/.test(raw)) {
+            if ((/소리/.test(raw) && /줄|낮|내려|작게/.test(raw)) || /볼륨내|볼륨낮/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.max(1, (Number(ttsVolumeLevel) || 3) - 1);
