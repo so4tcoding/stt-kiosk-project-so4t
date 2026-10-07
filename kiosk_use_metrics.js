@@ -236,12 +236,15 @@
         }
 
         function countIn(raw) {
+            if (/열잔|열개|열그릇|열명|10잔|10개/.test(raw)) return 10;
+            if (/아홉잔|아홉개|아홉그릇|아홉명|9잔|9개/.test(raw)) return 9;
+            if (/여덟잔|여덟개|여덟그릇|여덟명|8잔|8개/.test(raw)) return 8;
             if (/일곱잔|일곱개|일곱그릇|일곱명|7잔|7개|7명/.test(raw)) return 7;
             if (/여섯잔|여섯개|여섯그릇|여섯명|6잔|6개|6명/.test(raw)) return 6;
             if (/다섯잔|다섯개|다섯그릇|다섯명|5잔|5개|5명/.test(raw)) return 5;
             if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명/.test(raw)) return 4;
             if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명/.test(raw)) return 3;
-            if (/두잔|두개|둘이|두그릇|두명|두사람|2잔|2개|2명/.test(raw)) return 2;
+            if (/두잔|두개|둘이|두그릇|두명|두사람|2잔|2개|2명|곱빼/.test(raw)) return 2;
             if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명/.test(raw)) return 1;
             return 0;
         }
@@ -326,7 +329,7 @@
                 return true;
             }
 
-            if (/아래보여|밑에보여|밑으로|아랫부분|밑부분/.test(raw) && !/왼쪽|오른쪽|번째/.test(raw)) {
+            if (/아래보여|밑에보여|밑으로|아랫부분|밑부분|아래쪽/.test(raw) && !/왼쪽|오른쪽|번째|거/.test(raw)) {
                 try {
                     if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
                     if ((Number(zoomLevel) || 0) <= 0) zoomLevel = 1;
@@ -455,7 +458,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /처음인데|처음이야|첫주문/.test(raw)) {
+            if (stage === "welcome" && /처음인데|처음이야|첫주문|어려워/.test(raw)) {
                 previous("사용법 알려줘");
                 return true;
             }
@@ -480,12 +483,17 @@
                 return true;
             }
 
-            if (stage === "add_more_prompt" && /더담|추가|하나더|더주문|다른메뉴|다른거|있으면네|^네$|^예$|^응$/.test(raw)) {
+            if (stage === "add_more_prompt" && /더담|추가|하나더|더주문|또주문|다른메뉴|다른거|있으면네|^네$|^예$|^응$/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 isAddOnPhase = true;
                 if (typeof transitionTo === "function" && typeof renderCategorySelect === "function") {
                     transitionTo("category_select", renderCategorySelect);
                 }
+                return true;
+            }
+
+            if (/menu_grid/.test(stage) && /5번|오번/.test(raw) && !/15번|6번|육번/.test(raw)) {
+                previous("5번");
                 return true;
             }
 
@@ -600,11 +608,13 @@
                 if (/세트|같이/.test(raw)) {
                     tempItem.isSet = true;
                     askQuantity();
+                    if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
                 if (/단품|버거만|햄버거만/.test(raw)) {
                     tempItem.isSet = false;
                     askQuantity();
+                    if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
             }
