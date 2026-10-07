@@ -147,6 +147,14 @@
         let taughtChanged = false;
         let aliasChanged = false;
         const protect = {};
+        if (taught["안녕하세요 날씨 좋네요"]) {
+            delete taught["안녕하세요 날씨 좋네요"];
+            taughtChanged = true;
+        }
+        if (aliases["안녕하세요날씨좋네요"]) {
+            delete aliases["안녕하세요날씨좋네요"];
+            aliasChanged = true;
+        }
         for (let i = 0; i < list.length; i++) {
             const heard = String((list[i] && list[i][0]) || "").trim();
             const target = String((list[i] && list[i][1]) || heard).trim();
@@ -230,10 +238,15 @@
             window.__kioskUseMetrics = summary;
         }
 
+        function unrelatedChat(text) {
+            return String(text || "").replace(/[^0-9a-z가-힣]/g, "") === "안녕하세요날씨좋네요";
+        }
+
         function teachStored(target, heard) {
             const key = String(heard).trim();
             const taught = loadJSON(TAUGHT_KEY, {});
-            if (!key || taught[key]) return false;
+            if (!key || unrelatedChat(key) || unrelatedChat(target)) return false;
+            if (taught[key]) return false;
             const heardCompact = compact(key);
             if (heardCompact !== compact(target) && heardCompact.length >= 2 && !YESNO.test(heardCompact)) {
                 try {

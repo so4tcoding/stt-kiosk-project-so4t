@@ -26729,6 +26729,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const c = compact(text);
 
         if (!c) return false;
+        if (window.__kioskTrainedHit && window.__kioskTrainedHit(text)) return true;
         if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
         if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
         if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
@@ -27178,6 +27179,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const c = compact(text);
 
         if (!c) return false;
+        if (window.__kioskTrainedHit && window.__kioskTrainedHit(text)) return true;
         if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
         if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
         if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;

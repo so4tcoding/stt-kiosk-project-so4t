@@ -1,11 +1,28 @@
 /*
-  1311개 주문 말. 같은 말은 한 번만 둔다.
+  주문 말. 같은 말은 한 번만 둔다.
+  날씨처럼 주문과 무관한 말은 넣지 않는다.
   화면을 열면 이 목록이 학습 사전에 들어간다.
 */
 (function (root, factory) {
     const list = factory();
     if (typeof module === "object" && module.exports) module.exports = list;
-    if (typeof window !== "undefined") window.__kioskLearnedWords = list;
+    if (typeof window !== "undefined") {
+        window.__kioskLearnedWords = list;
+        window.__kioskTrainedHit = function (text) {
+            const key = String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+            if (!key) return false;
+            for (let i = 0; i < list.length; i++) {
+                const heard = String((list[i] && list[i][0]) || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+                if (heard && heard === key) return true;
+            }
+            try {
+                const taught = JSON.parse(localStorage.getItem("kiosk_taught_phrases_v1") || "{}");
+                const aliases = JSON.parse(localStorage.getItem("kiosk_command_alias_v1") || "{}");
+                if (taught[String(text || "").trim()] || aliases[key]) return true;
+            } catch (e) {}
+            return false;
+        };
+    }
     root.KioskLearnedWords = list;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
     return [
@@ -35,7 +52,6 @@
         ["오단계", "오단계"],
         ["추천해줘", "추천해줘"],
         ["짭짤한 맛", "짭짤"],
-        ["안녕하세요 날씨 좋네요", "안녕하세요 날씨 좋네요"],
         ["라지", "라지"],
         ["매장에서 먹을게요", "매장에서"],
         ["아니요", "아니요"],

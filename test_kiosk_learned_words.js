@@ -2,6 +2,7 @@ const assert = require("assert");
 const Customer = require("./kiosk_customer.js");
 const words = require("./kiosk_learned_words.js");
 
+const notKiosk = new Set(["안녕하세요 날씨 좋네요"]);
 const seen = new Map();
 let visited = 0;
 Customer.steps().forEach(function (step) {
@@ -9,7 +10,7 @@ Customer.steps().forEach(function (step) {
     visited += 1;
     const heard = String(step.text || "").trim();
     const target = String(step.intended || heard).trim();
-    if (!heard || !target || seen.has(heard)) return;
+    if (!heard || !target || seen.has(heard) || notKiosk.has(heard)) return;
     seen.set(heard, target);
 });
 
