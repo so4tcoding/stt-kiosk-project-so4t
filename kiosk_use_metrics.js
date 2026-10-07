@@ -22,7 +22,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
     const ALIAS_KEY = "kiosk_command_alias_v1";
     const EVENT_KEY = "kiosk_use_metrics_v1";
-    const DICT_KEY = "kiosk_final_learned_dict_v1";
+    const TAUGHT_KEY = "kiosk_taught_phrases_v1";
     const YESNO = /^(네|내|예|넵|옙|아니|아니요|아니오|응|어|아|음)$/;
 
     function compact(text) {
@@ -51,7 +51,7 @@
         if (String(variant).length > 40 || String(canonical).length > 40) return false;
         store[v] = String(canonical).trim();
         const keys = Object.keys(store);
-        while (keys.length > 100) {
+        while (keys.length > 400) {
             delete store[keys.shift()];
         }
         return true;
@@ -115,24 +115,6 @@
         } catch (e) {}
     }
 
-    function dictHas(canonical, variant) {
-        const dict = loadJSON(DICT_KEY, {});
-        const want = compact(canonical);
-        const heard = compact(variant);
-        const items = dict[canonical] || dict[String(canonical).trim()] || [];
-        const lists = items.length ? [items] : Object.keys(dict).filter(function (key) {
-            return compact(key) === want;
-        }).map(function (key) { return dict[key]; });
-        for (let i = 0; i < lists.length; i++) {
-            const list = lists[i] || [];
-            for (let j = 0; j < list.length; j++) {
-                const text = typeof list[j] === "string" ? list[j] : list[j].text;
-                if (compact(text) === heard) return true;
-            }
-        }
-        return false;
-    }
-
     function install() {
         if (typeof window === "undefined" || window.__kioskUseMetricsInstalled) return;
         if (typeof window.processVoiceCommand !== "function") return;
@@ -167,7 +149,7 @@
             const events = loadJSON(EVENT_KEY, []);
             events.push(event);
             saveJSON(EVENT_KEY, events.slice(-500));
-            window.__kioskUseMetrics = summarize(loadJSON(EVENT_KEY, []));
+            publish();
             try {
                 fetch("/api/use-metrics", {
                     method: "POST",
@@ -177,11 +159,59 @@
             } catch (e) {}
         }
 
+        function publish() {
+            const summary = summarize(loadJSON(EVENT_KEY, []));
+            const taught = loadJSON(TAUGHT_KEY, {});
+            const seen = {};
+            summary.learnedWords.forEach(function (word) {
+                seen[word.text + "→" + (word.canonical || "")] = true;
+            });
+            Object.keys(taught).forEach(function (key) {
+                const row = taught[key];
+                if (!row || !row.text) return;
+                const id = row.text + "→" + (row.canonical || "");
+                if (seen[id]) return;
+                seen[id] = true;
+                summary.learnedWords.push({ text: row.text, canonical: row.canonical || "" });
+            });
+            summary.taught = Object.keys(taught).length;
+            window.__kioskUseMetrics = summary;
+        }
+
+        function teachStored(target, heard) {
+            const key = compact(heard);
+            const taught = loadJSON(TAUGHT_KEY, {});
+            if (!key || taught[key]) return false;
+            if (key !== compact(target) && key.length >= 2 && !YESNO.test(key)) {
+                try {
+                    if (typeof window.addLearnedVariant === "function") {
+                        window.addLearnedVariant(target, heard, { source: "use_metrics" });
+                    }
+                } catch (e) {}
+                const aliases = loadJSON(ALIAS_KEY, {});
+                if (rememberAlias(aliases, heard, target)) saveJSON(ALIAS_KEY, aliases);
+            }
+            taught[key] = {
+                text: String(heard).slice(0, 40),
+                canonical: String(target).slice(0, 40)
+            };
+            saveJSON(TAUGHT_KEY, taught);
+            record({
+                kind: "learn",
+                outcome: "success",
+                text: String(heard).slice(0, 40),
+                canonical: String(target).slice(0, 40),
+                stage: typeof currentStageName === "undefined" ? "" : currentStageName,
+                at: Date.now()
+            });
+            return true;
+        }
+
         function learn(canonical, variant) {
             const target = String(canonical || "").trim();
             const heard = String(variant || "").trim();
             const heardCompact = compact(heard);
-            if (!target || !heard || heardCompact === compact(target)) return;
+            if (!target || !heard || heardCompact === compact(target)) return false;
             if (heardCompact.length < 2 || YESNO.test(heardCompact)) {
                 record({
                     kind: "learn",
@@ -191,34 +221,9 @@
                     stage: typeof currentStageName === "undefined" ? "" : currentStageName,
                     at: Date.now()
                 });
-                return;
+                return false;
             }
-            let stored = false;
-            try {
-                if (typeof window.addLearnedVariant === "function") {
-                    stored = window.addLearnedVariant(target, heard, { source: "use_metrics" }) === true;
-                }
-            } catch (e) {}
-            const aliases = loadJSON(ALIAS_KEY, {});
-            const aliased = rememberAlias(aliases, heard, target);
-            if (aliased) saveJSON(ALIAS_KEY, aliases);
-            let resolved = dictHas(target, heard) || (aliased && resolveAlias(aliases, heard) === target);
-            try {
-                if (!resolved && typeof window.findByLearnedDict === "function") {
-                    const found = window.findByLearnedDict(heard);
-                    const name = found && (found.name || found.standard || "");
-                    resolved = compact(name) === compact(target);
-                }
-            } catch (e2) {}
-            stored = stored || aliased;
-            record({
-                kind: "learn",
-                outcome: stored && resolved ? "success" : "loss",
-                text: heard.slice(0, 40),
-                canonical: target.slice(0, 40),
-                stage: typeof currentStageName === "undefined" ? "" : currentStageName,
-                at: Date.now()
-            });
+            return teachStored(target, heard);
         }
 
         function plain(text) {
@@ -474,15 +479,20 @@
             if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
                 return previous.apply(this, arguments);
             }
-            let spoken = String(text || "");
-            const alias = resolveAlias(loadJSON(ALIAS_KEY, {}), spoken);
-            if (alias) spoken = alias;
+            const spoken = String(text || "");
             const before = capture();
             const intent = String(window.__kioskCustomerIntent || "").trim();
             let result;
             try {
                 if (applyKnownPhrase(spoken)) result = true;
                 else result = previous.call(this, spoken);
+                if (judgeUse(before, capture()) === "failure") {
+                    const alias = resolveAlias(loadJSON(ALIAS_KEY, {}), spoken);
+                    if (alias && compact(alias) !== compact(spoken)) {
+                        if (applyKnownPhrase(alias)) result = true;
+                        else result = previous.call(this, alias);
+                    }
+                }
             } finally {
                 const after = capture();
                 const outcome = judgeUse(before, after);
@@ -508,7 +518,17 @@
             }
         };
 
-        window.__kioskUseMetrics = summarize(loadJSON(EVENT_KEY, []));
+        window.__kioskTeachPhrase = function (canonical, variant) {
+            const heard = String(variant || "").trim();
+            const target = String(canonical || heard).trim();
+            if (!heard || !target) return false;
+            if (compact(heard) === compact(target)) return teachStored(target, heard);
+            return learn(target, heard) === true;
+        };
+        window.__kioskTaughtCount = function () {
+            return Object.keys(loadJSON(TAUGHT_KEY, {})).length;
+        };
+        publish();
         console.log("[kiosk] 사용 성공률과 학습 로스율을 기록합니다.");
     }
 

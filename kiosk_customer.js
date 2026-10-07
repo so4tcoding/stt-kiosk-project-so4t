@@ -262,7 +262,7 @@
             }
         }
 
-        const report = { total: 0, passed: 0, learned: 0, missed: [], rows: [] };
+        const report = { total: 0, passed: 0, learned: 0, taught: 0, known: 0, missed: [], rows: [] };
         (list && list.length ? list : steps()).forEach(function (step) {
             hush();
             prepare(step.prep);
@@ -280,6 +280,10 @@
             report.total += 1;
             if (passed) report.passed += 1;
             if (learned) report.learned += 1;
+            if (passed && typeof window.__kioskTeachPhrase === "function") {
+                const canonical = step.intended || step.text;
+                if (window.__kioskTeachPhrase(canonical, step.text)) report.taught += 1;
+            }
             if (!passed) {
                 report.missed.push({
                     group: step.group,
@@ -295,8 +299,9 @@
         window.speakText = savedSpeak;
         try { speakText = savedSpeak; } catch (e) {}
         window.__kioskTtsBlocking = savedBlock;
+        if (typeof window.__kioskTaughtCount === "function") report.known = window.__kioskTaughtCount();
         window.__kioskCustomerReport = report;
-        console.log("[고객] 통과 " + report.passed + "/" + report.total + ", 학습으로 살린 말 " + report.learned + ", 아직 실행 안 됨 " + report.missed.length);
+        console.log("[고객] 통과 " + report.passed + "/" + report.total + ", 이번에 학습 " + (report.taught + report.learned) + ", 사전 " + report.known + ", 아직 실행 안 됨 " + report.missed.length);
         report.missed.forEach(function (miss) {
             console.log("[고객] 실행 안 됨:", miss.text, miss.stage, miss.item);
         });

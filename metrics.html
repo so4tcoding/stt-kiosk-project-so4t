@@ -68,6 +68,21 @@
         document.getElementById("failure").textContent = summary.failureRate + "%";
         document.getElementById("learn").textContent = summary.learnSuccessRate + "%";
         document.getElementById("loss").textContent = summary.lossRate + "%";
+        try {
+            const taught = JSON.parse(localStorage.getItem("kiosk_taught_phrases_v1") || "{}");
+            const seen = {};
+            summary.learnedWords.forEach(function (word) {
+                seen[word.text + "→" + (word.canonical || "")] = true;
+            });
+            Object.keys(taught).forEach(function (key) {
+                const row = taught[key];
+                if (!row || !row.text) return;
+                const id = row.text + "→" + (row.canonical || "");
+                if (seen[id]) return;
+                seen[id] = true;
+                summary.learnedWords.push(row);
+            });
+        } catch (e) {}
         const words = document.getElementById("words");
         words.innerHTML = "";
         if (!summary.learnedWords.length) {

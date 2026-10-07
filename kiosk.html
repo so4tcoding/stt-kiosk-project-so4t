@@ -1273,8 +1273,10 @@
                         return;
                     }
                     const missed = (report.missed || []).slice(0, 3).map(function (row) { return row.text; }).join(", ");
-                    box.innerText = "통과 " + report.passed + "/" + report.total + ". 학습 " + report.learned + ". 실행 안 됨 " + report.missed.length + (missed ? ". " + missed : "");
-                    speakText("고객 확인이 끝났습니다. " + report.total + "개 중 " + report.passed + "개를 통과했습니다. 학습으로 살린 말은 " + report.learned + "개, 실행되지 않은 말은 " + report.missed.length + "개입니다.");
+                    const taughtNow = (report.taught || 0) + (report.learned || 0);
+                    const known = report.known || taughtNow;
+                    box.innerText = "통과 " + report.passed + "/" + report.total + ". 이번 학습 " + taughtNow + ". 사전에 있는 말 " + known + ". 실행 안 됨 " + report.missed.length + (missed ? ". " + missed : "");
+                    speakText("고객 확인이 끝났습니다. " + report.total + "개 중 " + report.passed + "개를 통과했습니다. 이번에 학습한 말은 " + taughtNow + "개, 사전에 있는 말은 " + known + "개, 실행되지 않은 말은 " + report.missed.length + "개입니다.");
                     return;
                 }
                 if (lower.match(/메뉴추가|추가/)) {
