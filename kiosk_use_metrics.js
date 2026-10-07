@@ -312,7 +312,7 @@
                 return true;
             }
 
-            if (/소리키워|소리크게|소리올려|크게말해|말크게/.test(raw)) {
+            if (/소리키워|소리크게|소리올려|크게말해|말크게|소리높|볼륨올/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
@@ -322,7 +322,17 @@
                 return true;
             }
 
-            if (/소리줄|소리낮|소리작게|소리내려/.test(raw)) {
+            if (/못들|잘안들|안들려/.test(raw)) {
+                try {
+                    if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
+                    ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
+                    ttsEnabled = true;
+                } catch (e) {}
+                if (typeof speakText === "function") speakText("소리를 키웠습니다.");
+                return true;
+            }
+
+            if (/소리줄|소리낮|소리작게|소리내려|볼륨내|볼륨낮/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.max(1, (Number(ttsVolumeLevel) || 3) - 1);
@@ -357,6 +367,10 @@
             }
 
             if (stage === "taste_select_prompt") {
+                if (/덜맵|안맵|안매|순한|싱거|담백/.test(raw) && typeof speakText === "function") {
+                    speakText("달콤, 상큼, 구수, 고소, 얼큰, 짭짤한 맛 중에서 골라주세요.");
+                    return true;
+                }
                 const tastes = [
                     { name: "달콤", words: ["달콤", "달달", "단거", "단맛"] },
                     { name: "상큼", words: ["상큼", "새콤", "신거", "신맛"] },
@@ -411,7 +425,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);
