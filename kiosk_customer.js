@@ -1048,7 +1048,21 @@
             {group:"결제",prep:"sum",text:"오렌지 주스 빼 줘",intended:"",expect:{type:"spoken",value:"뺐",stage:"summary"}},
             {group:"결제",prep:"more",text:"배불렀어요",intended:"아니요",expect:{type:"stage",value:"place"}},
             {group:"온도",prep:"temp:아메리카노",text:"따뜻하게 데워 줘",intended:"핫",expect:{type:"hot"}},
-            {group:"시작",prep:"qty:오렌지 주스",text:"주문 그만할게요",intended:"처음으로",expect:{type:"stage",value:"welcome"}}
+            {group:"시작",prep:"qty:오렌지 주스",text:"주문 그만할게요",intended:"처음으로",expect:{type:"stage",value:"welcome"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"일 잔",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"이 잔",intended:"두 개",expect:{type:"count",count:2,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"삼 그릇",intended:"세 개",expect:{type:"countLeave",count:3,item:"돼지"}},
+            {group:"수량",prep:"qty:한우 불고기",text:"사 개",intended:"네 개",expect:{type:"countLeave",count:4,item:"한우"}},
+            {group:"수량",prep:"qty:콜라",text:"오 잔",intended:"다섯 개",expect:{type:"count",count:5,stage:"cup_size",item:"콜라"}},
+            {group:"결제",prep:"more",text:"잘 먹을게요",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"place",text:"맛있게 먹을게",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"시작",prep:"welcome",text:"안녕하세요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"결제",prep:"more",text:"계산해 주시오",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"place",text:"포장 주시오",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"pay",text:"카드로 주시오",intended:"카드",expect:{type:"pay",value:"카드"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"일 개",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"이 개",intended:"두 개",expect:{type:"countLeave",count:2,item:"돼지"}},
+            {group:"수량",prep:"qty:한우 불고기",text:"삼 개",intended:"세 개",expect:{type:"countLeave",count:3,item:"한우"}}
         ];
     }
 

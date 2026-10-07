@@ -255,7 +255,16 @@
             if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명/.test(raw)) return 4;
             if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명/.test(raw)) return 3;
             if (/두잔|두개|둘이|두그릇|두명|두사람|2잔|2개|2명|곱빼/.test(raw)) return 2;
-            if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명/.test(raw)) return 1;
+            if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명|일잔|일개|일그릇/.test(raw)) return 1;
+            if (/이잔|이개|이그릇/.test(raw)) return 2;
+            if (/삼잔|삼개|삼그릇/.test(raw)) return 3;
+            if (/사잔|사개|사그릇/.test(raw)) return 4;
+            if (/오잔|오개|오그릇/.test(raw)) return 5;
+            if (/육잔|육개|육그릇/.test(raw)) return 6;
+            if (/칠잔|칠개|칠그릇/.test(raw)) return 7;
+            if (/팔잔|팔개|팔그릇/.test(raw)) return 8;
+            if (/구잔|구개|구그릇/.test(raw)) return 9;
+            if (/십잔|십개|십그릇/.test(raw)) return 10;
             return 0;
         }
 
@@ -556,6 +565,11 @@
                 return true;
             }
 
+            if (stage === "welcome" && /안녕/.test(raw) && typeof speakText === "function") {
+                speakText("안녕하세요. 주문하시려면 메뉴를 말씀해 주세요.");
+                return true;
+            }
+
             if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러|배고파|배고프|배고픕|주문부탁|예예|네네/.test(raw)) {
                 startOrder();
                 return true;
@@ -578,7 +592,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담|계산|결제|그냥주문|다했|그거면|이거면|골랐|영수증|충분|이만|배불|배부르|배불렀/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담|계산|결제|그냥주문|다했|그거면|이거면|골랐|영수증|충분|이만|배불|배부르|배불렀|잘먹/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);
