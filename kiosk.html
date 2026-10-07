@@ -26844,9 +26844,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         const asking = /뭐야|뭔데|뭐예|특징|설명|얼마|가격|무슨맛|어떤맛/.test(compact(t));
         const menu = findMenu(t);
-        let stageNow = "";
-        try { stageNow = String(currentStageName || ""); } catch (e) {}
-        if (stageNow === "summary") return false;
         if (menu && !asking) return selectMenu(menu, t);
         if (asking) return false;
 

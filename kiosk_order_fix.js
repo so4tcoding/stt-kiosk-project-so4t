@@ -181,15 +181,23 @@
                 }
             }
             if (stage === "summary" && /추가/.test(squash(text))) {
-                const count = typeof parseNumber === "function" ? parseNumber(String(text || "")) : 0;
                 let menu = null;
                 try { if (typeof findMatchingMenu === "function") menu = findMatchingMenu(text); } catch (e) {}
+                let rawCount = String(text || "");
+                if (menu && menu.name) rawCount = rawCount.split(menu.name).join(" ");
+                rawCount = rawCount.replace(/을|를|은|는|이|가/g, " ");
+                const count = typeof parseNumber === "function" ? parseNumber(rawCount) : 0;
                 if (menu && count > 0) return beginSummaryAdd(menu, count);
             }
             if (stage === "beverage_result") {
                 const heard = squash(text);
                 if (/이대로|그대로|이상태/.test(heard) && !/다시|아니/.test(heard) && typeof transitionTo === "function" && typeof renderAddMorePrompt === "function") {
                     transitionTo("add_more_prompt", renderAddMorePrompt);
+                    return true;
+                }
+                if (/다시/.test(heard) && !/이대로|그대로/.test(heard) && typeof transitionTo === "function" && typeof renderBeverageOptionStep === "function") {
+                    try { optionStepIndex = 0; } catch (e) {}
+                    transitionTo("beverage_option_step", renderBeverageOptionStep);
                     return true;
                 }
             }
