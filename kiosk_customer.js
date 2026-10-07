@@ -581,7 +581,26 @@
             { group: "메뉴", prep: "grid:음료", text: "맨 오른쪽", intended: "오른쪽", expect: { type: "spoken", value: "주스", stage: "menu_confirm" } },
             { group: "메뉴", prep: "grid:음료", text: "맨 마지막", intended: "마지막", expect: { type: "spoken", value: "사이다", stage: "menu_confirm" } },
             { group: "메뉴", prep: "grid:음료", text: "3번으로", intended: "세번째", expect: { type: "spoken", value: "레몬", stage: "menu_confirm" } },
-            { group: "메뉴", prep: "grid:음료", text: "첫번째 걸로", intended: "첫번째", expect: { type: "spoken", value: "딸기", stage: "menu_confirm" } }
+            { group: "메뉴", prep: "grid:음료", text: "첫번째 걸로", intended: "첫번째", expect: { type: "spoken", value: "딸기", stage: "menu_confirm" } },
+            { group: "결제", prep: "pay", text: "네", intended: "카드", expect: { type: "spoken", value: "카드", stage: "done" } },
+            { group: "결제", prep: "pay", text: "아니요", intended: "현금", expect: { type: "spoken", value: "현금", stage: "done" } },
+            { group: "세트", prep: "upsell:불고기버거", text: "네", intended: "세트", expect: { type: "set" } },
+            { group: "세트", prep: "upsell:불고기버거", text: "아니요", intended: "단품", expect: { type: "single" } },
+            { group: "안내", prep: "grid:커피", text: "소리 크게 해줘", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } },
+            { group: "안내", prep: "grid:커피", text: "아래 보여줘", intended: "아래", expect: { type: "spoken", value: "아래", stage: "menu_grid" } },
+            { group: "안내", prep: "grid:커피", text: "아메리카노 특징 설명해줘", intended: "아메리카노", expect: { type: "spoken", value: "아메리카노", stage: "menu_grid" } },
+            { group: "결제", prep: "sum", text: "불고기 추가해 줘", intended: "불고기", expect: { type: "category", value: "불고기", notStage: "quantity" } },
+            { group: "안내", prep: "grid:국밥", text: "돼지국밥 특징 설명해줘", intended: "돼지국밥", expect: { type: "spoken", value: "돼지", stage: "menu_grid" } },
+            { group: "결제", prep: "place", text: "포장해서 들고 갈래요", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "결제", prep: "place", text: "여기서 드시고 갈게요", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "결제", prep: "pay", text: "카드", intended: "카드", expect: { type: "pay", value: "카드" } },
+            { group: "결제", prep: "pay", text: "현금", intended: "현금", expect: { type: "pay", value: "현금" } },
+            { group: "온도", prep: "temp:아메리카노", text: "따뜻하게 주세요", intended: "핫", expect: { type: "hot" } },
+            { group: "온도", prep: "temp:아메리카노", text: "차갑게 주세요", intended: "아이스", expect: { type: "ice" } },
+            { group: "세트", prep: "upsell:치즈버거", text: "햄버거만", intended: "단품", expect: { type: "single" } },
+            { group: "시작", prep: "welcome", text: "소리 크게 해줘", intended: "소리", expect: { type: "spoken", value: "소리", stage: "welcome" } },
+            { group: "시작", prep: "welcome", text: "화면 확대해 줘", intended: "확대", expect: { type: "spoken", value: "확대", stage: "welcome" } },
+            { group: "결제", prep: "more", text: "있으면 네", intended: "네", expect: { type: "stage", value: "category_select" } }
         ];
     }
 

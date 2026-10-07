@@ -314,6 +314,16 @@
                 return true;
             }
 
+            if (/아래보여|밑에보여|밑으로|아랫부분|밑부분/.test(raw) && !/왼쪽|오른쪽|번째/.test(raw)) {
+                try {
+                    if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
+                    if ((Number(zoomLevel) || 0) <= 0) zoomLevel = 1;
+                    if (typeof updateZoomUI === "function") updateZoomUI("bottom");
+                } catch (e) {}
+                if (typeof speakText === "function") speakText("아래쪽 내용을 보여드리겠습니다.");
+                return true;
+            }
+
             if ((/소리/.test(raw) && /키워|높여|올려|크게/.test(raw)) || /크게말해|말크게|볼륨올/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
@@ -442,7 +452,7 @@
                 return true;
             }
 
-            if (stage === "add_more_prompt" && /더담|추가|하나더|더주문|다른메뉴|다른거/.test(raw)) {
+            if (stage === "add_more_prompt" && /더담|추가|하나더|더주문|다른메뉴|다른거|있으면네|^네$|^예$|^응$/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 isAddOnPhase = true;
                 if (typeof transitionTo === "function" && typeof renderCategorySelect === "function") {
@@ -480,6 +490,23 @@
                 if (typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                     transitionTo("menu_grid", renderMenuGrid);
                 }
+                return true;
+            }
+
+            if (/menu_grid|open_order_prompt|category_select/.test(stage) && /특징|무슨맛|어떤맛/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
+                const described = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
+                    return plain(b).length - plain(a).length;
+                });
+                for (let d = 0; d < described.length; d++) {
+                    const key = plain(described[d]);
+                    if (key.length >= 2 && raw.indexOf(key) !== -1) {
+                        const menu = customMenus.find(function (item) { return item.name === described[d]; });
+                        const price = Number(menu && menu.price || 0).toLocaleString();
+                        speakText(menu.name + "은 " + (menu.taste || "기본") + " 메뉴이고, 가격은 " + price + "원입니다.");
+                        return true;
+                    }
+                }
+                speakText("어떤 메뉴의 특징인지 이름을 같이 말씀해주세요.");
                 return true;
             }
 
