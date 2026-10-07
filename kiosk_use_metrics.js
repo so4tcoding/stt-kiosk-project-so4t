@@ -811,6 +811,24 @@
                     if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
+                if (/하지마|하지말/.test(raw)) {
+                    if (/차갑|차가|아이스|시원|얼음/.test(raw)) {
+                        tempItem.temp = "핫(HOT)";
+                        askQuantity();
+                        if (countIn(raw)) return leaveQuantity(countIn(raw));
+                        return true;
+                    }
+                    if (/뜨겁|뜨끈|따뜻|따듯|뜨뜻|핫|뜨거|데워/.test(raw)) {
+                        tempItem.temp = "아이스(ICE)";
+                        askQuantity();
+                        if (countIn(raw)) return leaveQuantity(countIn(raw));
+                        return true;
+                    }
+                    if (typeof speakText === "function") {
+                        speakText("뜨거운 것과 아이스 중에서 말씀해 주세요.");
+                        return true;
+                    }
+                }
                 if (/샷추가|샷넣|디카페인/.test(raw) && typeof speakText === "function") {
                     speakText("그 선택은 없습니다. 뜨거운 것과 아이스 중에서 말씀해 주세요.");
                     return true;
@@ -876,7 +894,7 @@
                 if (/낮게|싱겁|덜달|안달|없이|달지않|빼|없애|내려|무설탕|설탕없/.test(raw)) level = 1;
                 else if (/조금|적게/.test(raw)) level = 2;
                 else if (/많이/.test(raw) && !/달게|달콤/.test(raw)) level = 4;
-                else if (/달게|달콤|가득|달아|올려/.test(raw)) level = 5;
+                else if (/달게|달콤|가득|달아|올려|단맛/.test(raw)) level = 5;
                 else if (/적당|그냥|보통/.test(raw)) level = 3;
                 if (!level) return false;
                 if (!tempItem.beverageOptions) tempItem.beverageOptions = {};

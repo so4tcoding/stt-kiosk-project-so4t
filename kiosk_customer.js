@@ -1127,7 +1127,15 @@
             {group:"메뉴",prep:"welcome",text:"디저트 추천해 줘",intended:"디저트",expect:{type:"category",value:"디저트",notStage:"quantity"}},
             {group:"메뉴",prep:"welcome",text:"순한 음료",intended:"음료",expect:{type:"category",value:"음료",notStage:"quantity"}},
             {group:"메뉴",prep:"welcome",text:"국밥 추천",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
-            {group:"메뉴",prep:"open",text:"햄버거 추천",intended:"햄버거",expect:{type:"category",value:"햄버거",notStage:"quantity"}}
+            {group:"메뉴",prep:"open",text:"햄버거 추천",intended:"햄버거",expect:{type:"category",value:"햄버거",notStage:"quantity"}},
+            {group:"온도",prep:"temp:아메리카노",text:"차갑게 하지 마세요",intended:"핫",expect:{type:"hot"}},
+            {group:"온도",prep:"temp:아메리카노",text:"뜨겁게 하지 마세요",intended:"아이스",expect:{type:"ice"}},
+            {group:"온도",prep:"temp:카페라떼",text:"하지 마세요",intended:"",expect:{type:"spoken",value:"아이스",stage:"temp"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"뜨겁게 두 그릇",intended:"두 개",expect:{type:"countLeave",count:2,item:"돼지"}},
+            {group:"단계",prep:"opt",text:"단맛 나게",intended:"5단계",expect:{type:"sugar",value:5}},
+            {group:"결제",prep:"place",text:"천천히 먹을게",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"시작",prep:"welcome",text:"배고파서 왔어요",intended:"네",expect:{type:"stage",value:"open_order_prompt"}},
+            {group:"온도",prep:"temp:아메리카노",text:"아이스로 하지 마세요",intended:"핫",expect:{type:"hot"}}
         ];
     }
 
