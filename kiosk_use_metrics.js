@@ -445,6 +445,10 @@
                     transitionTo("summary", renderSummary);
                     return true;
                 }
+                if (/감사|고마워|고맙/.test(raw) && typeof speakText === "function") {
+                    speakText("포장인지 매장인지 말씀해 주세요.");
+                    return true;
+                }
             }
 
             if (stage === "taste_select_prompt") {
@@ -601,6 +605,11 @@
                 return true;
             }
 
+            if (stage === "welcome" && /감사|고마워|고맙/.test(raw) && typeof speakText === "function") {
+                speakText("감사합니다. 주문하시려면 메뉴를 말씀해 주세요.");
+                return true;
+            }
+
             if (stage === "welcome" && /안녕/.test(raw) && typeof speakText === "function") {
                 speakText("안녕하세요. 주문하시려면 메뉴를 말씀해 주세요.");
                 return true;
@@ -633,7 +642,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담|계산|결제|그냥주문|다했|그거면|이거면|골랐|영수증|충분|이만|배불|배부르|배불렀|잘먹/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담|계산|결제|그냥주문|다했|그거면|이거면|골랐|영수증|충분|이만|배불|배부르|배불렀|잘먹|감사|고마워|고맙/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);

@@ -1178,7 +1178,14 @@
             {group:"결제",prep:"sum",text:"알겠어요",intended:"맞아",expect:{type:"stage",value:"payment"}},
             {group:"결제",prep:"sum",text:"그렇게 해 주세요",intended:"맞아",expect:{type:"stage",value:"payment"}},
             {group:"결제",prep:"pay",text:"알겠습니다",intended:"카드",expect:{type:"pay",value:"카드"}},
-            {group:"메뉴",prep:"confirm:콜라",text:"네 알겠습니다",intended:"콜라",expect:{type:"itemStage",item:"콜라",stage:"quantity"}}
+            {group:"메뉴",prep:"confirm:콜라",text:"네 알겠습니다",intended:"콜라",expect:{type:"itemStage",item:"콜라",stage:"quantity"}},
+            {group:"시작",prep:"welcome",text:"감사합니다",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"고맙습니다",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"결제",prep:"more",text:"감사합니다",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"more",text:"됐어요 감사합니다",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"place",text:"감사합니다",intended:"",expect:{type:"spoken",value:"포장",stage:"place"}},
+            {group:"결제",prep:"place",text:"포장 감사합니다",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"먹고 갈게요 감사합니다",intended:"매장에서",expect:{type:"place",value:"매장"}}
         ];
     }
 
