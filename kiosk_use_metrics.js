@@ -411,6 +411,10 @@
                     speakText("현금이 없으면 카드로 말씀해 주세요.");
                     return true;
                 }
+                if (/알겠/.test(raw) && typeof selectPayment === "function") {
+                    selectPayment("신용/체크 카드");
+                    return true;
+                }
                 if (/카드|일시불|할부/.test(choice) && !/안돼|안됨|안읽/.test(choice) && typeof selectPayment === "function") {
                     selectPayment("신용/체크 카드");
                     return true;
@@ -945,7 +949,7 @@
                 return true;
             }
 
-            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거|이걸로|그걸로|이거지|그지|맞심/.test(raw) && !/아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거|말고|아이가/.test(raw) && typeof selectSpecificItem === "function") {
+            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거|이걸로|그걸로|이거지|그지|맞심|알겠/.test(raw) && !/아니|아닌|틀려|틀리|틀립|다시골|다른걸|다른거|말고|아이가/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem(pendingMenuName);
                 return afterSelect(raw);
             }
@@ -980,7 +984,7 @@
                 return true;
             }
 
-            if (stage === "summary" && /그래|그라/.test(raw)) {
+            if (stage === "summary" && /그래|그라|그렇|알겠/.test(raw)) {
                 previous("맞아");
                 return true;
             }

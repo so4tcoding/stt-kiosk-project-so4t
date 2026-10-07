@@ -1172,7 +1172,13 @@
             {group:"안내",prep:"grid:음료",text:"이거 뭐예요",intended:"",expect:{type:"spoken",value:"이름",stage:"menu_grid"}},
             {group:"수량",prep:"qty:오렌지 주스",text:"한 입만",intended:"",expect:{type:"spoken",value:"잔",stage:"quantity"}},
             {group:"시작",prep:"welcome",text:"포장 예약",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
-            {group:"안내",prep:"grid:커피",text:"이게 뭔데요",intended:"",expect:{type:"spoken",value:"이름",stage:"menu_grid"}}
+            {group:"안내",prep:"grid:커피",text:"이게 뭔데요",intended:"",expect:{type:"spoken",value:"이름",stage:"menu_grid"}},
+            {group:"메뉴",prep:"confirm:딸기 라떼",text:"알겠어요",intended:"딸기 라떼",expect:{type:"itemStage",item:"딸기",stage:"quantity"}},
+            {group:"메뉴",prep:"confirm:오렌지 주스",text:"알겠습니다",intended:"오렌지 주스",expect:{type:"itemStage",item:"오렌지",stage:"quantity"}},
+            {group:"결제",prep:"sum",text:"알겠어요",intended:"맞아",expect:{type:"stage",value:"payment"}},
+            {group:"결제",prep:"sum",text:"그렇게 해 주세요",intended:"맞아",expect:{type:"stage",value:"payment"}},
+            {group:"결제",prep:"pay",text:"알겠습니다",intended:"카드",expect:{type:"pay",value:"카드"}},
+            {group:"메뉴",prep:"confirm:콜라",text:"네 알겠습니다",intended:"콜라",expect:{type:"itemStage",item:"콜라",stage:"quantity"}}
         ];
     }
 
