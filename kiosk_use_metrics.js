@@ -556,7 +556,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /주차|영업|번호표|몇시/.test(raw) && typeof speakText === "function") {
+            if (stage === "welcome" && /주차|영업|번호표|몇시|예약|웨이팅|자리있|사진/.test(raw) && typeof speakText === "function") {
                 speakText("주문만 할 수 있습니다. 메뉴를 말씀해 주세요.");
                 return true;
             }
@@ -622,7 +622,7 @@
                 return true;
             }
 
-            if (stage === "quantity" && /반잔|절반|반공기/.test(raw) && typeof speakText === "function") {
+            if (stage === "quantity" && /반잔|절반|반공기|한입/.test(raw) && typeof speakText === "function") {
                 speakText("반 잔은 없습니다. 한 잔, 두 잔처럼 수량을 말씀해 주세요.");
                 return true;
             }
@@ -643,6 +643,11 @@
                 if (typeof transitionTo === "function" && typeof renderCategorySelect === "function") {
                     transitionTo("category_select", renderCategorySelect);
                 }
+                return true;
+            }
+
+            if (/menu_grid/.test(stage) && /이거뭐|뭐예|뭐야|뭔데/.test(raw) && !/메뉴/.test(raw) && typeof speakText === "function") {
+                speakText("메뉴 이름이나 몇 번째인지 말씀해 주세요.");
                 return true;
             }
 

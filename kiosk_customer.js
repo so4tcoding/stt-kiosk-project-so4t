@@ -1164,7 +1164,15 @@
             {group:"시작",prep:"welcome",text:"초코 케이크",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"시작",prep:"welcome",text:"바닐라 아이스크림",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"메뉴",prep:"grid:음료",text:"제일 싼 거",intended:"",expect:{type:"spoken",value:"가격",stage:"menu_grid"}},
-            {group:"메뉴",prep:"grid:국밥",text:"제일 저렴한 거",intended:"",expect:{type:"spoken",value:"가격",stage:"menu_grid"}}
+            {group:"메뉴",prep:"grid:국밥",text:"제일 저렴한 거",intended:"",expect:{type:"spoken",value:"가격",stage:"menu_grid"}},
+            {group:"시작",prep:"welcome",text:"예약했어요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"웨이팅 있어요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"자리 있어요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"사진 찍어 주세요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"안내",prep:"grid:음료",text:"이거 뭐예요",intended:"",expect:{type:"spoken",value:"이름",stage:"menu_grid"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"한 입만",intended:"",expect:{type:"spoken",value:"잔",stage:"quantity"}},
+            {group:"시작",prep:"welcome",text:"포장 예약",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"안내",prep:"grid:커피",text:"이게 뭔데요",intended:"",expect:{type:"spoken",value:"이름",stage:"menu_grid"}}
         ];
     }
 
