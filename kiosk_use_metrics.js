@@ -226,10 +226,10 @@
         }
 
         function countIn(raw) {
-            if (/네잔|네개|4잔|4개/.test(raw)) return 4;
-            if (/세잔|세개|3잔|3개/.test(raw)) return 3;
-            if (/두잔|두개|둘이|2잔|2개/.test(raw)) return 2;
-            if (/한잔|한개|1잔|1개/.test(raw)) return 1;
+            if (/네잔|네개|네그릇|4잔|4개/.test(raw)) return 4;
+            if (/세잔|세개|세그릇|3잔|3개/.test(raw)) return 3;
+            if (/두잔|두개|둘이|두그릇|2잔|2개/.test(raw)) return 2;
+            if (/한잔|한개|한그릇|1잔|1개/.test(raw)) return 1;
             return 0;
         }
 
@@ -246,7 +246,36 @@
             return true;
         }
 
-        function finishCup(size) {
+            function afterSelect(raw) {
+                if (currentStageName === "temp") {
+                    if (/아이스|차갑|시원/.test(raw)) {
+                        tempItem.temp = "아이스(ICE)";
+                        askQuantity();
+                        return true;
+                    }
+                    if (/뜨겁|뜨끈|따뜻|핫|뜨거/.test(raw)) {
+                        tempItem.temp = "핫(HOT)";
+                        askQuantity();
+                        return true;
+                    }
+                }
+                if (currentStageName === "upsell") {
+                    if (/세트|같이/.test(raw)) {
+                        tempItem.isSet = true;
+                        askQuantity();
+                        return true;
+                    }
+                    if (/단품/.test(raw)) {
+                        tempItem.isSet = false;
+                        askQuantity();
+                        return true;
+                    }
+                }
+                if (currentStageName === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
+                return true;
+            }
+
+            function finishCup(size) {
             tempItem.cupSize = size;
             let base = "";
             try { base = classifyDrinkBase(tempItem.item); } catch (e) {}
@@ -273,6 +302,16 @@
                 return true;
             }
 
+            if (/소리줄|소리낮|소리작게/.test(raw)) {
+                try {
+                    if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
+                    ttsVolumeLevel = Math.max(1, (Number(ttsVolumeLevel) || 3) - 1);
+                    ttsEnabled = true;
+                } catch (e) {}
+                if (typeof speakText === "function") speakText("소리를 줄였습니다.");
+                return true;
+            }
+
             if (stage === "payment") {
                 if (/카드/.test(raw) && typeof selectPayment === "function") {
                     selectPayment("신용/체크 카드");
@@ -285,16 +324,29 @@
             }
 
             if (stage === "taste_select_prompt") {
-                const tastes = ["달콤", "상큼", "구수", "고소", "얼큰", "짭짤"];
-                const hit = tastes.filter(function (name) { return raw.indexOf(name) !== -1; })[0];
+                const tastes = [
+                    { name: "달콤", words: ["달콤", "달달"] },
+                    { name: "상큼", words: ["상큼", "새콤"] },
+                    { name: "구수", words: ["구수"] },
+                    { name: "고소", words: ["고소"] },
+                    { name: "얼큰", words: ["얼큰"] },
+                    { name: "짭짤", words: ["짭짤"] }
+                ];
+                const hit = tastes.filter(function (taste) {
+                    return taste.words.some(function (word) { return raw.indexOf(word) !== -1; });
+                })[0];
                 if (hit && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                     let matched = customMenus.filter(function (menu) {
-                        return String(menu.taste || "").indexOf(hit) !== -1 || String(menu.name || "").indexOf(hit) !== -1;
+                        const taste = String(menu.taste || "");
+                        const name = String(menu.name || "");
+                        return hit.words.some(function (word) {
+                            return taste.indexOf(word) !== -1 || name.indexOf(word) !== -1;
+                        });
                     });
                     if (!matched.length) matched = customMenus;
                     selectedCategory = "추천 맛";
                     currentGridMenus = matched;
-                    currentGridTitle = hit + "한 맛 추천 메뉴";
+                    currentGridTitle = hit.name + "한 맛 추천 메뉴";
                     transitionTo("menu_grid", renderMenuGrid);
                     return true;
                 }
@@ -347,38 +399,21 @@
                     const key = plain(names[i]);
                     if (key.length >= 2 && raw.indexOf(key) !== -1) {
                         selectSpecificItem(names[i]);
-                        if (currentStageName === "temp") {
-                            if (/아이스|차갑|시원/.test(raw)) {
-                                tempItem.temp = "아이스(ICE)";
-                                askQuantity();
-                                return true;
-                            }
-                            if (/뜨겁|뜨끈|따뜻|핫/.test(raw)) {
-                                tempItem.temp = "핫(HOT)";
-                                askQuantity();
-                                return true;
-                            }
-                        }
-                        if (currentStageName === "upsell") {
-                            if (/세트|같이/.test(raw)) {
-                                tempItem.isSet = true;
-                                askQuantity();
-                                return true;
-                            }
-                            if (/단품/.test(raw)) {
-                                tempItem.isSet = false;
-                                askQuantity();
-                                return true;
-                            }
-                        }
-                        if (currentStageName === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
-                        return true;
+                        return afterSelect(raw);
                     }
+                }
+                const pieces = customMenus.filter(function (item) {
+                    const key = plain(item.name);
+                    return raw.length >= 2 && key.indexOf(raw) !== -1 && key !== raw;
+                });
+                if (pieces.length === 1) {
+                    selectSpecificItem(pieces[0].name);
+                    return afterSelect(raw);
                 }
             }
 
             if (stage === "temp") {
-                if (/뜨겁|뜨끈|따뜻|핫|hot/.test(raw)) {
+                if (/뜨겁|뜨끈|따뜻|핫|hot|뜨거/.test(raw)) {
                     tempItem.temp = "핫(HOT)";
                     askQuantity();
                     return true;
@@ -403,7 +438,7 @@
                 }
             }
 
-            if (stage === "cup_size" && /큰걸|큰컵|큰거|라지/.test(raw)) {
+            if (stage === "cup_size" && /큰걸|큰컵|큰거|큰잔|라지/.test(raw)) {
                 return finishCup("500ml");
             }
 
@@ -417,9 +452,9 @@
 
             if (stage === "beverage_option_step" && Array.isArray(optionList) && optionList[optionStepIndex]) {
                 let level = 0;
-                if (/달게|달콤|가득/.test(raw)) level = 5;
+                if (/낮게|싱겁|덜달|안달/.test(raw)) level = 1;
                 else if (/많이/.test(raw)) level = 4;
-                else if (/낮게|싱겁|덜달|안달/.test(raw)) level = 1;
+                else if (/달게|달콤|가득/.test(raw)) level = 5;
                 if (!level) return false;
                 if (!tempItem.beverageOptions) tempItem.beverageOptions = {};
                 tempItem.beverageOptions[optionList[optionStepIndex].key] = level;
