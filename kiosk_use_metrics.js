@@ -23,7 +23,9 @@
     const ALIAS_KEY = "kiosk_command_alias_v1";
     const EVENT_KEY = "kiosk_use_metrics_v1";
     const TAUGHT_KEY = "kiosk_taught_phrases_v1";
+    const STORE_CAP = 4000;
     const YESNO = /^(네|내|예|넵|옙|아니|아니요|아니오|응|어|아|음)$/;
+    const AMBIGUOUS = /^(국밥|버거|불고기|꽃|케이크|단|핫|아이스|사과|배|감|치즈|캔)$/;
 
     function compact(text) {
         return String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
@@ -43,17 +45,39 @@
         return "failure";
     }
 
+    function bakedRows() {
+        if (typeof window === "undefined" || !Array.isArray(window.__kioskLearnedWords)) return [];
+        return window.__kioskLearnedWords;
+    }
+
+    function dropUntil(store, cap, protect) {
+        let keys = Object.keys(store);
+        while (keys.length > cap) {
+            let idx = 0;
+            for (let i = 0; i < keys.length; i++) {
+                if (!protect || !protect[keys[i]]) {
+                    idx = i;
+                    break;
+                }
+            }
+            delete store[keys[idx]];
+            keys = Object.keys(store);
+        }
+    }
+
     function rememberAlias(store, variant, canonical) {
         const v = compact(variant);
         const c = compact(canonical);
         if (!store || !v || !c || v === c) return false;
-        if (v.length < 2 || YESNO.test(v)) return false;
+        if (v.length < 2 || YESNO.test(v) || AMBIGUOUS.test(v)) return false;
         if (String(variant).length > 40 || String(canonical).length > 40) return false;
         store[v] = String(canonical).trim();
-        const keys = Object.keys(store);
-        while (keys.length > 400) {
-            delete store[keys.shift()];
-        }
+        const protect = {};
+        bakedRows().forEach(function (row) {
+            const key = compact(row && row[0]);
+            if (key) protect[key] = true;
+        });
+        dropUntil(store, STORE_CAP, protect);
         return true;
     }
 
@@ -115,10 +139,38 @@
         } catch (e) {}
     }
 
+    function mergeBaked() {
+        const list = bakedRows();
+        if (!list.length) return;
+        const taught = loadJSON(TAUGHT_KEY, {});
+        const aliases = loadJSON(ALIAS_KEY, {});
+        let taughtChanged = false;
+        let aliasChanged = false;
+        const protect = {};
+        for (let i = 0; i < list.length; i++) {
+            const heard = String((list[i] && list[i][0]) || "").trim();
+            const target = String((list[i] && list[i][1]) || heard).trim();
+            if (!heard || !target) continue;
+            protect[heard] = true;
+            if (!taught[heard]) {
+                taught[heard] = {
+                    text: heard.slice(0, 40),
+                    canonical: target.slice(0, 40)
+                };
+                taughtChanged = true;
+            }
+            if (rememberAlias(aliases, heard, target)) aliasChanged = true;
+        }
+        dropUntil(taught, STORE_CAP, protect);
+        if (taughtChanged) saveJSON(TAUGHT_KEY, taught);
+        if (aliasChanged) saveJSON(ALIAS_KEY, aliases);
+    }
+
     function install() {
         if (typeof window === "undefined" || window.__kioskUseMetricsInstalled) return;
         if (typeof window.processVoiceCommand !== "function") return;
         window.__kioskUseMetricsInstalled = true;
+        mergeBaked();
 
         const previous = window.processVoiceCommand;
 
@@ -192,10 +244,12 @@
                 const aliases = loadJSON(ALIAS_KEY, {});
                 if (rememberAlias(aliases, key, target)) saveJSON(ALIAS_KEY, aliases);
             }
-            const keys = Object.keys(taught);
-            while (keys.length >= 400) {
-                delete taught[keys.shift()];
-            }
+            const protect = {};
+            bakedRows().forEach(function (row) {
+                const heard = String((row && row[0]) || "").trim();
+                if (heard) protect[heard] = true;
+            });
+            dropUntil(taught, STORE_CAP - 1, protect);
             taught[key] = {
                 text: key.slice(0, 40),
                 canonical: String(target).slice(0, 40)
