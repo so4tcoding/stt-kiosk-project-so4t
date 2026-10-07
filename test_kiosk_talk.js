@@ -63,6 +63,22 @@ assert.strictEqual(
     Talk.talkLine("주문하신 메뉴는 돼지국밥 1개입니다. 총 금액은 8000원입니다. 맞으시면 결제라고 말씀해주세요."),
     "맞으면 결제라고 말씀해 주세요."
 );
+assert.strictEqual(
+    Talk.talkLine("포장으로 선택하셨습니다. 주문하신 메뉴는 돼지국밥 1개입니다. 총 금액은 9000원입니다. 맞으시면 결제라고 말씀해주세요."),
+    "포장으로 선택하셨습니다. 맞으면 결제라고 말씀해 주세요."
+);
+assert.strictEqual(
+    Talk.talkLine("매장에서 드시기를 선택했습니다. 주문하신 메뉴는 오렌지 주스 1개입니다. 총 금액은 4000원입니다. 맞으시면 결제라고 말씀해주세요."),
+    "매장에서 드시기를 선택했습니다. 맞으면 결제라고 말씀해 주세요."
+);
+const menuList = "딸기 라떼 4800원, 오렌지 주스 4000원 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?";
+assert.strictEqual(Talk.talkLine(menuList), menuList);
+const addonBoard = "추가 메뉴입니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 입니다. 원하시는 메뉴를 말씀해 주세요.";
+assert.strictEqual(Talk.talkLine(addonBoard), addonBoard);
+assert.strictEqual(
+    Talk.talkLine("저희 매장에는 국밥, 불고기 카테고리가 있습니다. 무엇을 드시겠습니까?"),
+    "메뉴 이름을 말씀해 주세요."
+);
 assert.strictEqual(Talk.talkLine("쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다."), "메뉴 이름을 말씀해 주세요.");
 assert.strictEqual(Talk.talkLine("그 메뉴는 없습니다. 커피, 음료 중에서 말씀해 주세요."), "그 메뉴는 없습니다.");
 assert.ok(Talk.talkLine("그 단어만으로는 모르겠습니다. 메뉴 이름을 말씀해 주세요.").includes("이름"));

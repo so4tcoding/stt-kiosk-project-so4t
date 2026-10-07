@@ -425,7 +425,7 @@
                 return true;
             }
 
-            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게|더키워/.test(raw))) {
+            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게|더키워|안보여|안보임|안봐도/.test(raw))) {
                 try {
                     rememberZoom(currentZoom() + 1);
                     showZoomedView();
@@ -1076,11 +1076,15 @@
             const intent = String(window.__kioskCustomerIntent || "").trim();
             let result;
             try {
-                if (applyKnownPhrase(spoken)) result = true;
+                const knownAlias = !window.__kioskSuiteRunning ? resolveAlias(loadJSON(ALIAS_KEY, {}), spoken) : "";
+                if (knownAlias && compact(knownAlias) !== compact(spoken)) {
+                    if (applyKnownPhrase(knownAlias)) result = true;
+                    else result = previous.call(this, knownAlias);
+                } else if (applyKnownPhrase(spoken)) result = true;
                 else result = previous.call(this, spoken);
                 if (judgeUse(before, capture()) === "failure") {
                     const alias = resolveAlias(loadJSON(ALIAS_KEY, {}), spoken);
-                    if (alias && compact(alias) !== compact(spoken)) {
+                    if (alias && compact(alias) !== compact(spoken) && alias !== knownAlias) {
                         if (applyKnownPhrase(alias)) result = true;
                         else result = previous.call(this, alias);
                     }
@@ -1088,6 +1092,7 @@
             } finally {
                 const after = capture();
                 const outcome = judgeUse(before, after);
+                const moved = before.stage !== after.stage || before.item !== after.item || before.cart !== after.cart || before.place !== after.place || String(before.count) !== String(after.count);
                 record({
                     kind: "use",
                     outcome: outcome,
@@ -1097,6 +1102,25 @@
                     at: Date.now()
                 });
                 if (outcome === "failure" && intent) learn(intent, text);
+                if (!window.__kioskSuiteRunning) {
+                    const missed = outcome === "failure" || /없습니다|다시 한 번|다시 말씀|알아듣지|정확히 말씀/.test(String(after.spoken || ""));
+                    const ambiguous = /^(국밥|버거|불고기|꽃|케이크|단|핫|아이스|사과|배|감|치즈|캔)$/;
+                    if (moved) {
+                        const pending = window.__kioskPendingLearn;
+                        window.__kioskPendingLearn = null;
+                        if (pending && pending.stage === before.stage && Date.now() - pending.at < 120000) {
+                            const canonical = after.item && after.item !== before.item ? after.item : String(text || "").trim();
+                            if (canonical && compact(canonical) !== compact(pending.text) && !ambiguous.test(compact(pending.text)) && !ambiguous.test(compact(canonical))) {
+                                learn(canonical, pending.text);
+                            }
+                        }
+                    } else if (missed) {
+                        const heard = String(text || "").trim();
+                        if (heard && !ambiguous.test(compact(heard))) window.__kioskPendingLearn = { text: heard, stage: before.stage, at: Date.now() };
+                    } else {
+                        window.__kioskPendingLearn = null;
+                    }
+                }
             }
             return result;
         };

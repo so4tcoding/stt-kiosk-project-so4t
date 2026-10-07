@@ -39,6 +39,9 @@
         const raw = String(text || "").replace(/\s+/g, " ").trim();
         if (!raw) return raw;
         if (/비밀번호/.test(raw)) return raw;
+        if (/추가 메뉴입니다|등이 있습니다/.test(raw)) return raw;
+        if (/매장에서 드시기를 선택했습니다/.test(raw)) return "매장에서 드시기를 선택했습니다. 맞으면 결제라고 말씀해 주세요.";
+        if (/포장으로 선택하셨습니다/.test(raw)) return "포장으로 선택하셨습니다. 맞으면 결제라고 말씀해 주세요.";
 
         const name = heardName(heard);
         const called = name ? polite(name) : "";
@@ -135,11 +138,13 @@
         const ko = voices.filter(function (v) { return /ko/i.test(v.lang || ""); });
         function score(v) {
             const n = v.name || "";
-            if (/SunHi/i.test(n) && /Natural/i.test(n)) return 0;
-            if (/Natural|Neural|Online/i.test(n)) return 1;
-            if (/Google/i.test(n)) return 2;
-            if (/Heami|Yuna|InJoon/i.test(n)) return 3;
-            return 4;
+            if (/Heami/i.test(n)) return 0;
+            if (/Yuna/i.test(n)) return 1;
+            if (/Google/i.test(n) && /ko/i.test(v.lang || "")) return 2;
+            if (/InJoon/i.test(n)) return 3;
+            if (/SunHi/i.test(n)) return 5;
+            if (/Natural|Neural|Online/i.test(n)) return 4;
+            return 6;
         }
         ko.sort(function (a, b) { return score(a) - score(b); });
         return ko[0] || null;
@@ -150,12 +155,10 @@
         window.__kioskTalkInstalled = true;
 
         try {
-            if (!localStorage.getItem("kiosk_talk_voice")) {
-                const pitch = localStorage.getItem("kiosk_tts_pitch");
-                const rate = localStorage.getItem("kiosk_tts_rate");
-                if (!pitch || pitch === "1.15" || pitch === "0.7") localStorage.setItem("kiosk_tts_pitch", "1.0");
-                if (!rate || rate === "0.95" || rate === "0.85") localStorage.setItem("kiosk_tts_rate", "0.96");
-                localStorage.setItem("kiosk_talk_voice", "1");
+            if (localStorage.getItem("kiosk_talk_voice") !== "2") {
+                localStorage.setItem("kiosk_tts_pitch", "0.9");
+                localStorage.setItem("kiosk_tts_rate", "0.86");
+                localStorage.setItem("kiosk_talk_voice", "2");
             }
         } catch (e) {}
 
