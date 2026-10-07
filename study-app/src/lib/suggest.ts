@@ -5,11 +5,27 @@ function squash(value: string): string {
   return value.toLowerCase().replace(/[^0-9a-z가-힣]/g, '').replace(/[와과의및]/g, '')
 }
 
+const stems = ['이라고', '라고', '에서', '으로', '에게', '한테', '은', '는', '이', '가', '을', '를', '도', '만', '로']
+
 function tokens(text: string): string[] {
-  return text
+  const raw = text
     .split(/[^0-9A-Za-z가-힣]+/)
     .map((part) => squash(part))
-    .filter((part) => part.length >= 2)
+    .filter((part) => part.length > 0)
+  const merged: string[] = []
+  for (const part of raw) {
+    const single = part.length === 1 && part >= '가' && part <= '힣'
+    if (single && merged.length > 0) {
+      merged[merged.length - 1] += part
+      continue
+    }
+    if (!single && merged.length > 0 && merged[merged.length - 1].length === 1) {
+      merged[merged.length - 1] += part
+      continue
+    }
+    merged.push(part)
+  }
+  return merged.filter((part) => part.length >= 2)
 }
 
 function phraseSet(text: string): Set<string> {
@@ -18,6 +34,15 @@ function phraseSet(text: string): Set<string> {
   for (let size = 2; size <= 6; size++) {
     for (let index = 0; index + size <= parts.length; index++) {
       set.add(parts.slice(index, index + size).join(''))
+    }
+  }
+  for (const phrase of [...set]) {
+    for (const tail of stems) {
+      if (phrase.length > tail.length + 1 && phrase.endsWith(tail)) {
+        const stem = phrase.slice(0, -tail.length)
+        if (stem.length >= 2) set.add(stem)
+        break
+      }
     }
   }
   return set
