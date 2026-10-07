@@ -325,7 +325,7 @@
         <!-- 관리자 진입은 오직 음성 암호로만 (터치 UI 없음) -->
         <div id="admin-panel" class="hidden absolute inset-0 z-[300] flex flex-col items-center justify-start bg-[#3d2f1f]/95 backdrop-blur-lg px-6 pt-10 pb-6">
             <h2 class="text-2xl text-white font-black mb-2" style="font-family:'Jua',sans-serif;">관리자 메뉴 설정 (음성 전용)</h2>
-            <p class="text-[#e8d9c0] text-sm mb-4 text-center leading-relaxed">"메뉴 추가" 라고 말씀하시면 이름 → 가격 → 맛 순서로<br>음성으로 새 메뉴를 등록할 수 있습니다.<br>"닫기" 라고 말씀하시면 처음 화면으로 돌아갑니다.</p>
+            <p class="text-[#e8d9c0] text-sm mb-4 text-center leading-relaxed">"메뉴 추가" 라고 말씀하시면 이름 → 가격 → 맛 순서로<br>음성으로 새 메뉴를 등록할 수 있습니다.<br>"고객 실행" 이라고 말씀하시면 주문 말을 처음부터 확인합니다.<br>"닫기" 라고 말씀하시면 처음 화면으로 돌아갑니다.</p>
             <div id="admin-draft-box" class="w-full bg-white/10 p-4 rounded-2xl border border-white/20 mb-4 text-white font-bold text-center min-h-[70px] flex items-center justify-center"></div>
             <div class="w-full flex-1 overflow-hidden flex flex-col gap-4">
                 <div class="bg-white/10 p-4 rounded-2xl border border-white/20">
@@ -986,7 +986,7 @@
                 else speakText("비밀번호가 틀렸습니다.");
                 return;
             }
-            if (!document.getElementById('admin-panel').classList.contains('hidden')) {
+            if (!window.__kioskAdminCustomerRun && !document.getElementById('admin-panel').classList.contains('hidden')) {
                 handleAdminVoice(lower, text); return;
             }
 
@@ -1246,13 +1246,37 @@
             document.getElementById('admin-panel').classList.remove('hidden');
             currentStageName = 'admin_panel_open';
             adminDraft = null;
-            document.getElementById('admin-draft-box').innerText = '"메뉴 추가" 라고 말씀해보세요.';
-            speakText("관리자 설정이 열렸습니다. 메뉴 추가 라고 말씀하시면 새 메뉴를 등록할 수 있습니다.");
+            document.getElementById('admin-draft-box').innerText = '"메뉴 추가" 또는 "고객 실행" 이라고 말씀해보세요.';
+            speakText("관리자 설정이 열렸습니다. 메뉴 추가 라고 말씀하시면 새 메뉴를 등록하고, 고객 실행 이라고 말씀하시면 주문 말을 확인합니다.");
         }
         function closeAdminPanel() { document.getElementById('admin-panel').classList.add('hidden'); adminDraft = null; showWelcomeScreen(); }
         function handleAdminVoice(lower, original) {
             if (lower.match(/닫기|나가기|종료/)) { closeAdminPanel(); return; }
             if (!adminDraft) {
+                if (lower.match(/고객실행|고객돌려|고객시작|인공지능고객/)) {
+                    const box = document.getElementById('admin-draft-box');
+                    if (typeof window.__kioskRunCustomer !== "function") {
+                        box.innerText = "고객 스크립트가 없습니다. 서버를 다시 켜고 새로고침하세요.";
+                        speakText("고객 스크립트가 없습니다. 서버를 다시 켜고 화면을 새로고침하세요.");
+                        currentStageName = "admin_panel_open";
+                        return;
+                    }
+                    box.innerText = "고객이 주문 말을 확인하고 있습니다.";
+                    window.__kioskAdminCustomerRun = true;
+                    let report = null;
+                    try { report = window.__kioskRunCustomer(); }
+                    finally { window.__kioskAdminCustomerRun = false; }
+                    currentStageName = "admin_panel_open";
+                    if (!report) {
+                        box.innerText = "사용 기록이 없습니다. 새로고침한 뒤 다시 말씀하세요.";
+                        speakText("사용 기록이 없습니다. 화면을 새로고침한 뒤 다시 말씀하세요.");
+                        return;
+                    }
+                    const missed = (report.missed || []).slice(0, 3).map(function (row) { return row.text; }).join(", ");
+                    box.innerText = "통과 " + report.passed + "/" + report.total + ". 학습 " + report.learned + ". 실행 안 됨 " + report.missed.length + (missed ? ". " + missed : "");
+                    speakText("고객 확인이 끝났습니다. " + report.total + "개 중 " + report.passed + "개를 통과했습니다. 학습으로 살린 말은 " + report.learned + "개, 실행되지 않은 말은 " + report.missed.length + "개입니다.");
+                    return;
+                }
                 if (lower.match(/메뉴추가|추가/)) {
                     adminDraft = { step: 'name', name: '', price: 0, taste: '' };
                     document.getElementById('admin-draft-box').innerText = '새 메뉴의 이름을 말씀해주세요.';
@@ -34220,7 +34244,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     const isAdminOpen = adminPanel && !adminPanel.classList.contains('hidden');
                     let intercept = false;
 
-                    if (isAdminOpen || currentStageName === 'admin_panel_open' || currentStageName === 'admin_auth') {
+                    if (window.__kioskAdminCustomerRun) {
+                        intercept = true;
+                    }
+                    else if (isAdminOpen || currentStageName === 'admin_panel_open' || currentStageName === 'admin_auth') {
                         if (/닫기|나가기|종료/.test(clean)) {
                             if (typeof closeAdminPanel === 'function') closeAdminPanel();
                             else { adminPanel.classList.add('hidden'); showWelcomeScreen(); }
@@ -34867,6 +34894,9 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     }
                     
                     // 기존 핵심 쉴드 유지 (관리자, 이전, 처음, 네/아니요, 맛, 추천 등)
+                    else if (window.__kioskAdminCustomerRun) {
+                        intercept = true;
+                    }
                     else if (isAdminOpen || currentStageName === 'admin_panel_open' || currentStageName === 'admin_auth') {
                         if (/닫기|나가기|종료/.test(clean)) {
                             if (typeof closeAdminPanel === 'function') closeAdminPanel();
