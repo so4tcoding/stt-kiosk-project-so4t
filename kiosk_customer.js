@@ -287,7 +287,22 @@
             { group: "시작", prep: "welcome", text: "아무거나", intended: "추천해줘", expect: { type: "stage", value: "taste_select_prompt" } },
             { group: "뒤로", prep: "qty:오렌지 주스", text: "이전 화면", intended: "이전으로", expect: { type: "back", item: "오렌지" } },
             { group: "뒤로", prep: "qty:오렌지 주스", text: "뒤로", intended: "이전으로", expect: { type: "back", item: "오렌지" } },
-            { group: "시작", prep: "grid:커피", text: "처음 화면", intended: "처음으로", expect: { type: "stage", value: "welcome" } }
+            { group: "시작", prep: "grid:커피", text: "처음 화면", intended: "처음으로", expect: { type: "stage", value: "welcome" } },
+            { group: "메뉴", prep: "grid:음료", text: "세번째 거", intended: "세번째", expect: { type: "spoken", value: "레몬", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "오른쪽 거", intended: "오른쪽", expect: { type: "spoken", value: "주스", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "1번", intended: "첫번째", expect: { type: "spoken", value: "딸기", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "2번", intended: "두번째", expect: { type: "spoken", value: "오렌지", stage: "menu_confirm" } },
+            { group: "온도", prep: "temp:아메리카노", text: "아이스요", intended: "아이스", expect: { type: "ice" } },
+            { group: "온도", prep: "temp:아메리카노", text: "핫이요", intended: "핫", expect: { type: "hot" } },
+            { group: "온도", prep: "temp:아메리카노", text: "따뜻하게요", intended: "핫", expect: { type: "hot" } },
+            { group: "세트", prep: "upsell:치즈버거", text: "세트로요", intended: "세트", expect: { type: "set" } },
+            { group: "세트", prep: "upsell:치즈버거", text: "단품요", intended: "단품", expect: { type: "single" } },
+            { group: "용량", prep: "cup:콜라", text: "큰거요", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "용량", prep: "cup:콜라", text: "작은거요", intended: "스몰", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "결제", prep: "place", text: "포장이고", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "결제", prep: "place", text: "매장이고", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "결제", prep: "pay", text: "카드입니다", intended: "카드", expect: { type: "pay", value: "카드" } },
+            { group: "결제", prep: "pay", text: "현금입니다", intended: "현금", expect: { type: "pay", value: "현금" } }
         ];
     }
 
