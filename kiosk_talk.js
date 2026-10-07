@@ -56,7 +56,7 @@
             return fit("메뉴 이름을 말씀해 주세요.");
         }
         if (/무엇을 드시고|메뉴를 아시면|메뉴 이름을 아시면|지금은 메뉴를 말하는|메뉴판 보여줘/.test(raw)) {
-            return fit("메뉴 이름을 말씀해 주세요.");
+            return fit("무엇을 드시고 싶으세요. 모르면 메뉴판 보여줘.");
         }
         if (/메뉴 수량을 말씀|몇 잔인지|몇 개인지|수량을 정확히/.test(raw)) {
             const head = called ? called + ". " : "";
@@ -138,12 +138,13 @@
         const ko = voices.filter(function (v) { return /ko/i.test(v.lang || ""); });
         function score(v) {
             const n = v.name || "";
-            if (/Heami/i.test(n)) return 0;
-            if (/Yuna/i.test(n)) return 1;
+            if (/SunHi/i.test(n) && /Natural|Neural/i.test(n)) return 0;
+            if (/SunHi/i.test(n)) return 1;
             if (/Google/i.test(n) && /ko/i.test(v.lang || "")) return 2;
-            if (/InJoon/i.test(n)) return 3;
-            if (/SunHi/i.test(n)) return 5;
-            if (/Natural|Neural|Online/i.test(n)) return 4;
+            if (/Yuna/i.test(n)) return 3;
+            if (/InJoon/i.test(n)) return 4;
+            if (/Natural|Neural|Online/i.test(n)) return 5;
+            if (/Heami/i.test(n)) return 9;
             return 6;
         }
         ko.sort(function (a, b) { return score(a) - score(b); });
@@ -155,10 +156,10 @@
         window.__kioskTalkInstalled = true;
 
         try {
-            if (localStorage.getItem("kiosk_talk_voice") !== "2") {
-                localStorage.setItem("kiosk_tts_pitch", "0.9");
-                localStorage.setItem("kiosk_tts_rate", "0.86");
-                localStorage.setItem("kiosk_talk_voice", "2");
+            if (localStorage.getItem("kiosk_talk_voice") !== "3") {
+                localStorage.setItem("kiosk_tts_pitch", "1.05");
+                localStorage.setItem("kiosk_tts_rate", "0.92");
+                localStorage.setItem("kiosk_talk_voice", "3");
             }
         } catch (e) {}
 

@@ -7682,7 +7682,7 @@ var addLearningCluster = window.addLearningCluster || function() {
 
         let selected = normalizeCandidateText(candidates[0]);
 
-        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        if (window.speechSynthesis && window.speechSynthesis.speaking && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(selected))) {
             console.log("TTS 중 인식 차단:", selected);
             return;
         }
@@ -9780,7 +9780,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
 
         const selected = normalizeCandidate(candidates[0]);
 
-        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        if (window.speechSynthesis && window.speechSynthesis.speaking && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(selected))) {
             console.log("TTS 중 인식 차단:", selected);
             return;
         }
@@ -9818,18 +9818,8 @@ if (typeof updateDrink3DFromTempItem === "function") {
        ---------------------------------------------------------------------- */
     if (fastWatchdogTimer) {
         clearInterval(fastWatchdogTimer);
+        fastWatchdogTimer = null;
     }
-
-    fastWatchdogTimer = setInterval(() => {
-        if (window.speechSynthesis && window.speechSynthesis.speaking) return;
-
-        const offlineTime = Date.now() - lastRecognitionActiveAt;
-
-        if (!isListening && !isStarting && offlineTime > MAX_OFFLINE_TIME) {
-            console.log("🛠️ Watchdog: 5초 이상 비활성 → 강제 복구");
-            fastStartRecognition("watchdog 빠른 복구", 100);
-        }
-    }, WATCHDOG_INTERVAL);
 
     setTimeout(() => {
         fastStartRecognition("초기 빠른 복구", 300);
@@ -21246,6 +21236,12 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
         );
     }
 
+    window.__kioskAllowDuringTts = function (text) {
+        const raw = String(text || "");
+        const compact = raw.replace(/[\s.,?!~'"]/g, "");
+        return /이대로|그대로|이상태|다시/.test(raw) || /이대로|그대로|이상태|다시|대로/.test(compact);
+    };
+
     const previousSpeakTextEmergency = window.speakText || speakText;
 
     window.speakText = speakText = function emergencySpeakText(text, onEndCallback = null) {
@@ -21302,11 +21298,6 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
     const previousShowVoiceResultEmergency = window.showVoiceResult || showVoiceResult;
 
     window.showVoiceResult = showVoiceResult = function emergencyShowVoiceResult(text) {
-        if (isTtsBlockedNow()) {
-            console.log("🚫 TTS 중 showVoiceResult 차단:", text);
-            return;
-        }
-
         return previousShowVoiceResultEmergency(text);
     };
 
@@ -26703,6 +26694,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         if (!c) return false;
         if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
+        if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -26833,7 +26825,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function processFilteredText(text){
         const t = normalizeText(text);
 
-        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(t))) {
             console.log("[kiosk] TTS 중 음성 차단:", t);
             return true;
         }
@@ -26852,6 +26844,9 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         const asking = /뭐야|뭔데|뭐예|특징|설명|얼마|가격|무슨맛|어떤맛/.test(compact(t));
         const menu = findMenu(t);
+        let stageNow = "";
+        try { stageNow = String(currentStageName || ""); } catch (e) {}
+        if (stageNow === "summary") return false;
         if (menu && !asking) return selectMenu(menu, t);
         if (asking) return false;
 
@@ -27147,6 +27142,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         if (!c) return false;
         if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
+        if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -27270,7 +27266,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function routeText(text){
         const t = normalizeText(text);
 
-        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(t))) {
             console.log("[kiosk] TTS 중 음성 차단:", t);
             chunks = [];
             return true;
@@ -27285,6 +27281,15 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             const msg = getStageHelp();
             console.log("✅ HYBRID 도움말:", msg);
             speakOnly(msg);
+            return true;
+        }
+
+        let stageNow = "";
+        try { stageNow = String(currentStageName || ""); } catch (e) {}
+        if (stageNow === "summary") {
+            try {
+                if (typeof processVoiceCommand === "function") processVoiceCommand(t);
+            } catch (e) {}
             return true;
         }
 
@@ -27389,7 +27394,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     async function sendWhisper(fallbackText){
         if (sendingWhisper) return;
-        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(fallbackText))) {
             chunks = [];
             console.log("[kiosk] TTS 중 음성 차단:", fallbackText);
             return;
@@ -27449,7 +27454,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         if (!t) return;
 
-        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(t))) {
             chunks = [];
             console.log("[kiosk] TTS 중 음성 차단:", t);
             return;
@@ -34121,6 +34126,14 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 
     function muteMicForTTS(text, reason) {
+        const muteKey = rawText(text).slice(0, 160);
+        const muteNow = Date.now();
+        if (window.__lastTTSMuteKey === muteKey && muteNow - (window.__lastTTSMuteAt || 0) < 400) {
+            return window.__lastTTSFinalMicOff;
+        }
+        window.__lastTTSMuteKey = muteKey;
+        window.__lastTTSMuteAt = muteNow;
+
         window.__TTS_FINAL_MIC_OFF = true;
         window.__kioskTTSBusy = true;
 
@@ -34931,8 +34944,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     const isAdminOpen = adminPanel && !adminPanel.classList.contains('hidden');
                     let intercept = false;
 
+                    if (/이대로|그대로|이상태|다시/.test(clean)) {
+                        intercept = false;
+                    }
                     // [수정 1] 볼륨과 화면 확대 단어의 완벽한 분리
-                    if (/소리|볼륨/.test(clean)) {
+                    else if (/소리|볼륨/.test(clean)) {
                         speakText("볼륨 조절은 기기 자체의 물리 버튼을 이용해 주세요.");
                         intercept = true;
                     }
@@ -35176,7 +35192,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     const clean = String(transcript).replace(/[\s,.'?!]+/g, '');
                     
                     // "설명해 줘" 명령어 가로채기
-                    if (/설명해줘|뭐야|뭐해야돼|어떻게해|기능설명/.test(clean)) {
+                    if (/설명해줘|뭐야|뭐해야돼|어떻게해|기능설명/.test(clean) && !/세트/.test(clean)) {
                         console.log("🛡️ [HELP SHIELD] 화면 설명 요청 가로챔");
                         window.hybridLock = true; setTimeout(() => window.hybridLock = false, 2000);
                         if (typeof showVoiceResult === 'function') showVoiceResult(transcript);
@@ -35294,7 +35310,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     const clean = String(transcript).replace(/[\s,.'?!]+/g, '');
 
                     // 사용자가 제안한 '뭔데', '뭐고', '어떻게', '도와' 등 자연스러운 표현 싹 다 추가
-                    if (/설명|뭐야|뭔데|뭐고|뭐해야|어떻게|도와/.test(clean)) {
+                    if (/설명|뭐야|뭔데|뭐고|뭐해야|어떻게|도와/.test(clean) && !/세트/.test(clean) && !/이대로|그대로|다시/.test(clean)) {
                         console.log("🛡️ [HELP SHIELD V2] 자연스러운 화면 설명 요청 가로챔:", transcript);
                         window.hybridLock = true; setTimeout(() => window.hybridLock = false, 2000);
                         if (typeof showVoiceResult === 'function') showVoiceResult(transcript);
@@ -35675,7 +35691,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     const previousCommand = window.processVoiceCommand;
     if (typeof previousCommand === "function" && !previousCommand.__kioskAssistFront) {
         const wrappedCommand = function (text) {
-            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(text))) {
                 console.log("[kiosk] TTS 중 음성 차단:", text);
                 return;
             }
@@ -35972,6 +35988,13 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 this.__kioskTtsGuard = true;
                 this.addEventListener("result", function (event) {
                     if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+                        let heard = "";
+                        try {
+                            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                                heard += event.results[i][0].transcript;
+                            }
+                        } catch (e) {}
+                        if (typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(heard)) return;
                         console.log("[kiosk] TTS 중 음성 차단");
                         event.stopImmediatePropagation();
                     }

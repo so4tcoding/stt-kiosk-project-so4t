@@ -77,12 +77,115 @@
             return true;
         }
 
+        function finishSummaryAdd() {
+            const place = window.__kioskSummaryPlace || "";
+            window.__kioskSummaryAdd = false;
+            window.__kioskSummaryPlace = "";
+            if (typeof tempItem !== "undefined" && tempItem) tempItem.presetCount = 0;
+            if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
+            if (typeof orderState !== "undefined" && orderState && place) orderState.place = place;
+            if (typeof transitionTo === "function" && typeof renderSummary === "function") {
+                transitionTo("summary", renderSummary);
+            }
+            return true;
+        }
+
+        function beginSummaryAdd(menu, count) {
+            const place = (typeof orderState !== "undefined" && orderState && orderState.place) || "";
+            window.__kioskSummaryAdd = true;
+            window.__kioskSummaryPlace = place;
+            window.__kioskSummaryQtySkipped = false;
+            tempItem.item = menu.name;
+            tempItem.count = count;
+            tempItem.presetCount = count;
+            tempItem.isSet = false;
+            tempItem.temp = "기본";
+            tempItem.options = "";
+            tempItem.beverageOptions = null;
+            tempItem.cupSize = "";
+            const cat = menu.category || "";
+            if (cat === "햄버거" && typeof askUpsell === "function") {
+                askUpsell();
+                return true;
+            }
+            if (cat === "커피" && typeof askTemperature === "function") {
+                askTemperature();
+                return true;
+            }
+            if (cat === "음료" && typeof transitionTo === "function" && typeof askCupSize === "function") {
+                transitionTo("cup_size", askCupSize);
+                return true;
+            }
+            return finishSummaryAdd();
+        }
+
+        if (typeof askQuantity === "function" && !askQuantity.__kioskSummaryCount) {
+            const previousAsk = askQuantity;
+            askQuantity = function () {
+                const preset = typeof tempItem !== "undefined" && tempItem ? tempItem.presetCount : 0;
+                if (!(preset > 0) || !window.__kioskSummaryAdd || window.__kioskSummaryQtySkipped) return previousAsk.apply(this, arguments);
+                window.__kioskSummaryQtySkipped = true;
+                tempItem.count = preset;
+                let cat = "";
+                try {
+                    const row = customMenus.find(function (menu) { return menu.name === tempItem.item; });
+                    cat = row ? row.category : "";
+                } catch (e) {}
+                if (cat === "음료" && typeof transitionTo === "function" && typeof askCupSize === "function") {
+                    return transitionTo("cup_size", askCupSize);
+                }
+                if (cat === "커피" && typeof transitionTo === "function" && typeof renderBeverageOptionPrompt === "function") {
+                    return transitionTo("beverage_option_prompt", renderBeverageOptionPrompt);
+                }
+                return finishSummaryAdd();
+            };
+            askQuantity.__kioskSummaryCount = true;
+        }
+
+        if (typeof transitionTo === "function" && !transitionTo.__kioskSummaryPlace) {
+            const previousTransition = transitionTo;
+            transitionTo = function (stageName, renderFn) {
+                if (window.__kioskSummaryAdd && (stageName === "menu_grid" || stageName === "category_select" || stageName === "welcome" || stageName === "menu_confirm")) {
+                    window.__kioskSummaryAdd = false;
+                    window.__kioskSummaryPlace = "";
+                    window.__kioskSummaryQtySkipped = false;
+                }
+                if (window.__kioskSummaryAdd && (stageName === "add_more_prompt" || stageName === "place")) {
+                    const kept = window.__kioskSummaryPlace || ((typeof orderState !== "undefined" && orderState && orderState.place) || "");
+                    if (kept) {
+                        window.__kioskSummaryAdd = false;
+                        window.__kioskSummaryPlace = "";
+                        if (typeof tempItem !== "undefined" && tempItem) tempItem.presetCount = 0;
+                        if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
+                        if (typeof orderState !== "undefined" && orderState) orderState.place = kept;
+                        return previousTransition.call(this, "summary", renderSummary);
+                    }
+                }
+                return previousTransition.apply(this, arguments);
+            };
+            transitionTo.__kioskSummaryPlace = true;
+        }
+
         window.processVoiceCommand = function (text) {
-            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            const allowTts = typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(text);
+            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !allowTts) {
                 return previous.apply(this, arguments);
             }
             try { window.__kioskHeard = String(text || "").trim(); } catch (e) {}
             const stage = typeof currentStageName === "undefined" ? "" : currentStageName;
+            if (stage === "upsell") {
+                const heard = squash(text);
+                if (/세트/.test(heard) && /뭐|설명|뭔/.test(heard)) {
+                    if (typeof speakText === "function") speakText("세트는 2000원이 더해집니다. 세트 또는 단품.");
+                    return true;
+                }
+            }
+            if (stage === "summary" && /추가/.test(squash(text))) {
+                const count = typeof parseNumber === "function" ? parseNumber(String(text || "")) : 0;
+                let menu = null;
+                try { if (typeof findMatchingMenu === "function") menu = findMatchingMenu(text); } catch (e) {}
+                if (menu && count > 0) return beginSummaryAdd(menu, count);
+            }
             if (stage === "beverage_result") {
                 const heard = squash(text);
                 if (/이대로|그대로|이상태/.test(heard) && !/다시|아니/.test(heard) && typeof transitionTo === "function" && typeof renderAddMorePrompt === "function") {

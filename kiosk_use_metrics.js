@@ -1127,7 +1127,7 @@
         }
 
         window.processVoiceCommand = function measuredProcessVoiceCommand(text) {
-            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(text))) {
                 return previous.apply(this, arguments);
             }
             const spoken = String(text || "");
