@@ -458,12 +458,25 @@
                 return true;
             }
 
+            if (stage === "welcome" && /목말라|목마르/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                selectedCategory = "음료";
+                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "음료"; });
+                currentGridTitle = "음료 메뉴판";
+                transitionTo("menu_grid", renderMenuGrid);
+                return true;
+            }
+
+            if (stage === "welcome" && /사용법|사용방식|알려줘/.test(raw)) {
+                previous("사용법 알려줘");
+                return true;
+            }
+
             if (stage === "welcome" && /처음인데|처음이야|첫주문|어려워/.test(raw)) {
                 previous("사용법 알려줘");
                 return true;
             }
 
-            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러/.test(raw)) {
+            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러|배고파|배고프|주문부탁/.test(raw)) {
                 startOrder();
                 return true;
             }
@@ -551,7 +564,7 @@
                 return true;
             }
 
-            if (/menu_grid|open_order_prompt|category_select/.test(stage) && typeof selectSpecificItem === "function" && Array.isArray(customMenus)) {
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && typeof selectSpecificItem === "function" && Array.isArray(customMenus)) {
                 const names = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
                     return plain(b).length - plain(a).length;
                 });
@@ -657,7 +670,12 @@
                 return true;
             }
 
-            if (stage === "quantity" && /^취소/.test(raw)) {
+            if (stage === "menu_confirm" && typeof pendingMenuName !== "undefined" && pendingMenuName && /그거/.test(raw) && !/아니|틀려/.test(raw) && typeof selectSpecificItem === "function") {
+                selectSpecificItem(pendingMenuName);
+                return afterSelect(raw);
+            }
+
+            if (stage === "quantity" && /^취소|^잘못/.test(raw)) {
                 previous("뒤로");
                 return true;
             }
