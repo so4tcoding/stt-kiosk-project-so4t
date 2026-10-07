@@ -711,7 +711,18 @@
             { group: "시작", prep: "welcome", text: "다시 읽어 줘", intended: "다시", expect: { type: "spoken", value: "주문", stage: "welcome" } },
             { group: "추천", prep: "taste", text: "달달한 거 주세요", intended: "달콤", expect: { type: "gridHas", value: "덮밥", stage: "menu_grid" } },
             { group: "결제", prep: "more", text: "추가 안 합니다", intended: "아니요", expect: { type: "stage", value: "place" } },
-            { group: "결제", prep: "place", text: "들고 가 주세요", intended: "포장", expect: { type: "place", value: "포장" } }
+            { group: "결제", prep: "place", text: "들고 가 주세요", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "메뉴", prep: "confirm:딸기 라떼", text: "네", intended: "딸기 라떼", expect: { type: "itemStage", item: "딸기", stage: "quantity" } },
+            { group: "메뉴", prep: "confirm:딸기 라떼", text: "맞아요", intended: "딸기 라떼", expect: { type: "itemStage", item: "딸기", stage: "quantity" } },
+            { group: "메뉴", prep: "confirm:딸기 라떼", text: "아니요", intended: "", expect: { type: "ignore" } },
+            { group: "메뉴", prep: "confirm:아메리카노", text: "네", intended: "아메리카노", expect: { type: "itemStage", item: "아메리카노", stage: "temp" } },
+            { group: "메뉴", prep: "confirm:치즈버거", text: "맞아", intended: "치즈버거", expect: { type: "itemStage", item: "치즈버거", stage: "upsell" } },
+            { group: "메뉴", prep: "confirm:오렌지 주스", text: "틀려", intended: "", expect: { type: "ignore" } },
+            { group: "메뉴", prep: "confirm:딸기 라떼", text: "예", intended: "딸기 라떼", expect: { type: "itemStage", item: "딸기", stage: "quantity" } },
+            { group: "메뉴", prep: "confirm:오렌지 주스", text: "응", intended: "오렌지 주스", expect: { type: "itemStage", item: "오렌지", stage: "quantity" } },
+            { group: "메뉴", prep: "confirm:아메리카노", text: "맞습니다", intended: "아메리카노", expect: { type: "itemStage", item: "아메리카노", stage: "temp" } },
+            { group: "메뉴", prep: "confirm:콜라", text: "좋아요", intended: "콜라", expect: { type: "itemStage", item: "콜라", stage: "quantity" } },
+            { group: "메뉴", prep: "confirm:사이다", text: "아니야", intended: "", expect: { type: "ignore" } }
         ];
     }
 
@@ -814,6 +825,17 @@
                 selectedCategory = cat;
                 currentGridMenus = customMenus.filter(function (menu) { return menu.category === cat; });
                 currentStageName = "menu_grid";
+                return;
+            }
+            if (kind.indexOf("confirm:") === 0) {
+                const name = kind.slice(8);
+                pendingMenuName = name;
+                const menu = customMenus.find(function (item) { return item.name === name; });
+                if (menu) {
+                    selectedCategory = menu.category;
+                    currentGridMenus = customMenus.filter(function (item) { return item.category === menu.category; });
+                }
+                currentStageName = "menu_confirm";
                 return;
             }
             if (kind.indexOf("qty:") === 0) {
