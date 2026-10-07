@@ -1036,7 +1036,19 @@
             {group:"단계",prep:"opt",text:"세 단계",intended:"3단계",expect:{type:"sugar",value:3}},
             {group:"단계",prep:"opt",text:"네 단계",intended:"4단계",expect:{type:"sugar",value:4}},
             {group:"뒤로",prep:"qty:오렌지 주스",text:"이전 화면으로",intended:"이전으로",expect:{type:"back",item:"오렌지"}},
-            {group:"안내",prep:"welcome",text:"소리 크게 해 주이소",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}}
+            {group:"안내",prep:"welcome",text:"소리 크게 해 주이소",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}},
+            {group:"결제",prep:"more",text:"배불러요",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"more",text:"이제 배불러",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"more",text:"더 배고파요",intended:"네",expect:{type:"stage",value:"category_select"}},
+            {group:"온도",prep:"temp:아메리카노",text:"데워 주세요",intended:"핫",expect:{type:"hot"}},
+            {group:"온도",prep:"temp:카페라떼",text:"식혀 주세요",intended:"아이스",expect:{type:"ice"}},
+            {group:"시작",prep:"welcome",text:"주문 취소할게요",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"grid:커피",text:"주문 취소",intended:"처음으로",expect:{type:"stage",value:"welcome"}},
+            {group:"시작",prep:"place",text:"전부 취소해 줘",intended:"처음으로",expect:{type:"stage",value:"welcome"}},
+            {group:"결제",prep:"sum",text:"오렌지 주스 빼 줘",intended:"",expect:{type:"spoken",value:"뺐",stage:"summary"}},
+            {group:"결제",prep:"more",text:"배불렀어요",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"온도",prep:"temp:아메리카노",text:"따뜻하게 데워 줘",intended:"핫",expect:{type:"hot"}},
+            {group:"시작",prep:"qty:오렌지 주스",text:"주문 그만할게요",intended:"처음으로",expect:{type:"stage",value:"welcome"}}
         ];
     }
 

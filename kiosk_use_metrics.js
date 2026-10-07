@@ -275,8 +275,8 @@
             function afterSelect(raw) {
                 if (currentStageName === "temp") {
                     let picked = "";
-                    if (/아이스|차갑|차가|시원/.test(raw)) picked = "아이스(ICE)";
-                    else if (/뜨겁|뜨끈|따뜻|따듯|뜨뜻|핫|뜨거/.test(raw)) picked = "핫(HOT)";
+                    if (/아이스|차갑|차가|시원|식혀/.test(raw)) picked = "아이스(ICE)";
+                    else if (/뜨겁|뜨끈|따뜻|따듯|뜨뜻|핫|뜨거|데워/.test(raw)) picked = "핫(HOT)";
                     if (picked) {
                         tempItem.temp = picked;
                         askQuantity();
@@ -376,6 +376,15 @@
                     ttsEnabled = true;
                 } catch (e) {}
                 if (typeof speakText === "function") speakText("소리를 줄였습니다.");
+                return true;
+            }
+
+            if (/주문취소|전부취소|다취소|주문그만/.test(raw)) {
+                if (stage === "welcome" && typeof speakText === "function") {
+                    speakText("아직 주문 전입니다. 메뉴를 말씀해 주세요.");
+                    return true;
+                }
+                previous("처음으로");
                 return true;
             }
 
@@ -569,7 +578,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담|계산|결제|그냥주문|다했|그거면|이거면|골랐|영수증|충분|이만/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담|계산|결제|그냥주문|다했|그거면|이거면|골랐|영수증|충분|이만|배불|배부르|배불렀/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);
@@ -577,7 +586,7 @@
                 return true;
             }
 
-            if (stage === "add_more_prompt" && /더담|추가|하나더|더주문|또주문|다른메뉴|다른거|시킬|있으면네|^네$|^예$|^응$/.test(raw)) {
+            if (stage === "add_more_prompt" && /더담|추가|하나더|더주문|또주문|다른메뉴|다른거|시킬|배고파|더먹|있으면네|^네$|^예$|^응$/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 isAddOnPhase = true;
                 if (typeof transitionTo === "function" && typeof renderCategorySelect === "function") {
@@ -749,13 +758,13 @@
                     speakText("뜨거운 것과 아이스 중에서 말씀해 주세요.");
                     return true;
                 }
-                if (/뜨겁|뜨끈|따뜻|따듯|뜨뜻|핫|hot|뜨거/.test(choice)) {
+                if (/뜨겁|뜨끈|따뜻|따듯|뜨뜻|핫|hot|뜨거|데워/.test(choice)) {
                     tempItem.temp = "핫(HOT)";
                     askQuantity();
                     if (countIn(raw)) return leaveQuantity(countIn(raw));
                     return true;
                 }
-                if (/아이스|차갑|차가|시원|ice|얼음/.test(choice)) {
+                if (/아이스|차갑|차가|시원|ice|얼음|식혀/.test(choice)) {
                     tempItem.temp = "아이스(ICE)";
                     askQuantity();
                     if (countIn(raw)) return leaveQuantity(countIn(raw));
@@ -837,12 +846,24 @@
                 return true;
             }
 
-            if (stage === "summary" && /빼/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
-                const named = customMenus.some(function (item) { return raw.indexOf(plain(item.name)) !== -1; });
-                if (!named) {
-                    speakText("어떤 메뉴를 뺄지 이름을 같이 말씀해 주세요.");
-                    return true;
+            if (stage === "summary" && /빼|제외|지워/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
+                const names = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
+                    return plain(b).length - plain(a).length;
+                });
+                for (let r = 0; r < names.length; r++) {
+                    const key = plain(names[r]);
+                    if (key.length >= 2 && raw.indexOf(key) !== -1 && orderState && Array.isArray(orderState.items)) {
+                        const idx = orderState.items.findIndex(function (item) { return item.item === names[r]; });
+                        if (idx !== -1) {
+                            orderState.items.splice(idx, 1);
+                            if (typeof renderSummary === "function" && orderState.items.length) renderSummary();
+                            speakText(names[r] + " 메뉴를 장바구니에서 뺐습니다.");
+                            return true;
+                        }
+                    }
                 }
+                speakText("어떤 메뉴를 뺄지 이름을 같이 말씀해 주세요.");
+                return true;
             }
 
             if (stage === "summary" && /얼마|가격/.test(raw) && typeof renderSummary === "function") {
