@@ -55,7 +55,19 @@
             { group: "단계", prep: "opt", text: "당도 낮게", intended: "1단계", expect: { type: "sugar", value: 1 } },
             { group: "단계", prep: "opt", text: "달게 해주세요", intended: "5단계", expect: { type: "sugar", value: 5 } },
             { group: "용량", prep: "cup:콜라", text: "작은 거로", intended: "스몰", expect: { type: "stage", value: "add_more_prompt" } },
-            { group: "안내", prep: "grid:음료", text: "안 들려", intended: "안 들려", expect: { type: "spoken", value: "소리", stage: "menu_grid" } }
+            { group: "안내", prep: "grid:음료", text: "안 들려", intended: "안 들려", expect: { type: "spoken", value: "소리", stage: "menu_grid" } },
+            { group: "메뉴", prep: "grid:국밥", text: "순대국밥", intended: "순대국밥", expect: { type: "itemStage", item: "순대", stage: "quantity" } },
+            { group: "수량", prep: "qty:오렌지 주스", text: "한 잔만", intended: "한 개", expect: { type: "count", count: 1, stage: "cup_size", item: "오렌지" } },
+            { group: "단계", prep: "opt", text: "당도 많이", intended: "4단계", expect: { type: "sugar", value: 4 } },
+            { group: "결제", prep: "more", text: "없어요", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "결제", prep: "more", text: "더 담을게요", intended: "네", expect: { type: "stage", value: "category_select" } },
+            { group: "메뉴", prep: "grid:음료", text: "오렌지 주스 두 잔", intended: "오렌지 주스", expect: { type: "count", count: 2, stage: "cup_size", item: "오렌지" } },
+            { group: "메뉴", prep: "grid:국밥", text: "돼지국밥 세 개", intended: "돼지국밥", expect: { type: "countLeave", count: 3, item: "돼지" } },
+            { group: "수량", prep: "qty:한우 불고기", text: "네잔", intended: "네 개", expect: { type: "countLeave", count: 4, item: "한우" } },
+            { group: "용량", prep: "cup:사이다", text: "보통 사이즈", intended: "미디엄", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "결제", prep: "pay", text: "카드로 계산", intended: "카드", expect: { type: "pay", value: "카드" } },
+            { group: "추천", prep: "taste", text: "얼큰한 맛", intended: "얼큰", expect: { type: "gridHas", value: "소고기", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "담백한 거", intended: "", expect: { type: "spoken", value: "달콤", stage: "taste_select_prompt" } }
         ];
     }
 
