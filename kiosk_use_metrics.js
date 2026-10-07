@@ -179,27 +179,32 @@
         }
 
         function teachStored(target, heard) {
-            const key = compact(heard);
+            const key = String(heard).trim();
             const taught = loadJSON(TAUGHT_KEY, {});
             if (!key || taught[key]) return false;
-            if (key !== compact(target) && key.length >= 2 && !YESNO.test(key)) {
+            const heardCompact = compact(key);
+            if (heardCompact !== compact(target) && heardCompact.length >= 2 && !YESNO.test(heardCompact)) {
                 try {
                     if (typeof window.addLearnedVariant === "function") {
-                        window.addLearnedVariant(target, heard, { source: "use_metrics" });
+                        window.addLearnedVariant(target, key, { source: "use_metrics" });
                     }
                 } catch (e) {}
                 const aliases = loadJSON(ALIAS_KEY, {});
-                if (rememberAlias(aliases, heard, target)) saveJSON(ALIAS_KEY, aliases);
+                if (rememberAlias(aliases, key, target)) saveJSON(ALIAS_KEY, aliases);
+            }
+            const keys = Object.keys(taught);
+            while (keys.length >= 400) {
+                delete taught[keys.shift()];
             }
             taught[key] = {
-                text: String(heard).slice(0, 40),
+                text: key.slice(0, 40),
                 canonical: String(target).slice(0, 40)
             };
             saveJSON(TAUGHT_KEY, taught);
             record({
                 kind: "learn",
                 outcome: "success",
-                text: String(heard).slice(0, 40),
+                text: key.slice(0, 40),
                 canonical: String(target).slice(0, 40),
                 stage: typeof currentStageName === "undefined" ? "" : currentStageName,
                 at: Date.now()
