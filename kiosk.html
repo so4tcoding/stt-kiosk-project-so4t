@@ -9038,9 +9038,14 @@ if (typeof updateDrink3DFromTempItem === "function") {
             window.speechSynthesis.cancel();
         } catch (e) {}
 
-        setTimeout(() => {
-            speakText("절전 모드입니다. 주문을 시작하시려면 아래의 빛나는 버튼을 눌러주세요.");
-        }, 500);
+        const sleepLine = "절전 모드입니다. 주문을 시작하시려면 아래의 빛나는 버튼을 눌러주세요.";
+        const sleepNow = Date.now();
+        if (!(window.__kioskSleepAnnouncedAt && sleepNow - window.__kioskSleepAnnouncedAt < 8000)) {
+            window.__kioskSleepAnnouncedAt = sleepNow;
+            setTimeout(() => {
+                speakText(sleepLine);
+            }, 500);
+        }
 
         console.log("💤 버튼 기반 절전 모드 진입");
     }
@@ -23635,6 +23640,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             }, Math.max(2500, job.message.length * 210) + 1200);
 
             utterance.onstart = function () {
+                job.started = true;
                 document.body.classList.add("tts-speaking");
             };
 
@@ -23646,6 +23652,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 const reason = event && event.error ? String(event.error) : "";
                 if (reason === "interrupted" || reason === "canceled" || reason === "cancelled") {
                     if (job.done) return;
+                    if (job.started) {
+                        finishRecoveredUtterance(job, safetyTimer, true);
+                        return;
+                    }
                     clearTimeout(safetyTimer);
                     if (recoveredSmoothSpeakText._currentJob !== job) return;
                     job.retries = (job.retries || 0) + 1;
@@ -24454,9 +24464,14 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             window.__ttsBlockUntil = 0;
         } catch (e) {}
 
-        setTimeout(() => {
-            speakText("절전 모드입니다. 주문을 시작하시려면 아래의 빛나는 버튼을 눌러주세요.");
-        }, 300);
+        const sleepLine = "절전 모드입니다. 주문을 시작하시려면 아래의 빛나는 버튼을 눌러주세요.";
+        const sleepNow = Date.now();
+        if (!(window.__kioskSleepAnnouncedAt && sleepNow - window.__kioskSleepAnnouncedAt < 8000)) {
+            window.__kioskSleepAnnouncedAt = sleepNow;
+            setTimeout(() => {
+                speakText(sleepLine);
+            }, 300);
+        }
     };
 
     window.exitSleepMode = function recoveredExitSleepMode() {
@@ -31724,10 +31739,15 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             };
         }
 
+        const notAPlainNo = /뭐|왜|이게|무슨|뭔|어떻게/.test(c) && !noExact.includes(c);
+
         if (
+            !notAPlainNo &&
+            (
             noExact.includes(c) ||
             noStarts.some(w => c.startsWith(compactText(w))) ||
             noContains.some(w => c.includes(compactText(w)))
+            )
         ) {
             return {
                 related: true,
@@ -34529,13 +34549,17 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 if (match) { isMatch = true; for(let i=1; i<match.length; i++) capturedVars.push(match[i]); }
             } else if (rule.match && text.includes(rule.match)) {
                 isMatch = true;
-            } else if (text.includes(rule.default.split(' ')[0])) { 
-                isMatch = true;
+            } else if (rule.default) {
+                const head = String(rule.default).replace(/\s+/g, " ").trim().slice(0, 12);
+                if (head.length >= 8 && String(text).includes(head)) isMatch = true;
             }
             
             if (isMatch) {
                 let customText = localStorage.getItem(rule.id);
-                if (customText) {
+                const source = String(text || "");
+                const savedQty = customText && String(customText).indexOf("메뉴 수량을 말씀") !== -1;
+                const sourceIsQty = /메뉴 수량을 말씀|몇 .+인지 말씀|수량을 말씀해/.test(source);
+                if (customText && !(savedQty && !sourceIsQty)) {
                     finalText = customText;
                     for(let i=0; i<capturedVars.length; i++) finalText = finalText.replace(`{${i}}`, capturedVars[i]);
                 }
