@@ -997,7 +997,15 @@
             {group:"수량",prep:"qty:오렌지 주스",text:"다섯 식구요",intended:"다섯 개",expect:{type:"count",count:5,stage:"cup_size",item:"오렌지"}},
             {group:"수량",prep:"qty:한우 불고기",text:"한 식구요",intended:"한 개",expect:{type:"countLeave",count:1,item:"한우"}},
             {group:"안내",prep:"welcome",text:"소리 좀 키워 보이소",intended:"소리",expect:{type:"spoken",value:"소리",stage:"welcome"}},
-            {group:"시작",prep:"welcome",text:"직원 좀 불러 보이소",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}}
+            {group:"시작",prep:"welcome",text:"직원 좀 불러 보이소",intended:"",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"결제",prep:"pay",text:"카드 안 돼요",intended:"",expect:{type:"spoken",value:"현금",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"현금 없어요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"결제 안 돼요",intended:"",expect:{type:"spoken",value:"현금",stage:"payment"}},
+            {group:"안내",prep:"welcome",text:"더 크게",intended:"확대",expect:{type:"spoken",value:"확대",stage:"welcome"}},
+            {group:"안내",prep:"welcome",text:"더 키워 줘",intended:"확대",expect:{type:"spoken",value:"확대",stage:"welcome"}},
+            {group:"안내",prep:"welcome",text:"작게 해 줘",intended:"줄",expect:{type:"spoken",value:"줄",stage:"welcome"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"스무 잔",intended:"",expect:{type:"spoken",value:"열",stage:"quantity"}},
+            {group:"수량",prep:"qty:콜라",text:"백 잔",intended:"",expect:{type:"spoken",value:"열",stage:"quantity"}}
         ];
     }
 

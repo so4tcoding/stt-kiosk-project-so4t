@@ -319,7 +319,7 @@
             const raw = plain(text);
             if (!raw || !stage) return false;
 
-            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침/.test(raw))) {
+            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게|더키워/.test(raw))) {
                 try {
                     if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
                     zoomLevel = Math.min(4, (Number(zoomLevel) || 0) + 1);
@@ -329,7 +329,7 @@
                 return true;
             }
 
-            if (!/소리/.test(raw) && (/글씨|글자|화면/.test(raw) && /줄여|작게|축소/.test(raw))) {
+            if (!/소리/.test(raw) && ((/글씨|글자|화면/.test(raw) && /줄여|작게|축소/.test(raw)) || /더작게|작게해/.test(raw))) {
                 try {
                     if (typeof zoomLevel === "undefined") window.zoomLevel = 0;
                     zoomLevel = Math.max(0, (Number(zoomLevel) || 0) - 1);
@@ -385,11 +385,19 @@
                     speakText("영수증은 카드나 현금을 고르신 뒤에 나옵니다. 카드 또는 현금을 말씀해 주세요.");
                     return true;
                 }
-                if (/카드|일시불|할부/.test(choice) && typeof selectPayment === "function") {
+                if ((/카드/.test(raw) && /안돼|안됨|안읽/.test(raw) || /결제안돼|결제안됨/.test(raw)) && typeof speakText === "function") {
+                    speakText("카드가 안 되면 현금으로 말씀해 주세요.");
+                    return true;
+                }
+                if (/현금없|현찰없|돈없/.test(raw) && typeof speakText === "function") {
+                    speakText("현금이 없으면 카드로 말씀해 주세요.");
+                    return true;
+                }
+                if (/카드|일시불|할부/.test(choice) && !/안돼|안됨|안읽/.test(choice) && typeof selectPayment === "function") {
                     selectPayment("신용/체크 카드");
                     return true;
                 }
-                if (/현금|현찰|돈으로/.test(choice) && typeof selectPayment === "function") {
+                if (/현금|현찰|돈으로/.test(choice) && !/없/.test(choice) && typeof selectPayment === "function") {
                     selectPayment("현금 결제");
                     return true;
                 }
@@ -547,6 +555,11 @@
             if (/오렌쥐쥬스|오렌쥐주스|오렌지쥬스/.test(raw) && /menu_grid|open_order_prompt|category_select|welcome/.test(stage)) {
                 selectSpecificItem("오렌지 주스");
                 return afterSelect(raw);
+            }
+
+            if (stage === "quantity" && /스무|백잔|백개|20잔|20개|서른/.test(raw) && typeof speakText === "function") {
+                speakText("한 번에 열 잔까지 됩니다. 열 잔 이하로 말씀해 주세요.");
+                return true;
             }
 
             if (stage === "quantity" && /반잔|절반/.test(raw) && typeof speakText === "function") {
