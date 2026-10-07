@@ -1255,7 +1255,28 @@
             {group:"시작",prep:"welcome",text:"메뉴판 좀",intended:"",expect:{type:"stage",value:"category_select"}},
             {group:"시작",prep:"welcome",text:"뭐 있어요",intended:"",expect:{type:"stage",value:"category_select"}},
             {group:"메뉴",prep:"welcome",text:"캔 콜라",intended:"콜라",expect:{type:"itemStage",item:"콜라",stage:"quantity"}},
-            {group:"메뉴",prep:"welcome",text:"페트 사이다",intended:"사이다",expect:{type:"itemStage",item:"사이다",stage:"quantity"}}
+            {group:"메뉴",prep:"welcome",text:"페트 사이다",intended:"사이다",expect:{type:"itemStage",item:"사이다",stage:"quantity"}},
+            {group:"시작",prep:"welcome",text:"해장국 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"설렁탕",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"육개장",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"삼계탕",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"추어탕",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"곰탕 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"우거지국",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"파전 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"빈대떡",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"청국장",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"라볶이",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"닭강정",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"탕수육",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"후라이드",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"깐풍기",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"북엇국",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"녹두전",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"메뉴",prep:"welcome",text:"순대국",intended:"순대국밥",expect:{type:"itemStage",item:"순대",stage:"quantity"}},
+            {group:"용량",prep:"cup:콜라",text:"큰 걸로요",intended:"라지",expect:{type:"stage",value:"add_more_prompt"}},
+            {group:"용량",prep:"cup:사이다",text:"작은 걸로요",intended:"스몰",expect:{type:"stage",value:"add_more_prompt"}},
+            {group:"용량",prep:"cup:콜라",text:"중간으로요",intended:"미디엄",expect:{type:"stage",value:"add_more_prompt"}}
         ];
     }
 
