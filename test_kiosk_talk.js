@@ -8,19 +8,19 @@ assert.ok(shop.includes("말씀해 주세요"));
 
 assert.strictEqual(
     Talk.talkLine("메뉴 수량을 말씀해주세요.", "돼지국밥", ""),
-    "돼지국밥이요. 몇 그릇 드릴까요. 두 그릇이요, 라고 말씀해 주세요."
+    "돼지국밥이요. 몇 그릇 드릴까요."
 );
 assert.strictEqual(
     Talk.talkLine("몇 잔인지 말씀해 주세요.", "초코 케이크", "잔"),
-    "초코 케이크요. 몇 잔 드릴까요. 두 잔이요, 라고 말씀해 주세요."
+    "초코 케이크요. 몇 잔 드릴까요."
 );
 assert.strictEqual(
     Talk.talkLine("몇 개인지 말씀해 주세요.", "꽃다발", "개"),
-    "꽃다발이요. 몇 개 드릴까요. 두 개요, 라고 말씀해 주세요."
+    "꽃다발이요. 몇 개 드릴까요."
 );
 assert.strictEqual(
     Talk.talkLine("메뉴 수량을 말씀해주세요.", "네", ""),
-    "몇 그릇 드릴까요. 두 그릇이요, 라고 말씀해 주세요."
+    "몇 그릇 드릴까요."
 );
 
 const cup = Talk.talkLine("작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.");

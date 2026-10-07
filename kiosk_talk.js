@@ -29,10 +29,10 @@
         return s;
     }
 
-    function qtyPhrase(qtyWord) {
-        if (qtyWord === "잔") return { unit: "잔", example: "두 잔이요" };
-        if (qtyWord === "개") return { unit: "개", example: "두 개요" };
-        return { unit: "그릇", example: "두 그릇이요" };
+    function qtyUnit(qtyWord) {
+        if (qtyWord === "잔") return "잔";
+        if (qtyWord === "개") return "개";
+        return "그릇";
     }
 
     function talkLine(text, heard, qtyWord) {
@@ -53,9 +53,8 @@
             return "쉽게 말씀드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워, 라고 말씀해 주세요.";
         }
         if (/메뉴 수량을 말씀|몇 잔인지|몇 개인지|수량을 정확히/.test(raw)) {
-            const qty = qtyPhrase(qtyWord);
             const head = called ? called + ". " : "";
-            return head + "몇 " + qty.unit + " 드릴까요. " + qty.example + ", 라고 말씀해 주세요.";
+            return head + "몇 " + qtyUnit(qtyWord) + " 드릴까요.";
         }
         if (/작은 잔, 중간 잔, 큰 잔/.test(raw)) {
             return "잔은 어떻게 드릴까요. 작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.";
