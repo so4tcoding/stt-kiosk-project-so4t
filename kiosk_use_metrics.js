@@ -413,7 +413,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /주문할래|먹을래|시작할게/.test(raw)) {
+            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께/.test(raw)) {
                 startOrder();
                 return true;
             }

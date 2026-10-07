@@ -226,7 +226,27 @@
             { group: "메뉴", prep: "grid:커피", text: "핫커피", intended: "아메리카노", expect: { type: "hot" } },
             { group: "시작", prep: "welcome", text: "추천 메뉴", intended: "추천해줘", expect: { type: "stage", value: "taste_select_prompt" } },
             { group: "안내", prep: "grid:커피", text: "다시 말해줘", intended: "다시", expect: { type: "spoken", value: "메뉴", stage: "menu_grid" } },
-            { group: "안내", prep: "grid:커피", text: "천천히 말해줘", intended: "다시", expect: { type: "spoken", value: "메뉴", stage: "menu_grid" } }
+            { group: "안내", prep: "grid:커피", text: "천천히 말해줘", intended: "다시", expect: { type: "spoken", value: "메뉴", stage: "menu_grid" } },
+            { group: "시작", prep: "welcome", text: "주문할께", intended: "네", expect: { type: "stage", value: "open_order_prompt" } },
+            { group: "시작", prep: "welcome", text: "먹을께", intended: "네", expect: { type: "stage", value: "open_order_prompt" } },
+            { group: "결제", prep: "more", text: "계산할께", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "결제", prep: "place", text: "포장할께", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "결제", prep: "pay", text: "카드로 할께", intended: "카드", expect: { type: "pay", value: "카드" } },
+            { group: "온도", prep: "temp:아메리카노", text: "뜨겁게 주이소", intended: "핫", expect: { type: "hot" } },
+            { group: "온도", prep: "temp:아메리카노", text: "시원하게 주이소", intended: "아이스", expect: { type: "ice" } },
+            { group: "수량", prep: "qty:돼지국밥", text: "한 그릇 주이소", intended: "한 개", expect: { type: "countLeave", count: 1, item: "돼지" } },
+            { group: "메뉴", prep: "grid:커피", text: "아메리카노 하나", intended: "아메리카노", expect: { type: "itemStage", item: "아메리카노", stage: "temp" } },
+            { group: "메뉴", prep: "grid:커피", text: "라떼 두 잔", intended: "카페라떼", expect: { type: "itemStage", item: "카페라떼", stage: "temp" } },
+            { group: "메뉴", prep: "grid:햄버거", text: "치즈버거 하나", intended: "치즈버거", expect: { type: "itemStage", item: "치즈버거", stage: "upsell" } },
+            { group: "메뉴", prep: "grid:국밥", text: "순대국밥 두 그릇", intended: "순대국밥", expect: { type: "countLeave", count: 2, item: "순대" } },
+            { group: "메뉴", prep: "grid:국밥", text: "소고기국밥 하나", intended: "소고기국밥", expect: { type: "countLeave", count: 1, item: "소고기" } },
+            { group: "메뉴", prep: "grid:디저트", text: "케이크 하나", intended: "치즈 케이크", expect: { type: "countLeave", count: 1, item: "치즈" } },
+            { group: "메뉴", prep: "grid:디저트", text: "아이스크림 하나", intended: "소프트 아이스크림", expect: { type: "countLeave", count: 1, item: "아이스크림" } },
+            { group: "메뉴", prep: "grid:국밥", text: "수육", intended: "수육 백반", expect: { type: "itemStage", item: "수육", stage: "quantity" } },
+            { group: "용량", prep: "cup:콜라", text: "라지 사이즈", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "용량", prep: "cup:콜라", text: "스몰 사이즈", intended: "스몰", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "단계", prep: "opt", text: "당도 없이", intended: "1단계", expect: { type: "sugar", value: 1 } },
+            { group: "결제", prep: "place", text: "여기 먹을께", intended: "매장에서", expect: { type: "place", value: "매장" } }
         ];
     }
 
