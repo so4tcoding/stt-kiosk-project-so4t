@@ -1276,7 +1276,23 @@
             {group:"메뉴",prep:"welcome",text:"순대국",intended:"순대국밥",expect:{type:"itemStage",item:"순대",stage:"quantity"}},
             {group:"용량",prep:"cup:콜라",text:"큰 걸로요",intended:"라지",expect:{type:"stage",value:"add_more_prompt"}},
             {group:"용량",prep:"cup:사이다",text:"작은 걸로요",intended:"스몰",expect:{type:"stage",value:"add_more_prompt"}},
-            {group:"용량",prep:"cup:콜라",text:"중간으로요",intended:"미디엄",expect:{type:"stage",value:"add_more_prompt"}}
+            {group:"용량",prep:"cup:콜라",text:"중간으로요",intended:"미디엄",expect:{type:"stage",value:"add_more_prompt"}},
+            {group:"시작",prep:"welcome",text:"아이스티",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"자몽 에이드",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"스무디",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"프라페",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"버블티",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"코코아",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"밀크쉐이크",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"팥빙수",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"와플",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"마카롱",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"토스트",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"도넛",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"츄러스",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"약과",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"메뉴",prep:"welcome",text:"아아 한 잔",intended:"아메리카노",expect:{type:"countLeave",count:1,item:"아메리카노"}},
+            {group:"메뉴",prep:"welcome",text:"뜨아 한 잔",intended:"아메리카노",expect:{type:"countLeave",count:1,item:"아메리카노"}}
         ];
     }
 
