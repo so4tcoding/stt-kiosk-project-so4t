@@ -270,6 +270,11 @@
 
     function speak(utterance) {
         var text = spokenText(utterance);
+        if (text) {
+            try {
+                if (typeof window.__kioskOnSpoken === "function") window.__kioskOnSpoken(text);
+            } catch (e) {}
+        }
         if (!text) {
             if (utterance && typeof utterance.onend === "function") {
                 setTimeout(function () {

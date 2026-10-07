@@ -55,6 +55,77 @@
         body.touch-locked #boot-overlay * {
             pointer-events: auto !important;
         }
+        #text-mode {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 12px;
+            border-radius: 16px;
+            background: #2a2018;
+            color: #fffdf8;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+            pointer-events: auto !important;
+            touch-action: auto;
+        }
+        body.touch-locked #text-mode,
+        body.touch-locked #text-mode * {
+            pointer-events: auto !important;
+            cursor: auto !important;
+        }
+        #text-mode-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        #text-mode-head strong { font-size: 16px; }
+        #text-mode-head span { color: #e8d9c0; flex: 1; }
+        #text-mode-toggle {
+            border: 0;
+            border-radius: 999px;
+            padding: 4px 12px;
+            background: #e76f51;
+            color: white;
+            font-weight: 700;
+        }
+        #text-mode-log {
+            max-height: 132px;
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 8px 10px;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+        #text-mode-log p { margin: 0 0 6px; }
+        #text-mode-log .text-mode-me b { color: #f4a261; }
+        #text-mode-log .text-mode-kiosk b { color: #b7e4c7; }
+        #text-mode-form { display: flex; gap: 8px; }
+        #text-mode-input {
+            flex: 1;
+            border: 0;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 16px;
+            color: #2a2018;
+        }
+        #text-mode-form button {
+            border: 0;
+            border-radius: 12px;
+            padding: 0 16px;
+            background: #e76f51;
+            color: white;
+            font-weight: 800;
+        }
+        #text-mode.is-collapsed #text-mode-log,
+        #text-mode.is-collapsed #text-mode-form { display: none; }
 
         #kiosk-frame .text-indigo-300, #kiosk-frame .text-indigo-200 { color: var(--text-secondary) !important; }
 
@@ -345,8 +416,25 @@
 
     <div id="voice-result"></div>
 
+    <aside id="text-mode">
+        <div id="text-mode-head">
+            <strong>글자로 시험</strong>
+            <span>말한 것처럼 적으면 키오스크 대답이 글자로 나옵니다.</span>
+            <button type="button" id="text-mode-toggle">접기</button>
+        </div>
+        <div id="text-mode-log"></div>
+        <form id="text-mode-form">
+            <input id="text-mode-input" autocomplete="off" placeholder="예: 아메리카노, 다섯 개, 그대로">
+            <button type="submit">보내기</button>
+        </form>
+    </aside>
+
     <script>
         (function () {
+            window.__kioskInTextMode = function (e) {
+                var el = e && e.target;
+                return !!(el && el.closest && el.closest("#text-mode"));
+            };
             try {
                 var synth = window.speechSynthesis;
                 if (!synth || window.__kioskNativeSpeak) return;
@@ -558,12 +646,13 @@
                 if (!isListening && !isStarting) startListening(); else stopListening();
             }
             if (e.key.toLowerCase() === 't') {
-                if (window.speechSynthesis.speaking) return;
-                let simText = prompt("🗣️ [테스트용] 텍스트 명령어를 입력하세요:");
-                if (simText) {
-                    if (!isValidContext(simText)) { alert("문맥 분석 결과, 무시되었습니다."); return; }
-                    showVoiceResult(simText);
-                    processVoiceCommand(simText);
+                if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
+                var textBox = document.getElementById('text-mode-input');
+                if (textBox) {
+                    e.preventDefault();
+                    var textPanel = document.getElementById('text-mode');
+                    if (textPanel) textPanel.classList.remove('is-collapsed');
+                    textBox.focus();
                 }
             }
         });
@@ -10852,6 +10941,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
     };
 
     window.addEventListener("keydown", function(e) {
+        if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
         if (e.key.toLowerCase() === "d") {
             openWordDictionaryWindow();
         }
@@ -14352,6 +14442,7 @@ stopListeningUI = function whisperStopListeningUIOverride() {
     window.deleteAutoLearnedVariant = deleteVariant;
 
     window.addEventListener("keydown", function(e) {
+        if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
         if (e.key.toLowerCase() === "d") {
             openView();
         }
@@ -16935,6 +17026,7 @@ stopListeningUI = function finalStopListeningUI() {
 };
 
 window.addEventListener("keydown", function(e) {
+    if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
     if (e.key && e.key.toLowerCase() === "d") {
         openLearningWindow();
     }
@@ -21685,6 +21777,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
     window.addEventListener(
         "keydown",
         function(e) {
+            if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
             const key = String(e.key || "").toLowerCase();
 
             if (key !== "f") return;
@@ -34573,6 +34666,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         document.head.appendChild(style);
     }
     window.addEventListener('keydown', function(e) {
+        if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
         if (e.key.toLowerCase() === 'g') {
             const adminPanel = document.getElementById('admin-panel');
             if (adminPanel) {
@@ -36159,6 +36253,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 <script src="/kiosk_age_learn.js"></script>
 <script src="/kiosk_order_fix.js"></script>
 <script src="/kiosk_voice.js"></script>
+<script src="/kiosk_text_mode.js"></script>
 
 </body>
 </html>
