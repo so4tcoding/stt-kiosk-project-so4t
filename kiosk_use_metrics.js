@@ -492,7 +492,7 @@
                 return true;
             }
 
-            if ((stage === "welcome" || stage === "open_order_prompt") && /커피/.test(raw) && !/아메리카노|라떼|디카페인|에스프레소/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+            if ((stage === "welcome" || stage === "open_order_prompt") && /커피/.test(raw) && !/아메리카노|라떼|디카페인|에스프레소|카푸치노|모카|카라멜|헤이즐|더치|녹차/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                 selectedCategory = "커피";
                 currentGridMenus = customMenus.filter(function (menu) { return menu.category === "커피"; });
                 currentGridTitle = "커피 메뉴판";
@@ -538,7 +538,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
+            if (stage === "welcome" && (/물주세요|물좀|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|카푸치노|모카|카라멜|헤이즐|더치|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -749,7 +749,7 @@
                 return true;
             }
 
-            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /바닐라|에스프레소|디카페인/.test(raw) && typeof speakText === "function") {
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /바닐라|에스프레소|디카페인|카푸치노|모카|카라멜|헤이즐|녹차라떼|더치/.test(raw) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }

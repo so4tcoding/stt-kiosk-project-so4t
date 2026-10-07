@@ -1147,7 +1147,15 @@
             {group:"결제",prep:"place",text:"가져가고 싶어요",intended:"포장",expect:{type:"place",value:"포장"}},
             {group:"결제",prep:"place",text:"먹고 싶어요",intended:"매장에서",expect:{type:"place",value:"매장"}},
             {group:"용량",prep:"cup:사이다",text:"중간 정도",intended:"미디엄",expect:{type:"stage",value:"add_more_prompt"}},
-            {group:"수량",prep:"qty:돼지국밥",text:"뜨겁게 한 그릇",intended:"한 개",expect:{type:"countLeave",count:1,item:"돼지"}}
+            {group:"수량",prep:"qty:돼지국밥",text:"뜨겁게 한 그릇",intended:"한 개",expect:{type:"countLeave",count:1,item:"돼지"}},
+            {group:"시작",prep:"welcome",text:"카푸치노 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"모카 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"카라멜 라떼",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"헤이즐넛 라떼",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"더치커피 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"grid:커피",text:"모카 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"menu_grid"}},
+            {group:"시작",prep:"grid:커피",text:"카라멜 라떼 하나",intended:"",expect:{type:"spoken",value:"없",stage:"menu_grid"}},
+            {group:"시작",prep:"welcome",text:"녹차라떼 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}}
         ];
     }
 
