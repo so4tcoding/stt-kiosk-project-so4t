@@ -1209,7 +1209,25 @@
             {group:"수량",prep:"qty:사이다",text:"네 병",intended:"네 개",expect:{type:"count",count:4,stage:"cup_size",item:"사이다"}},
             {group:"수량",prep:"qty:콜라",text:"다섯 병",intended:"다섯 개",expect:{type:"count",count:5,stage:"cup_size",item:"콜라"}},
             {group:"메뉴",prep:"grid:음료",text:"콜라 두 병",intended:"콜라",expect:{type:"count",count:2,stage:"cup_size",item:"콜라"}},
-            {group:"메뉴",prep:"grid:음료",text:"사이다 세 병",intended:"사이다",expect:{type:"count",count:3,stage:"cup_size",item:"사이다"}}
+            {group:"메뉴",prep:"grid:음료",text:"사이다 세 병",intended:"사이다",expect:{type:"count",count:3,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:콜라",text:"여섯 병",intended:"여섯 개",expect:{type:"count",count:6,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"일곱 병",intended:"일곱 개",expect:{type:"count",count:7,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:콜라",text:"여덟 병",intended:"여덟 개",expect:{type:"count",count:8,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"아홉 병",intended:"아홉 개",expect:{type:"count",count:9,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:콜라",text:"열 병",intended:"열 개",expect:{type:"count",count:10,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"육 병",intended:"여섯 개",expect:{type:"count",count:6,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:콜라",text:"일 병",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"콜라"}},
+            {group:"메뉴",prep:"welcome",text:"국 주세요",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"국 하나",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
+            {group:"시작",prep:"welcome",text:"국수 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"사용 방법",intended:"사용법",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"처음이라서요",intended:"사용법",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"도움말",intended:"사용법",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"추천",prep:"welcome",text:"추천 좀",intended:"추천해줘",expect:{type:"stage",value:"taste_select_prompt"}},
+            {group:"잔",prep:"cup:콜라",text:"유리병으로",intended:"",expect:{type:"spoken",value:"잔",stage:"cup_size"}},
+            {group:"결제",prep:"more",text:"계산이요",intended:"아니요",expect:{type:"stage",value:"place"}},
+            {group:"결제",prep:"place",text:"포장이요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"매장이요",intended:"매장에서",expect:{type:"place",value:"매장"}}
         ];
     }
 

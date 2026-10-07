@@ -246,25 +246,25 @@
             if (/세식구|3식구/.test(raw)) return 3;
             if (/두식구|2식구/.test(raw)) return 2;
             if (/한식구|1식구/.test(raw)) return 1;
-            if (/열잔|열개|열그릇|열명|10잔|10개/.test(raw)) return 10;
-            if (/아홉잔|아홉개|아홉그릇|아홉명|9잔|9개/.test(raw)) return 9;
-            if (/여덟잔|여덟개|여덟그릇|여덟명|8잔|8개/.test(raw)) return 8;
-            if (/일곱잔|일곱개|일곱그릇|일곱명|7잔|7개|7명/.test(raw)) return 7;
-            if (/여섯잔|여섯개|여섯그릇|여섯명|6잔|6개|6명/.test(raw)) return 6;
+            if (/열잔|열개|열그릇|열명|10잔|10개|열병/.test(raw)) return 10;
+            if (/아홉잔|아홉개|아홉그릇|아홉명|9잔|9개|아홉병/.test(raw)) return 9;
+            if (/여덟잔|여덟개|여덟그릇|여덟명|8잔|8개|여덟병/.test(raw)) return 8;
+            if (/일곱잔|일곱개|일곱그릇|일곱명|7잔|7개|7명|일곱병/.test(raw)) return 7;
+            if (/여섯잔|여섯개|여섯그릇|여섯명|6잔|6개|6명|여섯병/.test(raw)) return 6;
             if (/다섯잔|다섯개|다섯그릇|다섯명|5잔|5개|5명|다섯병/.test(raw)) return 5;
             if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명|네병/.test(raw)) return 4;
             if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명|세병/.test(raw)) return 3;
             if (/두잔|두개|둘이|두그릇|두명|두사람|2잔|2개|2명|곱빼|두병/.test(raw)) return 2;
-            if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명|일잔|일개|일그릇|조금만|한병/.test(raw)) return 1;
-            if (/이잔|이개|이그릇/.test(raw)) return 2;
-            if (/삼잔|삼개|삼그릇/.test(raw)) return 3;
-            if (/사잔|사개|사그릇/.test(raw)) return 4;
-            if (/오잔|오개|오그릇/.test(raw)) return 5;
-            if (/육잔|육개|육그릇/.test(raw)) return 6;
-            if (/칠잔|칠개|칠그릇/.test(raw)) return 7;
-            if (/팔잔|팔개|팔그릇/.test(raw)) return 8;
-            if (/구잔|구개|구그릇/.test(raw)) return 9;
-            if (/십잔|십개|십그릇/.test(raw)) return 10;
+            if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명|일잔|일개|일그릇|조금만|한병|일병/.test(raw)) return 1;
+            if (/이잔|이개|이그릇|이병/.test(raw)) return 2;
+            if (/삼잔|삼개|삼그릇|삼병/.test(raw)) return 3;
+            if (/사잔|사개|사그릇|사병/.test(raw)) return 4;
+            if (/오잔|오개|오그릇|오병/.test(raw)) return 5;
+            if (/육잔|육개|육그릇|육병/.test(raw)) return 6;
+            if (/칠잔|칠개|칠그릇|칠병/.test(raw)) return 7;
+            if (/팔잔|팔개|팔그릇|팔병/.test(raw)) return 8;
+            if (/구잔|구개|구그릇|구병/.test(raw)) return 9;
+            if (/십잔|십개|십그릇|십병/.test(raw)) return 10;
             return 0;
         }
 
@@ -546,7 +546,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && (/물주세요|물좀|물이요|물한|생수|보리차|유자차|쌍화|숭늉|이온|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|카푸치노|모카|카라멜|헤이즐|더치|초코|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
+            if (stage === "welcome" && (/물주세요|물좀|물이요|물한|생수|보리차|유자차|쌍화|숭늉|이온|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|카푸치노|모카|카라멜|헤이즐|더치|초코|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -579,12 +579,12 @@
                 return true;
             }
 
-            if (stage === "welcome" && /사용법|사용방식|알려줘/.test(raw)) {
+            if (stage === "welcome" && /사용법|사용방식|사용방법|도움말|알려줘/.test(raw)) {
                 previous("사용법 알려줘");
                 return true;
             }
 
-            if (stage === "welcome" && /처음인데|처음이야|첫주문|어려워/.test(raw)) {
+            if (stage === "welcome" && /처음인데|처음이야|처음이라|첫주문|어려워/.test(raw)) {
                 previous("사용법 알려줘");
                 return true;
             }
@@ -722,7 +722,7 @@
                 }
             }
 
-            if (/menu_grid|open_order_prompt|category_select/.test(stage) && (/국물/.test(raw) || (/^국/.test(raw) && !/국밥|돼지|순대|소고기|수육/.test(raw) && raw.length <= 8)) && Array.isArray(customMenus)) {
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && (/국물/.test(raw) || (/^국/.test(raw) && !/국밥|국수|돼지|순대|소고기|수육/.test(raw) && raw.length <= 8)) && Array.isArray(customMenus)) {
                 selectedCategory = "국밥";
                 currentGridMenus = customMenus.filter(function (menu) { return menu.category === "국밥"; });
                 currentGridTitle = "국밥 메뉴판";
