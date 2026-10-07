@@ -316,7 +316,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|없어요|없어/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|없어요|없어|그만|이게다/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);
@@ -324,7 +324,7 @@
                 return true;
             }
 
-            if (stage === "add_more_prompt" && /더담|담을게/.test(raw)) {
+            if (stage === "add_more_prompt" && /더담/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 isAddOnPhase = true;
                 if (typeof transitionTo === "function" && typeof renderCategorySelect === "function") {

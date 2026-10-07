@@ -27730,7 +27730,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 if (typeof updateZoomUI === "function") updateZoomUI();
             } catch(e) {}
 
-            say("화면을 크게 보여드리겠습니다.");
+            say("화면을 확대했습니다.");
             return true;
         }
 
@@ -30248,7 +30248,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/화면확대|글씨크게|글자크게|크게보|잘안보|안보|돋보기|키워|더크게/.test(c) && !/소리/.test(c)) {
             localZoomLevel = Math.min(3, localZoomLevel + 1);
             applyZoom();
-            say("화면을 크게 보여드리겠습니다.");
+            say("화면을 확대했습니다.");
             return true;
         }
 

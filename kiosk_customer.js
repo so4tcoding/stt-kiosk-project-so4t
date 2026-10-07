@@ -73,7 +73,10 @@
             { group: "용량", prep: "cup:사이다", text: "큰 걸로", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
             { group: "단계", prep: "opt", text: "당도 가득", intended: "5단계", expect: { type: "sugar", value: 5 } },
             { group: "수량", prep: "qty:오렌지 주스", text: "2잔", intended: "두 개", expect: { type: "count", count: 2, stage: "cup_size", item: "오렌지" } },
-            { group: "안내", prep: "grid:커피", text: "소리 키워 줘", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } }
+            { group: "안내", prep: "grid:커피", text: "소리 키워 줘", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } },
+            { group: "결제", prep: "more", text: "그만 담을게요", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "결제", prep: "more", text: "이게 다예요", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "안내", prep: "grid:커피", text: "글자 키워 줘", intended: "확대", expect: { type: "spoken", value: "확대", stage: "menu_grid" } }
         ];
     }
 
