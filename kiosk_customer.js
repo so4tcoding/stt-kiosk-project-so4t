@@ -911,7 +911,27 @@
             {group:"용량",prep:"cup:사이다",text:"큰 잔이요",intended:"라지",expect:{type:"stage",value:"add_more_prompt"}},
             {group:"용량",prep:"cup:오렌지 주스",text:"중간 잔이요",intended:"미디엄",expect:{type:"stage",value:"beverage_option_prompt"}},
             {group:"단계",prep:"opt",text:"시럽 빼줘",intended:"1단계",expect:{type:"sugar",value:1}},
-            {group:"메뉴",prep:"grid:커피",text:"따뜻한 아메리카노",intended:"아메리카노",expect:{type:"hot"}}
+            {group:"메뉴",prep:"grid:커피",text:"따뜻한 아메리카노",intended:"아메리카노",expect:{type:"hot"}},
+            {group:"결제",prep:"pay",text:"카드 말고 현금",intended:"현금",expect:{type:"pay",value:"현금"}},
+            {group:"결제",prep:"pay",text:"현금 말고 카드",intended:"카드",expect:{type:"pay",value:"카드"}},
+            {group:"결제",prep:"pay",text:"현금영수증 해주세요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"만원만 결제할게요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"여기 찍어 주세요",intended:"",expect:{type:"spoken",value:"카드",stage:"payment"}},
+            {group:"결제",prep:"pay",text:"일시불로",intended:"카드",expect:{type:"pay",value:"카드"}},
+            {group:"결제",prep:"place",text:"포장 말고 먹고 갈게",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"결제",prep:"place",text:"먹고 말고 포장해 줘",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"온도",prep:"temp:아메리카노",text:"뜨겁게 말고 아이스",intended:"아이스",expect:{type:"ice"}},
+            {group:"온도",prep:"temp:아메리카노",text:"아이스 말고 뜨겁게",intended:"핫",expect:{type:"hot"}},
+            {group:"세트",prep:"upsell:치즈버거",text:"세트 말고 단품",intended:"단품",expect:{type:"single"}},
+            {group:"세트",prep:"upsell:불고기버거",text:"단품 말고 세트",intended:"세트",expect:{type:"set"}},
+            {group:"추천",prep:"taste",text:"달콤 말고 얼큰",intended:"얼큰",expect:{type:"gridHas",value:"소고기",stage:"menu_grid"}},
+            {group:"추천",prep:"taste",text:"매운 거 말고",intended:"",expect:{type:"spoken",value:"달콤",stage:"taste_select_prompt"}},
+            {group:"메뉴",prep:"confirm:딸기 라떼",text:"그거 말고요",intended:"",expect:{type:"ignore"}},
+            {group:"시작",prep:"welcome",text:"아이고 배고프다",intended:"네",expect:{type:"stage",value:"open_order_prompt"}},
+            {group:"시작",prep:"welcome",text:"순한 국 주세요",intended:"",expect:{type:"spoken",value:"달콤",stage:"welcome"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"반 잔",intended:"",expect:{type:"spoken",value:"잔",stage:"quantity"}},
+            {group:"용량",prep:"cup:오렌지 주스",text:"1리터",intended:"",expect:{type:"spoken",value:"없",stage:"cup_size"}},
+            {group:"시작",prep:"welcome",text:"아이고 목마르다",intended:"음료",expect:{type:"category",value:"음료",notStage:"quantity"}}
         ];
     }
 
