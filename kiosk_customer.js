@@ -1304,7 +1304,15 @@
             {group:"시작",prep:"welcome",text:"요거트",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"시작",prep:"welcome",text:"매실차",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"시작",prep:"welcome",text:"도너츠",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
-            {group:"시작",prep:"welcome",text:"핫초코",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}}
+            {group:"시작",prep:"welcome",text:"핫초코",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"결제",prep:"place",text:"들고 갈게요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"가지고 갈게요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"나가서 먹을게요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"집에서요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"place",text:"앉아 먹을게요",intended:"매장에서",expect:{type:"place",value:"매장"}},
+            {group:"온도",prep:"temp:아메리카노",text:"아이스로요",intended:"아이스",expect:{type:"ice"}},
+            {group:"세트",prep:"upsell:치즈버거",text:"단품이요",intended:"단품",expect:{type:"single"}},
+            {group:"수량",prep:"qty:콜라",text:"한 잔만요",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"콜라"}}
         ];
     }
 
