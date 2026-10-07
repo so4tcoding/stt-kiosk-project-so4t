@@ -255,7 +255,7 @@
             if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명/.test(raw)) return 4;
             if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명/.test(raw)) return 3;
             if (/두잔|두개|둘이|두그릇|두명|두사람|2잔|2개|2명|곱빼/.test(raw)) return 2;
-            if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명|일잔|일개|일그릇/.test(raw)) return 1;
+            if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명|일잔|일개|일그릇|조금만/.test(raw)) return 1;
             if (/이잔|이개|이그릇/.test(raw)) return 2;
             if (/삼잔|삼개|삼그릇/.test(raw)) return 3;
             if (/사잔|사개|사그릇/.test(raw)) return 4;
@@ -580,12 +580,17 @@
                 return afterSelect(raw);
             }
 
+            if (stage === "quantity" && /많이주|가득주/.test(raw) && !countIn(raw) && typeof speakText === "function") {
+                speakText("몇 개인지 한 잔, 두 잔처럼 말씀해 주세요.");
+                return true;
+            }
+
             if (stage === "quantity" && /스무|백잔|백개|20잔|20개|서른/.test(raw) && typeof speakText === "function") {
                 speakText("한 번에 열 잔까지 됩니다. 열 잔 이하로 말씀해 주세요.");
                 return true;
             }
 
-            if (stage === "quantity" && /반잔|절반/.test(raw) && typeof speakText === "function") {
+            if (stage === "quantity" && /반잔|절반|반공기/.test(raw) && typeof speakText === "function") {
                 speakText("반 잔은 없습니다. 한 잔, 두 잔처럼 수량을 말씀해 주세요.");
                 return true;
             }
@@ -635,6 +640,11 @@
                 return true;
             }
 
+            if (/menu_grid/.test(stage) && selectedCategory === "커피" && /따뜻|뜨겁|뜨거|핫|따듯|아이스|차갑|시원/.test(raw) && !/아메리카노|라떼|카페|아이스커피|핫커피|뜨거운커피/.test(raw) && typeof speakText === "function") {
+                speakText("아메리카노와 카페라떼가 있습니다. 이름을 말씀해 주세요.");
+                return true;
+            }
+
             if (/menu_grid|open_order_prompt|category_select/.test(stage) && typeof selectSpecificItem === "function") {
                 if (/아이스커피/.test(raw) && raw.indexOf("아메리카노") === -1) {
                     selectSpecificItem("아메리카노");
@@ -670,6 +680,14 @@
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /싸이다/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem("사이다");
                 return afterSelect(raw);
+            }
+
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /국밥|국물/.test(raw) && !/돼지|순대|소고기|수육/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                selectedCategory = "국밥";
+                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "국밥"; });
+                currentGridTitle = "국밥 메뉴판";
+                transitionTo("menu_grid", renderMenuGrid);
+                return true;
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /순댓국/.test(raw) && typeof selectSpecificItem === "function") {

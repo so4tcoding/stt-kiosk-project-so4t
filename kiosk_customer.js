@@ -1072,7 +1072,19 @@
             {group:"수량",prep:"qty:돼지국밥",text:"칠 그릇",intended:"일곱 개",expect:{type:"countLeave",count:7,item:"돼지"}},
             {group:"수량",prep:"qty:한우 불고기",text:"팔 그릇",intended:"여덟 개",expect:{type:"countLeave",count:8,item:"한우"}},
             {group:"수량",prep:"qty:콜라",text:"구 잔",intended:"아홉 개",expect:{type:"count",count:9,stage:"cup_size",item:"콜라"}},
-            {group:"수량",prep:"qty:오렌지 주스",text:"십 잔",intended:"열 개",expect:{type:"count",count:10,stage:"cup_size",item:"오렌지"}}
+            {group:"수량",prep:"qty:오렌지 주스",text:"십 잔",intended:"열 개",expect:{type:"count",count:10,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"조금만 주세요",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"오렌지"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"많이 주세요",intended:"",expect:{type:"spoken",value:"잔",stage:"quantity"}},
+            {group:"수량",prep:"qty:한우 불고기",text:"가득 주세요",intended:"",expect:{type:"spoken",value:"잔",stage:"quantity"}},
+            {group:"수량",prep:"qty:돼지국밥",text:"반 공기",intended:"",expect:{type:"spoken",value:"잔",stage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"곱빼기 국밥",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
+            {group:"메뉴",prep:"grid:커피",text:"따뜻한 거 주세요",intended:"커피",expect:{type:"spoken",value:"아메리카노",stage:"menu_grid"}},
+            {group:"메뉴",prep:"welcome",text:"콜라 있나요",intended:"콜라",expect:{type:"itemStage",item:"콜라",stage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"아메리카노 주시겠어요",intended:"아메리카노",expect:{type:"itemStage",item:"아메리카노",stage:"temp"}},
+            {group:"결제",prep:"place",text:"포장해 주시겠어요",intended:"포장",expect:{type:"place",value:"포장"}},
+            {group:"결제",prep:"pay",text:"카드로 주시겠어요",intended:"카드",expect:{type:"pay",value:"카드"}},
+            {group:"수량",prep:"qty:오렌지 주스",text:"조금만 주이소",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"오렌지"}},
+            {group:"메뉴",prep:"grid:커피",text:"뜨거운 거 하나",intended:"커피",expect:{type:"spoken",value:"아메리카노",stage:"menu_grid"}}
         ];
     }
 
