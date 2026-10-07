@@ -1192,7 +1192,24 @@
             {group:"시작",prep:"welcome",text:"소주 한 병",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
             {group:"수량",prep:"qty:콜라",text:"한 병",intended:"한 개",expect:{type:"count",count:1,stage:"cup_size",item:"콜라"}},
             {group:"수량",prep:"qty:사이다",text:"두 병",intended:"두 개",expect:{type:"count",count:2,stage:"cup_size",item:"사이다"}},
-            {group:"메뉴",prep:"grid:음료",text:"콜라 한 병",intended:"콜라",expect:{type:"count",count:1,stage:"cup_size",item:"콜라"}}
+            {group:"메뉴",prep:"grid:음료",text:"콜라 한 병",intended:"콜라",expect:{type:"count",count:1,stage:"cup_size",item:"콜라"}},
+            {group:"시작",prep:"welcome",text:"여기요",intended:"",expect:{type:"spoken",value:"직원",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"저기요",intended:"",expect:{type:"spoken",value:"직원",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"아저씨 불러 주세요",intended:"",expect:{type:"spoken",value:"직원",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"이모님",intended:"",expect:{type:"spoken",value:"직원",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"생수 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"보리차 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"유자차 하나",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"이온음료 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"숭늉 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"쌍화차 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"잔",prep:"cup:콜라",text:"캔으로 주세요",intended:"",expect:{type:"spoken",value:"잔",stage:"cup_size"}},
+            {group:"잔",prep:"cup:사이다",text:"페트병으로",intended:"",expect:{type:"spoken",value:"잔",stage:"cup_size"}},
+            {group:"수량",prep:"qty:콜라",text:"세 병",intended:"세 개",expect:{type:"count",count:3,stage:"cup_size",item:"콜라"}},
+            {group:"수량",prep:"qty:사이다",text:"네 병",intended:"네 개",expect:{type:"count",count:4,stage:"cup_size",item:"사이다"}},
+            {group:"수량",prep:"qty:콜라",text:"다섯 병",intended:"다섯 개",expect:{type:"count",count:5,stage:"cup_size",item:"콜라"}},
+            {group:"메뉴",prep:"grid:음료",text:"콜라 두 병",intended:"콜라",expect:{type:"count",count:2,stage:"cup_size",item:"콜라"}},
+            {group:"메뉴",prep:"grid:음료",text:"사이다 세 병",intended:"사이다",expect:{type:"count",count:3,stage:"cup_size",item:"사이다"}}
         ];
     }
 

@@ -251,9 +251,9 @@
             if (/여덟잔|여덟개|여덟그릇|여덟명|8잔|8개/.test(raw)) return 8;
             if (/일곱잔|일곱개|일곱그릇|일곱명|7잔|7개|7명/.test(raw)) return 7;
             if (/여섯잔|여섯개|여섯그릇|여섯명|6잔|6개|6명/.test(raw)) return 6;
-            if (/다섯잔|다섯개|다섯그릇|다섯명|5잔|5개|5명/.test(raw)) return 5;
-            if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명/.test(raw)) return 4;
-            if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명/.test(raw)) return 3;
+            if (/다섯잔|다섯개|다섯그릇|다섯명|5잔|5개|5명|다섯병/.test(raw)) return 5;
+            if (/네잔|네개|네그릇|네명|네사람|4잔|4개|4명|네병/.test(raw)) return 4;
+            if (/세잔|세개|세그릇|세명|세사람|3잔|3개|3명|세병/.test(raw)) return 3;
             if (/두잔|두개|둘이|두그릇|두명|두사람|2잔|2개|2명|곱빼|두병/.test(raw)) return 2;
             if (/한잔|한개|한그릇|한명|혼자|한사람|하나|1잔|1개|1명|일잔|일개|일그릇|조금만|한병/.test(raw)) return 1;
             if (/이잔|이개|이그릇/.test(raw)) return 2;
@@ -508,7 +508,7 @@
                 return true;
             }
 
-            if ((stage === "welcome" || stage === "open_order_prompt") && /음료/.test(raw) && !/콜라|사이다|주스|에이드|쉐이크|딸기/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+            if ((stage === "welcome" || stage === "open_order_prompt") && /음료/.test(raw) && !/콜라|사이다|주스|에이드|쉐이크|딸기|이온/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                 selectedCategory = "음료";
                 currentGridMenus = customMenus.filter(function (menu) { return menu.category === "음료"; });
                 currentGridTitle = "음료 메뉴판";
@@ -541,12 +541,12 @@
                 return true;
             }
 
-            if (stage === "welcome" && /직원|불러줘|화장실|사장/.test(raw) && typeof speakText === "function") {
+            if (stage === "welcome" && /직원|불러줘|화장실|사장|여기요|저기요|아저씨|이모님/.test(raw) && typeof speakText === "function") {
                 speakText("직원 호출은 없습니다. 주문은 여기서 말씀해 주세요.");
                 return true;
             }
 
-            if (stage === "welcome" && (/물주세요|물좀|물이요|물한|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|카푸치노|모카|카라멜|헤이즐|더치|초코|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
+            if (stage === "welcome" && (/물주세요|물좀|물이요|물한|생수|보리차|유자차|쌍화|숭늉|이온|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|카푸치노|모카|카라멜|헤이즐|더치|초코|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw)) && typeof speakText === "function") {
                 speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
                 return true;
             }
@@ -918,7 +918,7 @@
                 return finishCup("350ml");
             }
 
-            if (stage === "cup_size" && /머그|유리잔|텀블러/.test(raw) && typeof speakText === "function") {
+            if (stage === "cup_size" && /머그|유리잔|텀블러|캔|페트|병으로|유리병/.test(raw) && typeof speakText === "function") {
                 speakText("그 잔은 없습니다. 작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.");
                 return true;
             }
