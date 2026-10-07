@@ -279,7 +279,15 @@
             { group: "용량", prep: "cup:콜라", text: "작은 컵으로 주세요", intended: "스몰", expect: { type: "stage", value: "add_more_prompt" } },
             { group: "용량", prep: "cup:콜라", text: "오백 밀리", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
             { group: "단계", prep: "opt", text: "시럽 조금만", intended: "2단계", expect: { type: "sugar", value: 2 } },
-            { group: "시작", prep: "grid:음료", text: "처음부터 다시", intended: "처음으로", expect: { type: "stage", value: "welcome" } }
+            { group: "시작", prep: "grid:음료", text: "처음부터 다시", intended: "처음으로", expect: { type: "stage", value: "welcome" } },
+            { group: "메뉴", prep: "grid:음료", text: "첫번째 거", intended: "첫번째", expect: { type: "spoken", value: "딸기", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "두번째 거", intended: "두번째", expect: { type: "spoken", value: "오렌지", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "마지막 거", intended: "마지막", expect: { type: "spoken", value: "사이다", stage: "menu_confirm" } },
+            { group: "메뉴", prep: "grid:음료", text: "왼쪽 거", intended: "왼쪽", expect: { type: "spoken", value: "딸기", stage: "menu_confirm" } },
+            { group: "시작", prep: "welcome", text: "아무거나", intended: "추천해줘", expect: { type: "stage", value: "taste_select_prompt" } },
+            { group: "뒤로", prep: "qty:오렌지 주스", text: "이전 화면", intended: "이전으로", expect: { type: "back", item: "오렌지" } },
+            { group: "뒤로", prep: "qty:오렌지 주스", text: "뒤로", intended: "이전으로", expect: { type: "back", item: "오렌지" } },
+            { group: "시작", prep: "grid:커피", text: "처음 화면", intended: "처음으로", expect: { type: "stage", value: "welcome" } }
         ];
     }
 
