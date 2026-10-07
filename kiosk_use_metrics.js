@@ -322,7 +322,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|없어요|없어|그만|이게다/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|없어요|없어|그만|이게다|추가안|안할래/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);
