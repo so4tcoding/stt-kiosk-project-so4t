@@ -304,6 +304,12 @@
                 }
             }
 
+            if (stage === "welcome" && /맛있어|맛있는거/.test(raw) && typeof renderTasteSelectPrompt === "function") {
+                currentStageName = "taste_select_prompt";
+                renderTasteSelectPrompt();
+                return true;
+            }
+
             if (stage === "welcome" && /주문할래|먹을래|시작할게/.test(raw)) {
                 startOrder();
                 return true;
@@ -347,7 +353,7 @@
                                 askQuantity();
                                 return true;
                             }
-                            if (/뜨겁|따뜻|핫/.test(raw)) {
+                            if (/뜨겁|뜨끈|따뜻|핫/.test(raw)) {
                                 tempItem.temp = "핫(HOT)";
                                 askQuantity();
                                 return true;
@@ -372,7 +378,7 @@
             }
 
             if (stage === "temp") {
-                if (/뜨겁|따뜻|핫|hot/.test(raw)) {
+                if (/뜨겁|뜨끈|따뜻|핫|hot/.test(raw)) {
                     tempItem.temp = "핫(HOT)";
                     askQuantity();
                     return true;

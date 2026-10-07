@@ -76,7 +76,9 @@
             { group: "안내", prep: "grid:커피", text: "소리 키워 줘", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } },
             { group: "결제", prep: "more", text: "그만 담을게요", intended: "아니요", expect: { type: "stage", value: "place" } },
             { group: "결제", prep: "more", text: "이게 다예요", intended: "아니요", expect: { type: "stage", value: "place" } },
-            { group: "안내", prep: "grid:커피", text: "글자 키워 줘", intended: "확대", expect: { type: "spoken", value: "확대", stage: "menu_grid" } }
+            { group: "안내", prep: "grid:커피", text: "글자 키워 줘", intended: "확대", expect: { type: "spoken", value: "확대", stage: "menu_grid" } },
+            { group: "온도", prep: "temp:아메리카노", text: "뜨끈하게", intended: "핫", expect: { type: "hot" } },
+            { group: "추천", prep: "welcome", text: "뭐가 맛있어", intended: "추천해줘", expect: { type: "stage", value: "taste_select_prompt" } }
         ];
     }
 
