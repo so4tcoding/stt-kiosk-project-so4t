@@ -1239,7 +1239,23 @@
             {group:"메뉴",prep:"welcome",text:"국이요",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
             {group:"메뉴",prep:"welcome",text:"국 좀 주세요",intended:"국밥",expect:{type:"category",value:"국밥",notStage:"quantity"}},
             {group:"시작",prep:"welcome",text:"설명 좀",intended:"사용법",expect:{type:"spoken",value:"주문",stage:"welcome"}},
-            {group:"시작",prep:"welcome",text:"어떻게 주문해요",intended:"사용법",expect:{type:"spoken",value:"주문",stage:"welcome"}}
+            {group:"시작",prep:"welcome",text:"어떻게 주문해요",intended:"사용법",expect:{type:"spoken",value:"주문",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"미역국 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"된장찌개",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"제육볶음",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"보쌈 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"족발 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"곱창 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"순두부 하나",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"편육 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"냉국 주세요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"따뜻한 물이요",intended:"",expect:{type:"spoken",value:"없",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"화장실이요",intended:"",expect:{type:"spoken",value:"직원",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"직원 있어요",intended:"",expect:{type:"spoken",value:"직원",stage:"welcome"}},
+            {group:"시작",prep:"welcome",text:"메뉴판 좀",intended:"",expect:{type:"stage",value:"category_select"}},
+            {group:"시작",prep:"welcome",text:"뭐 있어요",intended:"",expect:{type:"stage",value:"category_select"}},
+            {group:"메뉴",prep:"welcome",text:"캔 콜라",intended:"콜라",expect:{type:"itemStage",item:"콜라",stage:"quantity"}},
+            {group:"메뉴",prep:"welcome",text:"페트 사이다",intended:"사이다",expect:{type:"itemStage",item:"사이다",stage:"quantity"}}
         ];
     }
 
