@@ -1427,16 +1427,17 @@
             html += `</div>`;
             let titleText = currentGridTitle; if (isAddOnPhase && !titleText.includes("추가주문")) titleText = `[추가주문] ` + titleText;
 
+            const announce = window.__kioskSilentMenuGrid ? function () {} : speakText;
             if (selectedCategory === "추천 맛") {
                 html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${menus[0].name}" 또는 "오른쪽 거"</div>`;
-                updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); speakText(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
+                updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); announce(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
             } else if (isAddOnPhase) {
                 html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "오른쪽 거", 또는 "결제할게요"</div>`;
                 updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html);
-                speakText((ttsArray.length ? ttsArray.join(", ") + " 등이 있습니다. " : "") + "추가하실 메뉴 이름을 말씀해주세요. 더 없으면 결제라고 말씀해주세요.");
+                announce((ttsArray.length ? ttsArray.join(", ") + " 등이 있습니다. " : "") + "추가하실 메뉴 이름을 말씀해주세요. 더 없으면 결제라고 말씀해주세요.");
             } else {
                 html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${menus[0].name}" 또는 "첫번째 거"</div>`;
-                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); speakText(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
+                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); announce(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
             }
         }
 
@@ -1641,8 +1642,18 @@
                     const m = customMenus.find(mm => mm.name === keptName);
                     if (m && m.category === '커피') { askTemperature(); break; }
                     if (m && m.category === "햄버거") { askUpsell(); break; }
+                    if (m) {
+                        selectedCategory = m.category;
+                        currentGridMenus = customMenus.filter(mm => mm.category === m.category);
+                        currentGridTitle = m.category + " 메뉴판";
+                        const idx = Math.max(0, currentGridMenus.findIndex(mm => mm.name === m.name));
+                        window.__kioskSilentMenuGrid = true;
+                        try { renderMenuGrid(); } finally { window.__kioskSilentMenuGrid = false; }
+                        highlightMenuConfirm(m, idx);
+                        updateFloatingBasket();
+                        break;
+                    }
                     transitionTo('menu_grid', renderMenuGrid);
-                    if (keptName) speakText(keptName + " 수량 선택에서 메뉴판으로 돌아왔습니다. " + keptName + "을 다시 고르시려면 그 메뉴 이름을 말씀해주세요.");
                     break;
                 }
                 case 'cup_size': transitionTo('quantity', askQuantity); break;
@@ -1657,6 +1668,14 @@
                 case 'beverage_result': optionStepIndex = Math.max(0, optionList.length - 1); transitionTo('beverage_option_step', renderBeverageOptionStep); break;
                 case 'summary_add_quantity': resetTempItemOnly(); transitionTo('summary', renderSummary); break;
                 case 'add_more_prompt':
+                    if (isTempItemValid(tempItem)) {
+                        const kept = customMenus.find(m => m.name === tempItem.item);
+                        if (kept && kept.category === "음료" && tempItem.cupSize) transitionTo('cup_size', askCupSize);
+                        else if (kept && (kept.category === "음료" || kept.category === "커피") && tempItem.beverageOptions) transitionTo('beverage_result', renderBeverageResult);
+                        else askQuantity();
+                        updateFloatingBasket();
+                        break;
+                    }
                     if(orderState.items.length > 0) {
                         tempItem = orderState.items.pop();
                         const mm = customMenus.find(m => m.name === tempItem.item);
@@ -1664,7 +1683,7 @@
                         else if (mm && mm.category === "커피") transitionTo('beverage_result', renderBeverageResult);
                         else askQuantity();
                         speakText("이전 화면으로 돌아왔습니다.");
-                    } else { resetTempItemOnly(); askQuantity(); }
+                    } else { transitionTo('category_select', renderCategorySelect); }
                     break;
                 case 'place': transitionTo('add_more_prompt', renderAddMorePrompt); break;
                 case 'summary': transitionTo('place', renderPlaceSelect); break;
@@ -21243,7 +21262,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
     window.__kioskAllowDuringTts = function (text) {
         const raw = String(text || "");
         const compact = raw.replace(/[\s.,?!~'"]/g, "");
-        return /이대로|그대로|이상태|다시/.test(raw) || /이대로|그대로|이상태|다시|대로/.test(compact);
+        return /이대로|그대로|이상태|다시|이전으로|이전|뒤로|돌아가/.test(raw) || /이대로|그대로|이상태|다시|대로|전으로|이전|뒤로/.test(compact);
     };
 
     const previousSpeakTextEmergency = window.speakText || speakText;
@@ -26712,6 +26731,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (!c) return false;
         if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
         if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
+        if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -27157,6 +27177,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (!c) return false;
         if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
         if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
+        if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -27989,7 +28010,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
-        if (/이전|이전화면|뒤로|전화면/.test(c)) {
+        if (/이전|이전화면|뒤로|전화면|전으로/.test(c)) {
             try {
                 if (typeof goBack === "function") {
                     goBack();
@@ -30152,6 +30173,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const stage = String(typeof currentStageName !== "undefined" ? currentStageName : "");
 
         if (stage !== "beverage_option_step") return false;
+        if (isBackCommand(text) || isHomeCommand(text)) return false;
 
         const level = parseOptionLevel(text);
 
@@ -34348,7 +34370,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                         }
                         intercept = true;
                     }
-                    else if (/이전|뒤로|전화면|돌아가/.test(clean)) { goBack(); intercept = true; }
                     else if (/추천|뭐먹|결정장애/.test(clean)) {
                         if (['welcome', 'category_select', 'menu_grid', 'add_more_prompt'].includes(currentStageName)) {
                             currentStageName = 'taste_select_prompt'; renderTasteSelectPrompt(); 
@@ -35007,7 +35028,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                         if (typeof renderTasteSelectPrompt === 'function') renderTasteSelectPrompt();
                         intercept = true;
                     }
-                    else if (/이전|뒤로|전화면|돌아가/.test(clean)) { goBack(); intercept = true; }
                     else if (/처음부터|처음으로|다시시작/.test(clean)) {
                         if(document.getElementById('custom-alert-modal') && !document.getElementById('custom-alert-modal').classList.contains('hidden')) closeCustomAlert(); 
                         else { speakText("네, 처음 화면으로 돌아갑니다."); showWelcomeScreen(); }
