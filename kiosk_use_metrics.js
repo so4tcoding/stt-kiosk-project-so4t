@@ -425,7 +425,7 @@
 
             if (stage === "quantity" && countIn(raw)) return leaveQuantity(countIn(raw));
 
-            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐/.test(raw)) {
+            if (stage === "add_more_prompt" && /이걸로|그걸로|없어요|없어|그만|이게다|추가안|안할래|이제됐|그만할|됐|안담/.test(raw)) {
                 if (typeof commitTempItemToCartIfValid === "function") commitTempItemToCartIfValid();
                 if (typeof transitionTo === "function" && typeof renderPlaceSelect === "function") {
                     transitionTo("place", renderPlaceSelect);
@@ -440,6 +440,21 @@
                     transitionTo("category_select", renderCategorySelect);
                 }
                 return true;
+            }
+
+            if (/menu_grid|open_order_prompt|category_select/.test(stage) && typeof selectSpecificItem === "function") {
+                if (/아이스커피|아이스아메/.test(raw)) {
+                    selectSpecificItem("아메리카노");
+                    tempItem.temp = "아이스(ICE)";
+                    askQuantity();
+                    return true;
+                }
+                if (/핫커피|뜨거운커피/.test(raw)) {
+                    selectSpecificItem("아메리카노");
+                    tempItem.temp = "핫(HOT)";
+                    askQuantity();
+                    return true;
+                }
             }
 
             if (/menu_grid|open_order_prompt|category_select/.test(stage) && /국물/.test(raw) && Array.isArray(customMenus)) {
@@ -473,7 +488,7 @@
                 }
                 const pools = [];
                 if (Array.isArray(currentGridMenus) && currentGridMenus.length) pools.push(currentGridMenus);
-                pools.push(customMenus);
+                else pools.push(customMenus);
                 for (let p = 0; p < pools.length; p++) {
                     let bestLen = 1;
                     let hits = [];
@@ -538,6 +553,7 @@
             if (stage === "beverage_option_step" && Array.isArray(optionList) && optionList[optionStepIndex]) {
                 let level = 0;
                 if (/낮게|싱겁|덜달|안달|없이/.test(raw)) level = 1;
+                else if (/조금|적게/.test(raw)) level = 2;
                 else if (/많이/.test(raw)) level = 4;
                 else if (/달게|달콤|가득/.test(raw)) level = 5;
                 if (!level) return false;
