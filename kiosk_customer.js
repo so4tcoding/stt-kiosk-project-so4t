@@ -349,7 +349,17 @@
             { group: "결제", prep: "more", text: "결제", intended: "아니요", expect: { type: "stage", value: "place" } },
             { group: "결제", prep: "more", text: "그냥 주문", intended: "아니요", expect: { type: "stage", value: "place" } },
             { group: "결제", prep: "sum", text: "결제", intended: "결제", expect: { type: "stage", value: "payment" } },
-            { group: "결제", prep: "sum", text: "맞아", intended: "결제", expect: { type: "stage", value: "payment" } }
+            { group: "결제", prep: "sum", text: "맞아", intended: "결제", expect: { type: "stage", value: "payment" } },
+            { group: "시작", prep: "welcome", text: "주문시작", intended: "네", expect: { type: "stage", value: "open_order_prompt" } },
+            { group: "결제", prep: "place", text: "들고갈래요", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "결제", prep: "place", text: "여기서먹을래요", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "결제", prep: "sum", text: "이대로", intended: "결제", expect: { type: "stage", value: "payment" } },
+            { group: "결제", prep: "more", text: "추가요", intended: "네", expect: { type: "stage", value: "category_select" } },
+            { group: "결제", prep: "more", text: "결제요", intended: "아니요", expect: { type: "stage", value: "place" } },
+            { group: "단계", prep: "opt", text: "보통이요", intended: "3단계", expect: { type: "sugar", value: 3 } },
+            { group: "온도", prep: "temp:아메리카노", text: "차갑게 주이소", intended: "아이스", expect: { type: "ice" } },
+            { group: "추천", prep: "taste", text: "달아요 주이소", intended: "달콤", expect: { type: "gridHas", value: "덮밥", stage: "menu_grid" } },
+            { group: "추천", prep: "taste", text: "안 매워요", intended: "", expect: { type: "spoken", value: "달콤", stage: "taste_select_prompt" } }
         ];
     }
 
