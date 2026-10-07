@@ -83,6 +83,13 @@
             }
             try { window.__kioskHeard = String(text || "").trim(); } catch (e) {}
             const stage = typeof currentStageName === "undefined" ? "" : currentStageName;
+            if (stage === "beverage_result") {
+                const heard = squash(text);
+                if (/이대로|그대로|이상태/.test(heard) && !/다시|아니/.test(heard) && typeof transitionTo === "function" && typeof renderAddMorePrompt === "function") {
+                    transitionTo("add_more_prompt", renderAddMorePrompt);
+                    return true;
+                }
+            }
             if (stage !== "menu_grid" && stage !== "category_select") {
                 return previous.apply(this, arguments);
             }

@@ -772,6 +772,28 @@
                 return true;
             }
 
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /뭐야|뭔데|뭐예|특징|무슨맛|어떤맛|얼마|가격/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
+                const described = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
+                    return plain(b).length - plain(a).length;
+                });
+                for (let d = 0; d < described.length; d++) {
+                    const key = plain(described[d]);
+                    if (key.length >= 2 && raw.indexOf(key) !== -1) {
+                        const menu = customMenus.find(function (item) { return item.name === described[d]; });
+                        const price = Number(menu && menu.price || 0).toLocaleString();
+                        const taste = String((menu && menu.taste) || "").replace(/\s+/g, " ").trim();
+                        let line = menu.name + ", " + price + "원.";
+                        if (taste && (line + " " + taste).length <= 46) line = line + " " + taste + ".";
+                        speakText(line);
+                        return true;
+                    }
+                }
+                if (/특징|무슨맛|어떤맛|얼마|가격/.test(raw) && !/뭐야|뭔데|뭐예/.test(raw)) {
+                    speakText("어떤 메뉴의 특징인지 이름을 같이 말씀해주세요.");
+                    return true;
+                }
+            }
+
             if (/menu_grid/.test(stage) && /이거뭐|뭐예|뭐야|뭔데/.test(raw) && !/메뉴/.test(raw) && typeof speakText === "function") {
                 speakText("메뉴 이름이나 몇 번째인지 말씀해 주세요.");
                 return true;
@@ -856,23 +878,6 @@
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /순댓국/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem("순대국밥");
                 return afterSelect(raw);
-            }
-
-            if (/menu_grid|open_order_prompt|category_select/.test(stage) && /특징|무슨맛|어떤맛|얼마|가격/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
-                const described = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
-                    return plain(b).length - plain(a).length;
-                });
-                for (let d = 0; d < described.length; d++) {
-                    const key = plain(described[d]);
-                    if (key.length >= 2 && raw.indexOf(key) !== -1) {
-                        const menu = customMenus.find(function (item) { return item.name === described[d]; });
-                        const price = Number(menu && menu.price || 0).toLocaleString();
-                        speakText(menu.name + "은 " + (menu.taste || "기본") + " 메뉴이고, 가격은 " + price + "원입니다.");
-                        return true;
-                    }
-                }
-                speakText("어떤 메뉴의 특징인지 이름을 같이 말씀해주세요.");
-                return true;
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /바닐라|에스프레소|디카페인|카푸치노|모카|카라멜|헤이즐|녹차라떼|더치/.test(raw) && typeof speakText === "function") {

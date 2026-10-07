@@ -26702,6 +26702,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const c = compact(text);
 
         if (!c) return false;
+        if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -26849,8 +26850,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
+        const asking = /뭐야|뭔데|뭐예|특징|설명|얼마|가격|무슨맛|어떤맛/.test(compact(t));
         const menu = findMenu(t);
-        if (menu) return selectMenu(menu, t);
+        if (menu && !asking) return selectMenu(menu, t);
+        if (asking) return false;
 
         const cat = findCategory(t);
         if (cat) return openCategory(cat);
@@ -27143,6 +27146,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const c = compact(text);
 
         if (!c) return false;
+        if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -27284,7 +27288,14 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
+        const asking = /뭐야|뭔데|뭐예|특징|설명|얼마|가격|무슨맛|어떤맛/.test(compact(t));
         const menu = findMenu(t);
+        if (asking) {
+            try {
+                if (typeof processVoiceCommand === "function") processVoiceCommand(t);
+            } catch (e) {}
+            return true;
+        }
         if (menu) {
             console.log("✅ HYBRID 메뉴:", menu.name);
 
@@ -28377,7 +28388,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 const menu = list[idx];
                 if (typeof highlightMenuConfirm === "function") highlightMenuConfirm(menu, idx);
                 else if (typeof selectSpecificItem === "function") selectSpecificItem(menu.name);
-                say(`${menu.name} 맞습니까? 맞으면 네, 아니면 아니요라고 말씀해주세요.`);
                 return true;
             }
         } else if (/마지막|끝/.test(c)) {
@@ -28385,7 +28395,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             const menu = list[idx];
             if (typeof highlightMenuConfirm === "function") highlightMenuConfirm(menu, idx);
             else if (typeof selectSpecificItem === "function") selectSpecificItem(menu.name);
-            say(`${menu.name} 맞습니까? 맞으면 네, 아니면 아니요라고 말씀해주세요.`);
             return true;
         }
 
@@ -28416,8 +28425,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         } else if (typeof selectSpecificItem === "function") {
             selectSpecificItem(menu.name);
         }
-
-        say(`${menu.name} 맞습니까? 맞으면 네, 아니면 아니요라고 말씀해주세요.`);
         return true;
     }
 
