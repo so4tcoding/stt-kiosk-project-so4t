@@ -323,6 +323,25 @@
             return true;
         }
 
+        function missingLine() {
+            if (typeof window.__kioskMenuHint === "string" && window.__kioskMenuHint) return window.__kioskMenuHint;
+            return "그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.";
+        }
+
+        function showGrid(list, category, title) {
+            if (!list || !list.length) {
+                if (typeof speakText === "function") speakText(missingLine());
+                return true;
+            }
+            selectedCategory = category;
+            currentGridMenus = list;
+            currentGridTitle = title;
+            if (typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
+                transitionTo("menu_grid", renderMenuGrid);
+            }
+            return true;
+        }
+
         function applyKnownPhrase(text) {
             const stage = typeof currentStageName === "undefined" ? "" : currentStageName;
             const raw = plain(text);
@@ -501,27 +520,15 @@
             }
 
             if ((stage === "welcome" || stage === "open_order_prompt") && /커피/.test(raw) && !/아메리카노|라떼|디카페인|에스프레소|카푸치노|모카|카라멜|헤이즐|더치|녹차/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
-                selectedCategory = "커피";
-                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "커피"; });
-                currentGridTitle = "커피 메뉴판";
-                transitionTo("menu_grid", renderMenuGrid);
-                return true;
+                return showGrid(customMenus.filter(function (menu) { return menu.category === "커피"; }), "커피", "커피 메뉴판");
             }
 
             if ((stage === "welcome" || stage === "open_order_prompt") && /음료/.test(raw) && !/콜라|사이다|주스|에이드|쉐이크|딸기|이온/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
-                selectedCategory = "음료";
-                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "음료"; });
-                currentGridTitle = "음료 메뉴판";
-                transitionTo("menu_grid", renderMenuGrid);
-                return true;
+                return showGrid(customMenus.filter(function (menu) { return menu.category === "음료"; }), "음료", "음료 메뉴판");
             }
 
             if ((stage === "welcome" || stage === "open_order_prompt") && /디저트|후식/.test(raw) && !/케이크|아이스크림/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
-                selectedCategory = "디저트";
-                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "디저트"; });
-                currentGridTitle = "디저트 메뉴판";
-                transitionTo("menu_grid", renderMenuGrid);
-                return true;
+                return showGrid(customMenus.filter(function (menu) { return menu.category === "디저트"; }), "디저트", "디저트 메뉴판");
             }
 
             if (stage === "welcome" && /맛있어|맛있는거|뭐가좋|추천해/.test(raw) && typeof renderTasteSelectPrompt === "function") {
@@ -534,11 +541,8 @@
                 const matched = customMenus.filter(function (menu) {
                     return /얼큰|매운|매콤/.test(String(menu.taste || "") + String(menu.name || ""));
                 });
-                selectedCategory = "추천 맛";
-                currentGridMenus = matched.length ? matched : customMenus.filter(function (menu) { return menu.category === "국밥"; });
-                currentGridTitle = "얼큰한 맛 추천 메뉴";
-                transitionTo("menu_grid", renderMenuGrid);
-                return true;
+                const list = matched.length ? matched : customMenus.filter(function (menu) { return menu.category === "국밥"; });
+                return showGrid(list, "추천 맛", "얼큰한 맛 추천 메뉴");
             }
 
             if (stage === "welcome" && /직원|불러줘|화장실|사장|여기요|저기요|아저씨|이모님/.test(raw) && typeof speakText === "function") {
@@ -547,7 +551,7 @@
             }
 
             if (stage === "welcome" && (/물주세요|물좀|물이요|물한|생수|보리차|유자차|쌍화|숭늉|이온|미역|된장|찌개|제육|보쌈|족발|곱창|순두부|편육|냉국|해장|설렁|육개장|삼계|추어|곰탕|우거지|북엇|북어|파전|빈대|녹두|청국장|라볶|닭강정|탕수|후라이드|깐풍|자몽|아이스티|스무디|프라페|버블|청포|라임|매실|코코아|밀크|요거트|빙수|와플|마카롱|크로플|베이글|토스트|도넛|도너|츄러스|팝콘|호두|약과|인절미|경단|맥주|소주|공기밥|공기좀|김치|라면|우동|짜장|짬뽕|비빔밥|냉면|삼겹|갈비|피자|치킨|김밥|떡볶|녹차|홍차|밀크티|호떡|수저|휴지|쿠폰|포인트|적립|할인|멤버|우유|감자|튀김|막걸리|에스프레소|바닐라|와인|샌드|봉투|빨대|물티슈|와이파이|디카페인|카푸치노|모카|카라멜|헤이즐|더치|초코|만두|떡국|식혜|수정과|미숫|붕어|호빵|어묵|오뎅|주먹밥|칼국수|국수|수제비|선지|콩나물|계란|샐러드|과일|바나나|사과주|배하나|배주세|감주|감하나|쫄면|잡채|육회|초밥|도시락/.test(raw) || /^밥(좀)?(주세요|주이소|주소)?$/.test(raw) || /^물$/.test(raw)) && typeof speakText === "function") {
-                speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
+                speakText(missingLine());
                 return true;
             }
 
@@ -557,11 +561,7 @@
             }
 
             if (stage === "welcome" && /목말라|목마르|갈증/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
-                selectedCategory = "음료";
-                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "음료"; });
-                currentGridTitle = "음료 메뉴판";
-                transitionTo("menu_grid", renderMenuGrid);
-                return true;
+                return showGrid(customMenus.filter(function (menu) { return menu.category === "음료"; }), "음료", "음료 메뉴판");
             }
 
             if (stage === "welcome" && /주차|영업|번호표|몇시|예약|웨이팅|자리있|사진/.test(raw) && typeof speakText === "function") {
@@ -590,19 +590,11 @@
             }
 
             if (stage === "welcome" && /불고기/.test(raw) && !/한우|덮밥|버거/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
-                selectedCategory = "불고기";
-                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "불고기"; });
-                currentGridTitle = "불고기 메뉴판";
-                transitionTo("menu_grid", renderMenuGrid);
-                return true;
+                return showGrid(customMenus.filter(function (menu) { return menu.category === "불고기"; }), "불고기", "불고기 메뉴판");
             }
 
             if (stage === "welcome" && /햄버거/.test(raw) && !/치즈|불고기/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
-                selectedCategory = "햄버거";
-                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "햄버거"; });
-                currentGridTitle = "햄버거 메뉴판";
-                transitionTo("menu_grid", renderMenuGrid);
-                return true;
+                return showGrid(customMenus.filter(function (menu) { return menu.category === "햄버거"; }), "햄버거", "햄버거 메뉴판");
             }
 
             if (stage === "welcome" && /감사|고마워|고맙/.test(raw) && typeof speakText === "function") {
@@ -723,13 +715,7 @@
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && (/국물/.test(raw) || (/^국/.test(raw) && !/국밥|국수|돼지|순대|소고기|수육/.test(raw) && raw.length <= 8)) && Array.isArray(customMenus)) {
-                selectedCategory = "국밥";
-                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "국밥"; });
-                currentGridTitle = "국밥 메뉴판";
-                if (typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
-                    transitionTo("menu_grid", renderMenuGrid);
-                }
-                return true;
+                return showGrid(customMenus.filter(function (menu) { return menu.category === "국밥"; }), "국밥", "국밥 메뉴판");
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /레모네이드/.test(raw) && typeof selectSpecificItem === "function") {
@@ -743,11 +729,7 @@
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /국밥|국물/.test(raw) && !/돼지|순대|소고기|수육/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
-                selectedCategory = "국밥";
-                currentGridMenus = customMenus.filter(function (menu) { return menu.category === "국밥"; });
-                currentGridTitle = "국밥 메뉴판";
-                transitionTo("menu_grid", renderMenuGrid);
-                return true;
+                return showGrid(customMenus.filter(function (menu) { return menu.category === "국밥"; }), "국밥", "국밥 메뉴판");
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /순댓국/.test(raw) && typeof selectSpecificItem === "function") {
@@ -773,13 +755,25 @@
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /바닐라|에스프레소|디카페인|카푸치노|모카|카라멜|헤이즐|녹차라떼|더치/.test(raw) && typeof speakText === "function") {
-                speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
+                speakText(missingLine());
                 return true;
             }
 
             if ((stage === "welcome" || stage === "open_order_prompt" || stage === "category_select") && /^(사과|배|감|치즈|캔|단|핫|아이스|차갑|차가|시원|따뜻|따듯|뜨겁|뜨거|뜨끈)(요|하게|히)?$/.test(raw) && typeof speakText === "function") {
                 speakText("그 단어만으로는 모르겠습니다. 메뉴 이름을 말씀해 주세요.");
                 return true;
+            }
+
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && Array.isArray(window.__kioskRemovedNames) && window.__kioskRemovedNames.length && typeof speakText === "function") {
+                const gone = window.__kioskRemovedNames.map(function (name) { return plain(name); }).filter(function (key) {
+                    return key.length >= 2;
+                }).sort(function (a, b) { return b.length - a.length; });
+                for (let g = 0; g < gone.length; g++) {
+                    if (raw.indexOf(gone[g]) !== -1) {
+                        speakText(missingLine());
+                        return true;
+                    }
+                }
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && typeof selectSpecificItem === "function" && Array.isArray(customMenus)) {

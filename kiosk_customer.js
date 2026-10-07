@@ -1368,6 +1368,9 @@
         }
         const savedSpeak = window.speakText;
         const savedBlock = window.__kioskTtsBlocking;
+        let savedShop = "";
+        try { savedShop = localStorage.getItem("kiosk_shop_v1") || ""; } catch (e) {}
+        if (typeof window.__kioskApplyShop === "function") window.__kioskApplyShop("gukbap");
 
         function hush() {
             window.__kioskTtsBlocking = function () { return false; };
@@ -1550,6 +1553,7 @@
         window.speakText = savedSpeak;
         try { speakText = savedSpeak; } catch (e) {}
         window.__kioskTtsBlocking = savedBlock;
+        if (savedShop && typeof window.__kioskApplyShop === "function") window.__kioskApplyShop(savedShop);
         if (typeof window.__kioskTaughtCount === "function") report.known = window.__kioskTaughtCount();
         window.__kioskCustomerReport = report;
         console.log("[고객] 통과 " + report.passed + "/" + report.total + ", 이번에 학습 " + (report.taught + report.learned) + ", 사전 " + report.known + ", 아직 실행 안 됨 " + report.missed.length);

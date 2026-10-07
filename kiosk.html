@@ -1466,14 +1466,20 @@
         }
         function askUpsell() {
             transitionTo('upsell', () => {
-                updateUI("콜라와 감자튀김 세트를 추가하시겠습니까?", `[ ${tempItem.item} ]`, `<div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">대답 예: "네" (세트 추가) / "아니요" (단품)</div>`);
-                speakText("콜라나 감자튀김을 같이 드시고 싶으시나요? 같이 드시고 싶으시면 네, 햄버거만 드시고 싶으시면 아니요 라고 말씀해주세요.");
+                updateUI("세트를 추가하시겠습니까?", `[ ${tempItem.item} ]`, `<div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">대답 예: "세트" / "단품"</div>`);
+                speakText("세트로 하시려면 세트, 햄버거만이면 단품이라고 말씀해 주세요.");
             });
         }
         function askQuantity() {
             transitionTo('quantity', () => {
-                updateUI("수량을 말씀해주세요", `[ ${tempItem.item} ]`, `<div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">대답 예: "한 개", "세 개"</div>`);
-                speakText("메뉴 수량을 말씀해주세요.");
+                const word = window.__kioskQtyWord;
+                if (word === "잔" || word === "개" || word === "그릇") {
+                    updateUI("수량을 말씀해주세요", `[ ${tempItem.item} ]`, `<div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">대답 예: "한 ${word}", "두 ${word}"</div>`);
+                    speakText("몇 " + word + "인지 말씀해 주세요.");
+                } else {
+                    updateUI("수량을 말씀해주세요", `[ ${tempItem.item} ]`, `<div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">대답 예: "한 개", "세 개"</div>`);
+                    speakText("메뉴 수량을 말씀해주세요.");
+                }
             });
         }
         // [로직 신설] 음료 카테고리 전용 - 컵 사이즈 질문
@@ -1531,6 +1537,17 @@
             speakText("선택하신 옵션으로 음료가 완성되었습니다. 이대로 주문하시겠습니까?");
         }
         function renderAddMorePrompt() {
+            const shop = window.__kioskShopId || "";
+            if (shop === "cafe") {
+                updateUI("다른 메뉴를 더 추가하시겠습니까?", "추가 주문 여부를 말씀해주세요.", `<div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">대답 예: "네" (다른 음료) / "아니요" (결제 진행)</div>`);
+                speakText("다른 음료가 있으면 네, 없으면 아니요 라고 말씀해 주세요.");
+                return;
+            }
+            if (shop === "burger") {
+                updateUI("다른 메뉴를 더 추가하시겠습니까?", "추가 주문 여부를 말씀해주세요.", `<div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">대답 예: "네" (더 주문) / "아니요" (결제 진행)</div>`);
+                speakText("다른 메뉴가 있으면 네, 없으면 아니요 라고 말씀해 주세요.");
+                return;
+            }
             updateUI("다른 메뉴를 더 추가하시겠습니까?", "추가 주문 여부를 말씀해주세요.", `<div class="status-giant border-indigo-300 text-indigo-700 bg-indigo-50/50">대답 예: "네" (더 주문) / "아니요" (결제 진행)</div>`);
             speakText("추가하실 메뉴가 있습니까. 있으면 네, 없으면 아니요 라고 말씀해주세요.");
         }
@@ -23556,81 +23573,107 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     window.speakText = speakText = function recoveredSmoothSpeakText(text, onEndCallback = null) {
         const message = String(text || "").trim();
-
-        window.isTtsSpeaking = true;
-        window.__ttsHardBlock = true;
-
-        try {
-            if (ttsTimeout) clearTimeout(ttsTimeout);
-        } catch (e) {}
-
-        try {
-            if (!selectedFemaleVoice && typeof initVoices === "function") {
-                initVoices();
-            }
-        } catch (e) {}
-
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = "ko-KR";
-        utterance.rate = 0.86;
-        utterance.pitch = 1.03;
-
-        try {
-            if (selectedFemaleVoice) {
-                utterance.voice = selectedFemaleVoice;
-            }
-        } catch (e) {}
-
-        try {
-            const volumeSteps = [0, 0.12, 0.35, 0.58, 0.82];
-            utterance.volume = volumeSteps[ttsVolumeLevel || 3] || 0.58;
-        } catch (e) {
-            utterance.volume = 0.58;
+        if (!message) {
+            if (typeof onEndCallback === "function") onEndCallback();
+            return;
         }
 
-        let safetyTimer = setTimeout(() => {
-            window.isTtsSpeaking = false;
-            window.__ttsHardBlock = false;
-            window.__ttsBlockUntil = Date.now() + 900;
-            document.body.classList.remove("tts-speaking");
-        }, Math.max(2500, message.length * 210) + 1200);
+        if (!recoveredSmoothSpeakText._queue) recoveredSmoothSpeakText._queue = [];
+        const queued = recoveredSmoothSpeakText._queue;
+        const tail = queued.length ? queued[queued.length - 1].message : (recoveredSmoothSpeakText._busy ? recoveredSmoothSpeakText._current : "");
+        if (tail === message) return;
 
-        utterance.onstart = function() {
-            document.body.classList.add("tts-speaking");
-        };
+        const job = { message: message, onEndCallback: onEndCallback, done: false };
+        if (recoveredSmoothSpeakText._busy) {
+            queued.push(job);
+            return;
+        }
+        playRecoveredUtterance(job);
 
-        utterance.onend = function() {
-            clearTimeout(safetyTimer);
+        function playRecoveredUtterance(job) {
+            recoveredSmoothSpeakText._busy = true;
+            recoveredSmoothSpeakText._currentJob = job;
+            recoveredSmoothSpeakText._current = job.message;
+            window.isTtsSpeaking = true;
+            window.__ttsHardBlock = true;
 
-            document.body.classList.remove("tts-speaking");
-            window.isTtsSpeaking = false;
-            window.__ttsHardBlock = false;
-            window.__ttsBlockUntil = Date.now() + 900;
+            try {
+                if (ttsTimeout) clearTimeout(ttsTimeout);
+            } catch (e) {}
 
-            if (onEndCallback) onEndCallback();
-        };
+            try {
+                if (!selectedFemaleVoice && typeof initVoices === "function") {
+                    initVoices();
+                }
+            } catch (e) {}
 
-        utterance.onerror = function() {
-            clearTimeout(safetyTimer);
+            const utterance = new SpeechSynthesisUtterance(job.message);
+            utterance.lang = "ko-KR";
+            utterance.rate = 0.86;
+            utterance.pitch = 1.03;
 
-            document.body.classList.remove("tts-speaking");
-            window.isTtsSpeaking = false;
-            window.__ttsHardBlock = false;
-            window.__ttsBlockUntil = Date.now() + 900;
+            try {
+                if (selectedFemaleVoice) utterance.voice = selectedFemaleVoice;
+            } catch (e) {}
 
-            if (onEndCallback) onEndCallback();
-        };
+            try {
+                const volumeSteps = [0, 0.12, 0.35, 0.58, 0.82];
+                utterance.volume = volumeSteps[ttsVolumeLevel || 3] || 0.58;
+            } catch (e) {
+                utterance.volume = 0.58;
+            }
 
-        const startUtterance = function () {
+            const safetyTimer = setTimeout(function () {
+                finishRecoveredUtterance(job, safetyTimer, false);
+            }, Math.max(2500, job.message.length * 210) + 1200);
+
+            utterance.onstart = function () {
+                document.body.classList.add("tts-speaking");
+            };
+
+            utterance.onend = function () {
+                finishRecoveredUtterance(job, safetyTimer, true);
+            };
+
+            utterance.onerror = function (event) {
+                const reason = event && event.error ? String(event.error) : "";
+                if (reason === "interrupted" || reason === "canceled" || reason === "cancelled") {
+                    if (job.done) return;
+                    job.done = true;
+                    clearTimeout(safetyTimer);
+                    if (recoveredSmoothSpeakText._currentJob !== job) return;
+                    recoveredSmoothSpeakText._queue.length = 0;
+                    recoveredSmoothSpeakText._busy = false;
+                    recoveredSmoothSpeakText._current = "";
+                    window.isTtsSpeaking = false;
+                    window.__ttsHardBlock = false;
+                    window.__ttsBlockUntil = Date.now() + 200;
+                    document.body.classList.remove("tts-speaking");
+                    return;
+                }
+                finishRecoveredUtterance(job, safetyTimer, true);
+            };
+
             try { window.speechSynthesis.speak(utterance); } catch (e) {}
-        };
-        let busy = false;
-        try { busy = !!(window.speechSynthesis.speaking || window.speechSynthesis.pending); } catch (e) {}
-        if (busy) {
-            try { window.speechSynthesis.cancel(); } catch (e) {}
-            setTimeout(startUtterance, 250);
-        } else {
-            startUtterance();
+        }
+
+        function finishRecoveredUtterance(job, safetyTimer, runCallback) {
+            if (job.done) return;
+            job.done = true;
+            clearTimeout(safetyTimer);
+            document.body.classList.remove("tts-speaking");
+            window.isTtsSpeaking = false;
+            window.__ttsHardBlock = false;
+            window.__ttsBlockUntil = Date.now() + 900;
+            if (runCallback && typeof job.onEndCallback === "function") {
+                try { job.onEndCallback(); } catch (e) {}
+            }
+            const next = recoveredSmoothSpeakText._queue.shift();
+            if (next) setTimeout(function () { playRecoveredUtterance(next); }, 80);
+            else {
+                recoveredSmoothSpeakText._busy = false;
+                recoveredSmoothSpeakText._current = "";
+            }
         }
     };
 
@@ -34375,7 +34418,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         { id: 'tts_taste', label: '7. 맛 추천 안내 ({0}=메뉴1, {1}=메뉴2)', default: '골라 주세요. 달콤, 상큼, 구수, 고소, 얼큰, 짭짤입니다. 오늘의 추천 메뉴는 {0}이고, 제일 맛있는 메뉴는 {1}입니다.' },
         { id: 'tts_confirm', label: '8. 선택 메뉴 확인 ({0}=메뉴명)', default: '선택하신 게 {0} 맞습니까? 맞으면 네, 틀리면 아니요 라고 대답해주세요.' },
         { id: 'tts_temp', label: '9. 온도 선택 (핫/아이스)', default: '따뜻하게 드시고 싶으시면 따뜻하게, 차갑게 드시고 싶으시면 차갑게 라고 말씀해주세요.' },
-        { id: 'tts_upsell', label: '10. 세트/단품 선택', default: '콜라나 감자튀김을 같이 드시고 싶으시나요? 같이 드시고 싶으시면 네, 햄버거만 드시고 싶으시면 아니요 라고 말씀해주세요.' },
+        { id: 'tts_upsell', label: '10. 세트/단품 선택', default: '세트로 하시려면 세트, 햄버거만이면 단품이라고 말씀해 주세요.' },
         { id: 'tts_qty', label: '11. 수량 선택', default: '메뉴 수량을 말씀해주세요.' },
         { id: 'tts_cup', label: '12. 컵 사이즈 선택', default: '작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.' },
         { id: 'tts_bev_prompt2', label: '13. 커피 옵션 안내', default: '커피 샷 추가, 시럽, 얼음 양을 조절하고 싶으시다면 네, 추가할 게 없으시다면 아니요라고 해주세요.' },
@@ -35924,6 +35967,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 </script>
 <script src="/kiosk_use_metrics.js"></script>
 <script src="/kiosk_customer.js"></script>
+<script src="/kiosk_shop.js"></script>
 
 </body>
 </html>
