@@ -458,6 +458,11 @@
                 return true;
             }
 
+            if (stage === "welcome" && /물주세요|물좀|맥주|소주|공기밥/.test(raw) && typeof speakText === "function") {
+                speakText("그 메뉴는 없습니다. 국밥, 불고기, 햄버거, 커피, 음료, 디저트 중에서 말씀해주세요.");
+                return true;
+            }
+
             if (stage === "welcome" && /목말라|목마르/.test(raw) && Array.isArray(customMenus) && typeof transitionTo === "function" && typeof renderMenuGrid === "function") {
                 selectedCategory = "음료";
                 currentGridMenus = customMenus.filter(function (menu) { return menu.category === "음료"; });
@@ -476,7 +481,7 @@
                 return true;
             }
 
-            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러|배고파|배고프|주문부탁/.test(raw)) {
+            if (stage === "welcome" && /주문할래|먹을래|시작할게|주문할께|먹을께|먹을게|주문할게|주문합니다|먹으러|배고파|배고프|배고픕|주문부탁/.test(raw)) {
                 startOrder();
                 return true;
             }
@@ -677,6 +682,11 @@
 
             if (stage === "quantity" && /^취소|^잘못/.test(raw)) {
                 previous("뒤로");
+                return true;
+            }
+
+            if (stage === "summary" && /얼마|가격/.test(raw) && typeof renderSummary === "function") {
+                renderSummary();
                 return true;
             }
 

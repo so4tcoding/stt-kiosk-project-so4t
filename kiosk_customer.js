@@ -749,7 +749,27 @@
             { group: "결제", prep: "pay", text: "현금 부탁해요", intended: "현금", expect: { type: "pay", value: "현금" } },
             { group: "결제", prep: "more", text: "이제 결제할게요", intended: "아니요", expect: { type: "stage", value: "place" } },
             { group: "안내", prep: "grid:커피", text: "글씨 크게 해 주세요", intended: "확대", expect: { type: "spoken", value: "확대", stage: "menu_grid" } },
-            { group: "안내", prep: "grid:커피", text: "소리 크게 해 주세요", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } }
+            { group: "안내", prep: "grid:커피", text: "소리 크게 해 주세요", intended: "소리", expect: { type: "spoken", value: "소리", stage: "menu_grid" } },
+            { group: "시작", prep: "welcome", text: "물 주세요", intended: "", expect: { type: "spoken", value: "없", stage: "welcome" } },
+            { group: "시작", prep: "welcome", text: "맥주 주세요", intended: "", expect: { type: "spoken", value: "없", stage: "welcome" } },
+            { group: "시작", prep: "welcome", text: "공기밥 주세요", intended: "", expect: { type: "spoken", value: "없", stage: "welcome" } },
+            { group: "시작", prep: "welcome", text: "배고픕니다", intended: "네", expect: { type: "stage", value: "open_order_prompt" } },
+            { group: "시작", prep: "welcome", text: "목말라 죽겠어요", intended: "음료", expect: { type: "category", value: "음료" } },
+            { group: "결제", prep: "sum", text: "얼마예요", intended: "결제", expect: { type: "spoken", value: "원", stage: "summary" } },
+            { group: "메뉴", prep: "confirm:딸기 라떼", text: "네 맞습니다", intended: "딸기 라떼", expect: { type: "itemStage", item: "딸기", stage: "quantity" } },
+            { group: "메뉴", prep: "confirm:콜라", text: "예 맞아요", intended: "콜라", expect: { type: "itemStage", item: "콜라", stage: "quantity" } },
+            { group: "수량", prep: "qty:오렌지 주스", text: "두 명이서", intended: "두 개", expect: { type: "count", count: 2, stage: "cup_size", item: "오렌지" } },
+            { group: "수량", prep: "qty:돼지국밥", text: "곱빼기로", intended: "두 개", expect: { type: "countLeave", count: 2, item: "돼지" } },
+            { group: "메뉴", prep: "grid:국밥", text: "국밥 곱빼기", intended: "국밥", expect: { type: "category", value: "국밥", notStage: "quantity" } },
+            { group: "온도", prep: "temp:아메리카노", text: "따뜻하게 부탁해요", intended: "핫", expect: { type: "hot" } },
+            { group: "온도", prep: "temp:아메리카노", text: "차갑게 부탁해요", intended: "아이스", expect: { type: "ice" } },
+            { group: "용량", prep: "cup:콜라", text: "큰 거로 부탁해요", intended: "라지", expect: { type: "stage", value: "add_more_prompt" } },
+            { group: "결제", prep: "place", text: "포장이요 부탁해요", intended: "포장", expect: { type: "place", value: "포장" } },
+            { group: "결제", prep: "place", text: "매장이요 부탁해요", intended: "매장에서", expect: { type: "place", value: "매장" } },
+            { group: "결제", prep: "pay", text: "카드요 부탁해요", intended: "카드", expect: { type: "pay", value: "카드" } },
+            { group: "결제", prep: "pay", text: "현금이요 부탁해요", intended: "현금", expect: { type: "pay", value: "현금" } },
+            { group: "안내", prep: "grid:커피", text: "다시 말해 주세요", intended: "다시", expect: { type: "spoken", value: "메뉴", stage: "menu_grid" } },
+            { group: "시작", prep: "welcome", text: "천천히 좀", intended: "다시", expect: { type: "spoken", value: "주문", stage: "welcome" } }
         ];
     }
 
