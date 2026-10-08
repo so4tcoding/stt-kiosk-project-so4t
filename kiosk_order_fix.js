@@ -172,13 +172,15 @@
                 trained = typeof window.__kioskTrainedTarget === "function" ? window.__kioskTrainedTarget(text) : "";
                 if (trained && trained !== "소리" && trained !== "사용법") text = trained;
             } catch (e) {}
+            if (trained === "사용법" && typeof speakText === "function") {
+                try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
+                try { window.isTtsSpeaking = false; window.__ttsHardBlock = false; } catch (e2) {}
+                speakText("쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워 라고 말씀해 주세요.");
+                return true;
+            }
             const allowTts = typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(text);
             if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !allowTts) {
                 return previous.call(this, text);
-            }
-            if (trained === "사용법" && typeof speakText === "function") {
-                speakText("쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워 라고 말씀해 주세요.");
-                return true;
             }
             try { window.__kioskHeard = String(text || "").trim(); } catch (e) {}
             const stage = typeof currentStageName === "undefined" ? "" : currentStageName;

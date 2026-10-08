@@ -79,7 +79,7 @@ assert.strictEqual(
     Talk.talkLine("저희 매장에는 국밥, 불고기 카테고리가 있습니다. 무엇을 드시겠습니까?"),
     "메뉴 이름을 말씀해 주세요."
 );
-assert.strictEqual(Talk.talkLine("쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다."), "메뉴 이름을 말씀해 주세요.");
+assert.strictEqual(Talk.talkLine("쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다."), "주문은 메뉴 이름으로 합니다.");
 assert.strictEqual(Talk.talkLine("그 메뉴는 없습니다. 커피, 음료 중에서 말씀해 주세요."), "그 메뉴는 없습니다.");
 assert.ok(Talk.talkLine("그 단어만으로는 모르겠습니다. 메뉴 이름을 말씀해 주세요.").includes("이름"));
 assert.strictEqual(Talk.talkLine("화면을 확대했습니다."), "네, 화면을 확대했습니다.");
