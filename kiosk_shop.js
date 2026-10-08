@@ -139,6 +139,7 @@
         window.__kioskMenuHint = profile.hint || "";
         window.__kioskRemovedNames = removed;
         paintIcons();
+        try { paintShopAdmin(); } catch (e) {}
         return true;
     }
 
@@ -153,6 +154,79 @@
         if (/국밥|한식|분식|식당/.test(raw)) return "gukbap";
         if (/커피/.test(raw) && !/라떼|아메리카노/.test(raw)) return "cafe";
         return "";
+    }
+
+    const SHOP_LABELS = [
+        ["gukbap", "국밥집"],
+        ["cafe", "카페"],
+        ["burger", "햄버거집"],
+        ["flower", "꽃집"],
+        ["stationery", "문구점"],
+        ["gift", "선물가게"]
+    ];
+
+    function shopPhrase(label) {
+        const code = label.charCodeAt(label.length - 1) - 0xac00;
+        const batchim = code >= 0 && code <= 11171 && code % 28 !== 0;
+        return label + (batchim ? "으로" : "로");
+    }
+
+    function paintShopAdmin() {
+        const box = document.getElementById("admin-shop-box");
+        if (!box) return;
+        const current = window.__kioskShopId || "";
+        const note = document.getElementById("admin-shop-now");
+        const picked = SHOP_LABELS.filter(function (pair) { return pair[0] === current; })[0];
+        if (note) note.textContent = picked ? ("지금 가게: " + picked[1]) : "가게를 골라 주세요.";
+        SHOP_LABELS.forEach(function (pair) {
+            const button = box.querySelector('[data-shop="' + pair[0] + '"]');
+            if (!button) return;
+            const on = pair[0] === current;
+            button.setAttribute("aria-pressed", on ? "true" : "false");
+            button.style.background = on ? "#e76f51" : "rgba(255,255,255,0.12)";
+            button.style.color = "#fff";
+            button.style.borderColor = on ? "#fff" : "rgba(255,255,255,0.35)";
+        });
+    }
+
+    function chooseShop(id) {
+        const pair = SHOP_LABELS.filter(function (item) { return item[0] === id; })[0];
+        if (!pair) return false;
+        snapshot();
+        if (!applyProfile(id)) return false;
+        try { localStorage.setItem(SHOP_KEY, id); } catch (e) {}
+        paintShopAdmin();
+        const draft = document.getElementById("admin-draft-box");
+        const line = shopPhrase(pair[1]) + " 바꿨습니다.";
+        if (draft) draft.innerText = line;
+        try { if (typeof currentStageName !== "undefined") currentStageName = "admin_panel_open"; } catch (e) {}
+        if (typeof speakText === "function") speakText(line);
+        return true;
+    }
+
+    function mountShopAdmin() {
+        if (!document.getElementById("admin-panel") || document.getElementById("admin-shop-box")) {
+            paintShopAdmin();
+            return;
+        }
+        const draft = document.getElementById("admin-draft-box");
+        if (!draft) return;
+        const box = document.createElement("div");
+        box.id = "admin-shop-box";
+        box.style.cssText = "width:100%;background:rgba(255,255,255,0.1);padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,0.2);margin-bottom:16px;";
+        box.innerHTML = '<h3 style="color:#fff;font-weight:800;margin:0 0 8px;font-size:20px;">가게 설정</h3><p id="admin-shop-now" style="color:#e8d9c0;font-size:15px;margin:0 0 12px;">가게를 골라 주세요.</p><div id="admin-shop-buttons" style="display:flex;flex-wrap:wrap;gap:8px;"></div>';
+        draft.insertAdjacentElement("afterend", box);
+        const row = box.querySelector("#admin-shop-buttons");
+        SHOP_LABELS.forEach(function (pair) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.dataset.shop = pair[0];
+            button.textContent = pair[1];
+            button.style.cssText = "min-width:108px;min-height:52px;padding:10px 14px;border-radius:14px;border:2px solid rgba(255,255,255,0.35);font-weight:800;font-size:18px;cursor:pointer;";
+            button.addEventListener("click", function () { chooseShop(pair[0]); });
+            row.appendChild(button);
+        });
+        paintShopAdmin();
     }
 
     function askShop() {
@@ -231,6 +305,8 @@
 
         window.__kioskApplyShop = applyProfile;
         window.__kioskParseShop = parseShop;
+        window.__kioskChooseShop = chooseShop;
+        mountShopAdmin();
 
         let saved = "";
         try { saved = localStorage.getItem(SHOP_KEY) || ""; } catch (e) {}

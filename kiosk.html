@@ -396,7 +396,7 @@
         <!-- 관리자 진입은 오직 음성 암호로만 (터치 UI 없음) -->
         <div id="admin-panel" class="hidden absolute inset-0 z-[300] flex flex-col items-center justify-start bg-[#3d2f1f]/95 backdrop-blur-lg px-6 pt-10 pb-6">
             <h2 class="text-2xl text-white font-black mb-2" style="font-family:'Jua',sans-serif;">관리자 메뉴 설정 (음성 전용)</h2>
-            <p class="text-[#e8d9c0] text-sm mb-4 text-center leading-relaxed">"메뉴 추가" 라고 말씀하시면 이름 → 가격 → 맛 순서로<br>음성으로 새 메뉴를 등록할 수 있습니다.<br>"고객 실행" 이라고 말씀하시면 주문 말을 처음부터 확인합니다.<br>"닫기" 라고 말씀하시면 처음 화면으로 돌아갑니다.</p>
+            <p class="text-[#e8d9c0] text-sm mb-4 text-center leading-relaxed">가게는 아래 버튼으로 고릅니다.<br>"메뉴 추가" 라고 말씀하시면 이름 → 가격 → 맛 순서로<br>음성으로 새 메뉴를 등록할 수 있습니다.<br>"고객 실행" 이라고 말씀하시면 주문 말을 처음부터 확인합니다.<br>"닫기" 라고 말씀하시면 처음 화면으로 돌아갑니다.</p>
             <div id="admin-draft-box" class="w-full bg-white/10 p-4 rounded-2xl border border-white/20 mb-4 text-white font-bold text-center min-h-[70px] flex items-center justify-center"></div>
             <div class="w-full flex-1 overflow-hidden flex flex-col gap-4">
                 <div class="bg-white/10 p-4 rounded-2xl border border-white/20">
@@ -1345,8 +1345,8 @@
             document.getElementById('admin-panel').classList.remove('hidden');
             currentStageName = 'admin_panel_open';
             adminDraft = null;
-            document.getElementById('admin-draft-box').innerText = '"메뉴 추가" 또는 "고객 실행" 이라고 말씀해보세요.';
-            speakText("관리자 설정이 열렸습니다. 메뉴 추가 라고 말씀하시면 새 메뉴를 등록하고, 고객 실행 이라고 말씀하시면 주문 말을 확인합니다.");
+            document.getElementById('admin-draft-box').innerText = '가게는 아래 버튼으로 고르고, "메뉴 추가" 또는 "고객 실행" 이라고 말씀해보세요.';
+            speakText("관리자 설정이 열렸습니다. 가게는 화면의 버튼으로 고르세요. 메뉴 추가 라고 말씀하시면 새 메뉴를 등록하고, 고객 실행 이라고 말씀하시면 주문 말을 확인합니다.");
         }
         function closeAdminPanel() { document.getElementById('admin-panel').classList.add('hidden'); adminDraft = null; showWelcomeScreen(); }
         function handleAdminVoice(lower, original) {
@@ -36253,6 +36253,33 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     console.log("[kiosk] 상황 안내를 적용했습니다. 말하는 동안에는 음성 인식을 받지 않습니다.");
 })();
+
+    (function exposeOrderState() {
+        function bind(name, read, write) {
+            try {
+                Object.defineProperty(window, name, {
+                    configurable: true,
+                    enumerable: false,
+                    get: read,
+                    set: write
+                });
+            } catch (err) {}
+        }
+        bind("currentStageName", function () { return currentStageName; }, function (value) { currentStageName = value; });
+        bind("orderState", function () { return orderState; }, function (value) { orderState = value; });
+        bind("tempItem", function () { return tempItem; }, function (value) { tempItem = value; });
+        bind("customMenus", function () { return customMenus; }, function (value) { customMenus = value; });
+        bind("isAddOnPhase", function () { return isAddOnPhase; }, function (value) { isAddOnPhase = value; });
+        bind("optionList", function () { return optionList; }, function (value) { optionList = value; });
+        bind("optionStepIndex", function () { return optionStepIndex; }, function (value) { optionStepIndex = value; });
+        bind("selectedCategory", function () { return selectedCategory; }, function (value) { selectedCategory = value; });
+        bind("currentGridMenus", function () { return currentGridMenus; }, function (value) { currentGridMenus = value; });
+        bind("pendingMenuName", function () { return pendingMenuName; }, function (value) { pendingMenuName = value; });
+        bind("pendingMenuIndex", function () { return pendingMenuIndex; }, function (value) { pendingMenuIndex = value; });
+        bind("categoryIconMap", function () { return categoryIconMap; }, function () {});
+        bind("categoryToneMap", function () { return categoryToneMap; }, function () {});
+        bind("exactMenuIconMap", function () { return exactMenuIconMap; }, function () {});
+    })();
 </script>
 <script src="/kiosk_learned_words.js"></script>
 <script src="/kiosk_use_metrics.js"></script>

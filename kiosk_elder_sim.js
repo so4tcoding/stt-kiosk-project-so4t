@@ -77,6 +77,7 @@
         selectedCategory = "";
         currentGridMenus = [];
         pendingMenuName = "";
+        pendingMenuIndex = -1;
         window.__kioskLastSpoken = "";
         window.__kioskHeard = "";
         currentStageName = "welcome";
