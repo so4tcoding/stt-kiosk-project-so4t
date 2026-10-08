@@ -43,6 +43,13 @@ if (back.action === "use") assert.strictEqual(back.text, "치즈버거");
 assert.strictEqual(Noise.distort("치즈버거", { kind: 4, neighbor: "콜라", venue: "concert", n: 1 }).indexOf("콜라") >= 0, true);
 assert.strictEqual(repair(Noise.distort("치즈버거", { kind: 4, neighbor: "콜라", venue: "concert", n: 1 })).action, "repeat");
 assert.strictEqual(Noise.distort("치즈버거", { kind: 4, loud: true }), "치즈버거");
+assert.strictEqual(Noise.repair(Noise.dust("치즈버거", 0)).text, "치즈버거");
+assert.strictEqual(Noise.repair(Noise.dust("글씨가 안 보여요", 1), "category_select").text, "글씨가 안 보여요");
+assert.strictEqual(Noise.repair(Noise.dust("안 들려요", 2), "category_select").text, "안 들려요");
+assert.strictEqual(Noise.repair(Noise.dust("다음", 3), "category_select").text, "다음");
+assert.strictEqual(Noise.repair(Noise.dust("이해가 안 돼요", 0), "quantity").text, "이해가 안 돼요");
+assert.strictEqual(Noise.dust("볼펜", 0).endsWith("웅웅"), true);
+assert.strictEqual(Noise.dust("볼펜", 3).endsWith("지글"), true);
 
 menus.forEach(function (menu) {
     const flat = menu.name.replace(/\s/g, "");

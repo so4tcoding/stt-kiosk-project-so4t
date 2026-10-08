@@ -172,7 +172,7 @@
             const rest = body.split(hits[0].key).join("");
             if (!rest || rest === "다음") return { action: "use", text: hits[0].name, how: rest ? "echo" : "menu" };
         }
-        if (menuStage(stage) && body.length >= 4 && !/^(주문|단품|세트|포장|결제|카드|현금|없|아니|다음|따뜻|차갑|소리|확대|사용법|글씨|화면|안보|도움)/.test(body)) {
+        if (menuStage(stage) && body.length >= 4 && !/^(주문|단품|세트|포장|결제|카드|현금|없|아니|다음|따뜻|차갑|소리|확대|사용법|글씨|화면|안보|안들|이해|뭐라고|다시|잘모르|도움)/.test(body)) {
             const fuzzy = uniqueEdit(body, menus);
             if (fuzzy.one) return { action: "use", text: fuzzy.one, how: "fuzzy" };
             if (fuzzy.many) return { action: "repeat", text: "", how: "ambiguous" };
@@ -186,6 +186,16 @@
             return { action: "use", text: cleaned, how: "stripped" };
         }
         return { action: "pass", text: original, how: "pass" };
+    }
+
+    const PLACES = ["가게 안", "창가", "계산대 옆", "복도"];
+    const QUIET = ["웅웅", "쉬익", "웅웅", "지글"];
+
+    function dust(text, place) {
+        const at = Math.abs(Number(place) || 0) % QUIET.length;
+        const line = String(text || "").trim();
+        if (!line) return line;
+        return line + " " + QUIET[at];
     }
 
     function chant(venue, n) {
@@ -223,6 +233,8 @@
     return {
         repair: repair,
         distort: distort,
+        dust: dust,
+        places: PLACES.slice(),
         compact: compact,
         tokens: TOKENS.slice()
     };

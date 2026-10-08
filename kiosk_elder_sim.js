@@ -120,8 +120,15 @@
 
     function say(text) {
         const before = snapshot();
-        window.__kioskCustomerSay(text, "");
-        return { before: before, after: snapshot() };
+        let line = text;
+        if (typeof window.__kioskDustLine === "function") {
+            try {
+                const dusted = window.__kioskDustLine(text);
+                if (dusted) line = dusted;
+            } catch (e) {}
+        }
+        window.__kioskCustomerSay(line, "");
+        return { before: before, after: snapshot(), heard: line };
     }
 
     function heardLine(raw, heard, shopId) {
@@ -502,6 +509,7 @@
     }
 
     function runUntaughtBody(index) {
+        window.__kioskQuietIndex = index;
         const filter = ageFilter(true);
         const rand = mulberry32(filter ? filter.seed(index) : (88021 + index * 251));
         const shopId = SHOPS[(filter ? filter.shopSlot(index) : index) % SHOPS.length];
@@ -559,6 +567,15 @@
             const zoomBefore = zoomNow();
             const explainBefore = Number(window.__kioskExplainAt) || 0;
             const result = say(said);
+            if (typeof window.__kioskAfterSay === "function") {
+                let bad = "";
+                try { bad = window.__kioskAfterSay(said, result) || ""; } catch (e) {}
+                if (bad) {
+                    lastSaid = String(bad);
+                    stage = result.after.stage;
+                    break;
+                }
+            }
             if (zoomNow() > zoomHigh) zoomHigh = zoomNow();
             if (!complaint) instruction = heardLine(result.after.spoken, said, shopId);
             if (orderFinished(result.after)) {
