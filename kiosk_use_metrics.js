@@ -23,7 +23,7 @@
     const ALIAS_KEY = "kiosk_command_alias_v1";
     const EVENT_KEY = "kiosk_use_metrics_v1";
     const TAUGHT_KEY = "kiosk_taught_phrases_v1";
-    const STORE_CAP = 4000;
+    const STORE_CAP = 8000;
     const YESNO = /^(네|내|예|넵|옙|아니|아니요|아니오|응|어|아|음)$/;
     const AMBIGUOUS = /^(국밥|버거|불고기|꽃|케이크|단|핫|아이스|사과|배|감|치즈|캔)$/;
 
@@ -312,6 +312,26 @@
         }
 
         function countIn(raw) {
+            if (/스물아홉/.test(raw)) return 29;
+            if (/스물여덟/.test(raw)) return 28;
+            if (/스물일곱/.test(raw)) return 27;
+            if (/스물여섯/.test(raw)) return 26;
+            if (/스물다섯/.test(raw)) return 25;
+            if (/스물네/.test(raw)) return 24;
+            if (/스물세/.test(raw)) return 23;
+            if (/스물두/.test(raw)) return 22;
+            if (/스물한/.test(raw)) return 21;
+            if (/서른/.test(raw)) return 30;
+            if (/스물/.test(raw)) return 20;
+            if (/열아홉/.test(raw)) return 19;
+            if (/열여덟/.test(raw)) return 18;
+            if (/열일곱/.test(raw)) return 17;
+            if (/열여섯/.test(raw)) return 16;
+            if (/열다섯/.test(raw)) return 15;
+            if (/열네/.test(raw)) return 14;
+            if (/열세/.test(raw)) return 13;
+            if (/열두/.test(raw)) return 12;
+            if (/열한/.test(raw)) return 11;
             if (/열식구|10식구/.test(raw)) return 10;
             if (/아홉식구|9식구/.test(raw)) return 9;
             if (/여덟식구|8식구/.test(raw)) return 8;
@@ -501,7 +521,7 @@
                 return true;
             }
 
-            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게|더키워|안보여|안보임|안봐도/.test(raw))) {
+            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게(?!말)|더키워|안보여|안보임|안봐도/.test(raw))) {
                 try {
                     rememberZoom(currentZoom() + 1);
                     showZoomedView();
@@ -520,7 +540,7 @@
                 return true;
             }
 
-            if ((/소리/.test(raw) && /키워|높여|올려|크게|켜/.test(raw) && !/꺼/.test(raw)) || /크게말해|말크게|볼륨올/.test(raw)) {
+            if ((/소리/.test(raw) && /키워|높여|올려|크게|켜/.test(raw) && !/꺼/.test(raw)) || /크게말해|말크게|볼륨올|볼륨높|더크게말/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
@@ -765,8 +785,8 @@
                 return true;
             }
 
-            if (stage === "quantity" && /스무|백잔|백개|20잔|20개|서른/.test(raw) && typeof speakText === "function") {
-                speakText("한 번에 열 잔까지 됩니다. 열 잔 이하로 말씀해 주세요.");
+            if (stage === "quantity" && /백잔|백개|백병|100잔|100개/.test(raw) && typeof speakText === "function") {
+                speakText("한 번에 서른 개까지 됩니다. 서른 개 이하로 말씀해 주세요.");
                 return true;
             }
 

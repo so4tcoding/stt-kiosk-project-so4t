@@ -167,9 +167,18 @@
         }
 
         window.processVoiceCommand = function (text) {
+            let trained = "";
+            try {
+                trained = typeof window.__kioskTrainedTarget === "function" ? window.__kioskTrainedTarget(text) : "";
+                if (trained && trained !== "소리" && trained !== "사용법") text = trained;
+            } catch (e) {}
             const allowTts = typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(text);
             if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !allowTts) {
-                return previous.apply(this, arguments);
+                return previous.call(this, text);
+            }
+            if (trained === "사용법" && typeof speakText === "function") {
+                speakText("쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워 라고 말씀해 주세요.");
+                return true;
             }
             try { window.__kioskHeard = String(text || "").trim(); } catch (e) {}
             const stage = typeof currentStageName === "undefined" ? "" : currentStageName;
@@ -202,16 +211,16 @@
                 }
             }
             if (stage !== "menu_grid" && stage !== "category_select") {
-                return previous.apply(this, arguments);
+                return previous.call(this, text);
             }
 
             const raw = squash(text);
-            if (/안보/.test(raw)) return previous.apply(this, arguments);
+            if (/안보/.test(raw)) return previous.call(this, text);
 
             let list = [];
             if (stage === "menu_grid") {
                 try { list = (currentGridMenus || []).slice(); } catch (e) { list = []; }
-                if (hasMenuName(text, list)) return previous.apply(this, arguments);
+                if (hasMenuName(text, list)) return previous.call(this, text);
             } else {
                 try {
                     list = [];
@@ -222,17 +231,17 @@
                 if (list.some(function (name) {
                     const key = squash(name);
                     return key.length >= 2 && raw.indexOf(key) !== -1;
-                })) return previous.apply(this, arguments);
+                })) return previous.call(this, text);
             }
-            if (!list.length) return previous.apply(this, arguments);
+            if (!list.length) return previous.call(this, text);
 
             const fromBottom = /밑에서|아래에서|하단에서|맨아래/.test(raw);
             const number = ordinal(raw);
             const hasRight = /오른쪽|우측|오른편/.test(raw);
             const hasLeft = /왼쪽|좌측|왼편/.test(raw);
-            if (!fromBottom && !hasRight && !hasLeft) return previous.apply(this, arguments);
-            if (number > 0 && !fromBottom) return previous.apply(this, arguments);
-            if (hasLeft && hasRight) return previous.apply(this, arguments);
+            if (!fromBottom && !hasRight && !hasLeft) return previous.call(this, text);
+            if (number > 0 && !fromBottom) return previous.call(this, text);
+            if (hasLeft && hasRight) return previous.call(this, text);
 
             let index = -2;
             if (fromBottom && number > 0) {
@@ -249,7 +258,7 @@
             } else if (!fromBottom && hasLeft && !hasRight) {
                 index = 0;
             }
-            if (index < -1) return previous.apply(this, arguments);
+            if (index < -1) return previous.call(this, text);
             if (stage === "menu_grid") return pickMenu(list, index);
             return openCategory(list, index);
         };

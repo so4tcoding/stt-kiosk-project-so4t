@@ -21205,6 +21205,16 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
             }
         }
 
+        const compoundMap = [
+            ["스물아홉", 29], ["스물여덟", 28], ["스물일곱", 27], ["스물여섯", 26], ["스물다섯", 25],
+            ["스물네", 24], ["스물세", 23], ["스물두", 22], ["스물한", 21],
+            ["열아홉", 19], ["열여덟", 18], ["열일곱", 17], ["열여섯", 16], ["열다섯", 15],
+            ["열네", 14], ["열세", 13], ["열두", 12], ["열한", 11]
+        ];
+        for (const [word, value] of compoundMap) {
+            if (clean.includes(word)) return value;
+        }
+
         // 단순 수량
         const simpleMap = [
             ["하나", 1], ["한개", 1], ["한잔", 1], ["한그릇", 1], ["한", 1], ["일개", 1], ["일", 1],
