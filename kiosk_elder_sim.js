@@ -458,13 +458,19 @@
         const prevSuite = window.__kioskSuiteRunning;
         let prevUpdate = null;
         let prevFit = null;
+        const origTimeout = window.setTimeout;
+        const origInterval = window.setInterval;
         window.__kioskSimQuiet = true;
         window.__kioskSuiteRunning = true;
+        window.setTimeout = function () { return 0; };
+        window.setInterval = function () { return 0; };
         try { if (typeof updateUI === "function") { prevUpdate = updateUI; updateUI = function () {}; } } catch (e) {}
         try { if (typeof fitToScreen === "function") { prevFit = fitToScreen; fitToScreen = function () {}; } } catch (e2) {}
         try {
             return fn();
         } finally {
+            window.setTimeout = origTimeout;
+            window.setInterval = origInterval;
             window.__kioskSimQuiet = prevQuiet;
             window.__kioskSuiteRunning = prevSuite;
             try { if (prevUpdate) updateUI = prevUpdate; } catch (e3) {}
@@ -489,6 +495,7 @@
         let ok = false;
         let ordered = "";
         let stage = "welcome";
+        let lastSaid = "";
         for (let step = 0; step < 24; step++) {
             const state = snapshot();
             if (orderFinished(state)) {
@@ -513,6 +520,7 @@
                 said = followInstruction(instruction, style);
             }
             const complaint = said === "글씨가 안 보여요" || said === "안 들려요";
+            lastSaid = said;
             const result = say(said);
             if (!complaint) instruction = heardLine(result.after.spoken, said, shopId);
             if (orderFinished(result.after)) {
@@ -533,7 +541,9 @@
             hearing: Math.round(bot.hearing * 100),
             ok: ok,
             menu: ordered,
-            stage: stage
+            stage: stage,
+            said: ok ? "" : lastSaid,
+            prompt: ok ? "" : instruction
         };
     }
 
