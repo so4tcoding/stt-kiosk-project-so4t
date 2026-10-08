@@ -1500,9 +1500,9 @@
                 updateUI("[추가주문] 카테고리 선택", "결제를 원하시면 결제라고 말씀해주세요.", html);
                 speakText("추가 메뉴입니다. " + uniqueCats.join(", ") + " 입니다. 원하시는 메뉴를 말씀해 주세요.");
             } else {
-                html += `</div><div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-3 !text-sm mt-2">대답 예: "국밥", "음료"</div>`;
-                updateUI("어떤 메뉴를 원하시나요?", "카테고리를 확인하고 말씀해주세요.", html);
-                speakText(`저희 매장에는 ${uniqueCats.join(", ")} 카테고리가 있습니다. 무엇을 드시겠습니까?`);
+                html += `</div><div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-3 !text-sm mt-2">대답 예: "${(customMenus[0] && customMenus[0].name) || "메뉴"}"</div>`;
+                updateUI("어떤 메뉴를 원하시나요?", "보이는 메뉴 이름을 그대로 말씀해 주세요.", html);
+                speakText(((customMenus[0] && customMenus[0].name) || "메뉴") + " 해 주세요.");
             }
         }
 
@@ -1527,16 +1527,17 @@
             let titleText = currentGridTitle; if (isAddOnPhase && !titleText.includes("추가주문")) titleText = `[추가주문] ` + titleText;
 
             const announce = window.__kioskSilentMenuGrid ? function () {} : speakText;
+            const sampleName = menus[0] ? menus[0].name : "메뉴";
             if (selectedCategory === "추천 맛") {
-                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${menus[0].name}" 또는 "오른쪽 거"</div>`;
-                updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); announce(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
+                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
+                updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); announce(sampleName + " 해 주세요.");
             } else if (isAddOnPhase) {
-                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "오른쪽 거", 또는 "결제할게요"</div>`;
+                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
                 updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html);
-                announce((ttsArray.length ? ttsArray.join(", ") + " 등이 있습니다. " : "") + "추가하실 메뉴 이름을 말씀해주세요. 더 없으면 결제라고 말씀해주세요.");
+                announce(sampleName + " 해 주세요.");
             } else {
-                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${menus[0].name}" 또는 "첫번째 거"</div>`;
-                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); announce(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
+                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
+                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); announce(sampleName + " 해 주세요.");
             }
         }
 

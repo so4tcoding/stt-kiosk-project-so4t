@@ -23,18 +23,27 @@
             if (/현금/.test(heard)) return "현금";
             return "결제";
         }
-        window.__kioskTrainedTarget = function (text) {
-            const key = phraseKey(text);
-            if (!key) return "";
+        let heardMap = null;
+        let targetMap = null;
+        function trainedMaps() {
+            if (heardMap) return;
+            heardMap = new Map();
+            targetMap = new Map();
             for (let i = 0; i < list.length; i++) {
                 const heard = phraseKey(list[i] && list[i][0]);
                 const target = String((list[i] && list[i][1]) || (list[i] && list[i][0]) || "");
-                if (heard && heard === key) return payWordOnBill(text, target);
+                if (heard && !heardMap.has(heard)) heardMap.set(heard, target);
+                const targetKey = phraseKey(target);
+                if (targetKey && !targetMap.has(targetKey)) targetMap.set(targetKey, target);
             }
-            for (let i = 0; i < list.length; i++) {
-                const target = String((list[i] && list[i][1]) || "");
-                if (target && phraseKey(target) === key) return payWordOnBill(text, target);
-            }
+        }
+        window.__kioskTrainedTarget = function (text) {
+            const key = phraseKey(text);
+            if (!key) return "";
+            trainedMaps();
+            if (heardMap.has(key)) return payWordOnBill(text, heardMap.get(key));
+            if (targetMap.has(key)) return payWordOnBill(text, targetMap.get(key));
+            if (window.__kioskSimQuiet) return "";
             try {
                 const taught = JSON.parse(localStorage.getItem("kiosk_taught_phrases_v1") || "{}");
                 const raw = String(text || "").trim();

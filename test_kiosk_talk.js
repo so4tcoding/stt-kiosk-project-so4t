@@ -18,19 +18,19 @@ heardOk(shop);
 
 assert.strictEqual(
     Talk.talkLine("메뉴 수량을 말씀해주세요.", "돼지국밥", ""),
-    "몇 그릇 드릴까요."
+    "한 그릇 해 주세요."
 );
 assert.strictEqual(
     Talk.talkLine("몇 잔인지 말씀해 주세요.", "초코 케이크", "잔"),
-    "몇 잔 드릴까요."
+    "한 잔 해 주세요."
 );
 assert.strictEqual(
     Talk.talkLine("몇 개인지 말씀해 주세요.", "꽃다발", "개"),
-    "몇 개 드릴까요."
+    "한 개 해 주세요."
 );
 assert.strictEqual(
     Talk.talkLine("메뉴 수량을 말씀해주세요.", "네", ""),
-    "몇 그릇 드릴까요."
+    "한 그릇 해 주세요."
 );
 
 const cup = Talk.talkLine("작은 잔, 중간 잔, 큰 잔 중에서 말씀해 주세요.");
@@ -44,8 +44,8 @@ const taste = Talk.talkLine("골라 주세요. 달콤, 상큼, 구수, 고소, �
 assert.strictEqual(taste, "달콤, 짭짤, 얼큰.");
 
 assert.strictEqual(Talk.talkLine("세트로 하시려면 세트, 햄버거만이면 단품이라고 말씀해 주세요."), "세트요, 단품이요.");
-assert.strictEqual(Talk.talkLine("추가하실 메뉴가 있습니까. 있으면 네, 없으면 아니요 라고 말씀해주세요."), "더 있으면 네, 없으면 아니요.");
-assert.strictEqual(Talk.talkLine("다른 꽃이 있으면 네, 없으면 아니요 라고 말씀해 주세요."), "더 있으면 네, 없으면 아니요.");
+assert.strictEqual(Talk.talkLine("추가하실 메뉴가 있습니까. 있으면 네, 없으면 아니요 라고 말씀해주세요."), "아니요 해 주세요.");
+assert.strictEqual(Talk.talkLine("다른 꽃이 있으면 네, 없으면 아니요 라고 말씀해 주세요."), "아니요 해 주세요.");
 
 const place = Talk.talkLine("여기서 드시고 가시나요, 아니면 포장해서 들고 가시나요? 여기서 먹을래요, 또는 들고 갈래요 라고 말씀해주세요.");
 assert.ok(place.includes("포장"));

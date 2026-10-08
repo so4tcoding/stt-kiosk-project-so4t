@@ -10,6 +10,7 @@
         window.KioskElderSim = api;
         window.__kioskRunElderSim = api.run;
         window.__kioskRunAgedSim = api.runAged;
+        window.__kioskRunUntaught = api.runUntaughtMany;
     }
     root.KioskElderSim = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
@@ -416,6 +417,144 @@
         return run(count, true);
     }
 
+    const FOLLOW_STYLES = ["앞말", "뒷말", "둘째", "네", "존댓말", "따라하기"];
+
+    function taughtCommands(prompt) {
+        return String(prompt || "")
+            .replace(/[.?!]/g, " ")
+            .split(",")
+            .map(function (part) {
+                return part
+                    .replace(/라고 말씀해 주세요/g, " ")
+                    .replace(/말씀해 주세요/g, " ")
+                    .replace(/해 주세요/g, " ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            })
+            .filter(function (part) { return part && part !== "라고"; });
+    }
+
+    function followInstruction(prompt, style) {
+        const parts = taughtCommands(prompt);
+        if (!parts.length) return "잘 모르겠어요";
+        if (style === 1) return parts[parts.length - 1];
+        if (style === 2) return parts[Math.min(1, parts.length - 1)];
+        if (style === 3) {
+            const yes = parts.filter(function (part) { return part === "네" || part === "예"; })[0];
+            return yes || parts[0];
+        }
+        if (style === 4) return /요$/.test(parts[0]) ? parts[0] : parts[0] + "요";
+        if (style === 5) return parts.join(" ");
+        return parts[0];
+    }
+
+    function orderFinished(state) {
+        const hit = state.cart.some(function (item) { return item.name && item.count >= 1; });
+        return hit && (state.stage === "guidance" || state.stage === "done");
+    }
+
+    function withQuiet(fn) {
+        const prevQuiet = window.__kioskSimQuiet;
+        const prevSuite = window.__kioskSuiteRunning;
+        let prevUpdate = null;
+        let prevFit = null;
+        window.__kioskSimQuiet = true;
+        window.__kioskSuiteRunning = true;
+        try { if (typeof updateUI === "function") { prevUpdate = updateUI; updateUI = function () {}; } } catch (e) {}
+        try { if (typeof fitToScreen === "function") { prevFit = fitToScreen; fitToScreen = function () {}; } } catch (e2) {}
+        try {
+            return fn();
+        } finally {
+            window.__kioskSimQuiet = prevQuiet;
+            window.__kioskSuiteRunning = prevSuite;
+            try { if (prevUpdate) updateUI = prevUpdate; } catch (e3) {}
+            try { if (prevFit) fitToScreen = prevFit; } catch (e4) {}
+        }
+    }
+
+    function runUntaught(index) {
+        return withQuiet(function () { return runUntaughtBody(index); });
+    }
+
+    function runUntaughtBody(index) {
+        const filter = ageFilter(true);
+        const rand = mulberry32(filter ? filter.seed(index) : (88021 + index * 251));
+        const shopId = SHOPS[(filter ? filter.shopSlot(index) : index) % SHOPS.length];
+        resetOrder(shopId);
+        const bot = filter ? filter.profile(rand) : { hearing: 0.4, vision: 0.4, volume: 0.4, diction: 0.4, maxChars: 40, visionSaid: false, volumeSaid: false };
+        const style = index % FOLLOW_STYLES.length;
+        window.__kioskLastSpoken = "고객님, 반갑습니다! 주문을 시작하시려면 네, 키오스크 사용법이 궁금하시면 사용법 알려줘 라고 말씀해주세요.";
+        let instruction = heardLine(window.__kioskLastSpoken, "", shopId);
+        let stuck = 0;
+        let ok = false;
+        let ordered = "";
+        let stage = "welcome";
+        for (let step = 0; step < 24; step++) {
+            const state = snapshot();
+            if (orderFinished(state)) {
+                ok = true;
+                ordered = state.cart[0].name;
+                stage = state.stage;
+                break;
+            }
+            const gotIt = filter ? filter.understands(instruction, bot) : understands(instruction, bot);
+            let said;
+            const seeing = filter && !bot.visionSaid && bot.vision < 0.18 && state.stage === "welcome";
+            const quiet = filter && !bot.volumeSaid && bot.volume < 0.2;
+            if (seeing) {
+                bot.visionSaid = true;
+                said = "글씨가 안 보여요";
+            } else if (quiet) {
+                bot.volumeSaid = true;
+                said = "안 들려요";
+            } else if (!gotIt) {
+                said = filter ? filter.confused(rand) : confusedSay(rand);
+            } else {
+                said = followInstruction(instruction, style);
+            }
+            const complaint = said === "글씨가 안 보여요" || said === "안 들려요";
+            const result = say(said);
+            if (!complaint) instruction = heardLine(result.after.spoken, said, shopId);
+            if (orderFinished(result.after)) {
+                ok = true;
+                ordered = result.after.cart[0] ? result.after.cart[0].name : "";
+                stage = result.after.stage;
+                break;
+            }
+            if (moved(result.before, result.after)) stuck = 0;
+            else stuck += 1;
+            stage = result.after.stage;
+            if (stuck >= 3) break;
+        }
+        return {
+            id: index + 1,
+            shop: SHOP_NAME[shopId],
+            style: FOLLOW_STYLES[style],
+            hearing: Math.round(bot.hearing * 100),
+            ok: ok,
+            menu: ordered,
+            stage: stage
+        };
+    }
+
+    function runUntaughtMany(start, count) {
+        const n = count || 0;
+        const from = start || 0;
+        let success = 0;
+        const fails = [];
+        const menus = {};
+        return withQuiet(function () {
+        for (let i = 0; i < n; i++) {
+            const row = runUntaughtBody(from + i);
+            if (row.ok) {
+                success += 1;
+                menus[row.menu] = (menus[row.menu] || 0) + 1;
+            } else if (fails.length < 8) fails.push(row);
+        }
+        return { start: from, total: n, success: success, fail: n - success, fails: fails, menus: menus };
+        });
+    }
+
     function trace(shopId, lines) {
         resetOrder(shopId);
         window.__kioskLastSpoken = "고객님, 반갑습니다! 주문을 시작하시려면 네 라고 말씀해주세요.";
@@ -425,5 +564,5 @@
         });
     }
 
-    return { run: run, runOne: runOne, trace: trace, runAged: runAged };
+    return { run: run, runOne: runOne, trace: trace, runAged: runAged, runUntaught: runUntaught, runUntaughtMany: runUntaughtMany };
 });

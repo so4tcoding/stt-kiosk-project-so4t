@@ -78,9 +78,6 @@
         if (/매장에서 드시기를 선택했습니다/.test(raw)) return "매장에서 드시기를 선택했습니다. 맞으면 결제라고 말씀해 주세요.";
         if (/포장으로 선택하셨습니다/.test(raw)) return "포장으로 선택하셨습니다. 맞으면 결제라고 말씀해 주세요.";
 
-        const name = heardName(heard);
-        const called = name ? polite(name) : "";
-
         if (/무슨 가게인가요|가게를 바꿔/.test(raw) || /국밥집, 카페, 햄버거집, 꽃집/.test(raw)) {
             return fit("국밥집, 카페, 햄버거집, 꽃집, 문구점, 선물가게.");
         }
@@ -94,8 +91,7 @@
             return fit("무엇을 드시고 싶으세요. 모르면 메뉴판 보여줘.");
         }
         if (/메뉴 수량을 말씀|몇 잔인지|몇 개인지|수량을 정확히/.test(raw)) {
-            const head = called ? called + ". " : "";
-            return head + "몇 " + qtyUnit(qtyWord) + " 드릴까요.";
+            return fit("한 " + qtyUnit(qtyWord) + " 해 주세요.");
         }
         if (/작은 잔, 중간 잔, 큰 잔/.test(raw)) {
             return fit("작은 잔, 중간 잔, 큰 잔.");
@@ -107,7 +103,7 @@
             return fit("세트요, 단품이요.");
         }
         if (/추가하실 메뉴가 있습니까|있으면 네, 없으면 아니요|다른 꽃이 있으면|다른 문구가 있으면|다른 선물이 있으면|다른 음료가 있으면|다른 메뉴가 있으면/.test(raw)) {
-            return fit("더 있으면 네, 없으면 아니요.");
+            return fit("아니요 해 주세요.");
         }
         if (/여기서 드시|들고 가실지|포장해서/.test(raw)) {
             return fit("포장이요, 여기서 먹을게요.");

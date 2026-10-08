@@ -215,6 +215,7 @@
         }
 
         function record(event) {
+            if (window.__kioskSimQuiet) return;
             const events = loadJSON(EVENT_KEY, []);
             events.push(event);
             saveJSON(EVENT_KEY, events.slice(-500));
