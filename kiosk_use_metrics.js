@@ -87,6 +87,15 @@
         return hit ? String(hit) : "";
     }
 
+    function payAliasBlocked(spoken, alias) {
+        let stage = "";
+        try { stage = typeof currentStageName === "undefined" ? "" : currentStageName; } catch (e) {}
+        if (stage !== "summary" && stage !== "payment") return false;
+        const heard = compact(spoken);
+        if (!/결제|계산/.test(heard)) return false;
+        return /^(아니요|아니|아니오|네|예|응)$/.test(compact(alias));
+    }
+
     function summarize(events) {
         const list = Array.isArray(events) ? events : [];
         const uses = list.filter(function (e) { return e && e.kind === "use"; });
@@ -1148,7 +1157,8 @@
             const intent = String(window.__kioskCustomerIntent || "").trim();
             let result;
             try {
-                const knownAlias = !window.__kioskSuiteRunning ? resolveAlias(loadJSON(ALIAS_KEY, {}), spoken) : "";
+                let knownAlias = !window.__kioskSuiteRunning ? resolveAlias(loadJSON(ALIAS_KEY, {}), spoken) : "";
+                if (payAliasBlocked(spoken, knownAlias)) knownAlias = "";
                 if (knownAlias && compact(knownAlias) !== compact(spoken)) {
                     if (applyKnownPhrase(knownAlias)) result = true;
                     else result = previous.call(this, knownAlias);
@@ -1156,7 +1166,7 @@
                 else result = previous.call(this, spoken);
                 if (judgeUse(before, capture()) === "failure") {
                     const alias = resolveAlias(loadJSON(ALIAS_KEY, {}), spoken);
-                    if (alias && compact(alias) !== compact(spoken) && alias !== knownAlias) {
+                    if (alias && compact(alias) !== compact(spoken) && alias !== knownAlias && !payAliasBlocked(spoken, alias)) {
                         if (applyKnownPhrase(alias)) result = true;
                         else result = previous.call(this, alias);
                     }

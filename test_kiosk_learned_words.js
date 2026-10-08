@@ -32,5 +32,14 @@ assert.strictEqual(window.__kioskTrainedTarget("세트로 주세요"), "세트")
 assert.strictEqual(window.__kioskTrainedHit("추천해줘"), true);
 assert.strictEqual(window.__kioskTrainedTarget("안녕하세요 날씨 좋네요"), "");
 assert.strictEqual(window.__kioskTrainedHit("안녕하세요 날씨 좋네요"), false);
+assert.strictEqual(window.__kioskTrainedTarget("결제"), "아니요");
+assert.strictEqual(window.__kioskTrainedTarget("계산이요"), "아니요");
+global.currentStageName = "summary";
+assert.strictEqual(window.__kioskTrainedTarget("결제"), "결제");
+assert.strictEqual(window.__kioskTrainedTarget("계산이요"), "결제");
+global.currentStageName = "payment";
+assert.strictEqual(window.__kioskTrainedTarget("카드로 계산"), "카드");
+global.currentStageName = "";
+assert.strictEqual(window.__kioskTrainedTarget("결제"), "아니요");
 
 console.log("kiosk learned words ok");

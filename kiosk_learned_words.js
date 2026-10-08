@@ -11,24 +11,35 @@
         function phraseKey(text) {
             return String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
         }
+        function payWordOnBill(text, target) {
+            let stage = "";
+            try { stage = typeof currentStageName === "undefined" ? "" : currentStageName; } catch (e) {}
+            if (stage !== "summary" && stage !== "payment") return target;
+            const heard = phraseKey(text);
+            if (!/결제|계산/.test(heard)) return target;
+            if (!/^(아니요|아니|아니오|네|예|응)$/.test(phraseKey(target))) return target;
+            if (/카드/.test(heard)) return "카드";
+            if (/현금/.test(heard)) return "현금";
+            return "결제";
+        }
         window.__kioskTrainedTarget = function (text) {
             const key = phraseKey(text);
             if (!key) return "";
             for (let i = 0; i < list.length; i++) {
                 const heard = phraseKey(list[i] && list[i][0]);
                 const target = String((list[i] && list[i][1]) || (list[i] && list[i][0]) || "");
-                if (heard && heard === key) return target;
+                if (heard && heard === key) return payWordOnBill(text, target);
             }
             for (let i = 0; i < list.length; i++) {
                 const target = String((list[i] && list[i][1]) || "");
-                if (target && phraseKey(target) === key) return target;
+                if (target && phraseKey(target) === key) return payWordOnBill(text, target);
             }
             try {
                 const taught = JSON.parse(localStorage.getItem("kiosk_taught_phrases_v1") || "{}");
                 const raw = String(text || "").trim();
-                if (taught[raw] && taught[raw].canonical) return String(taught[raw].canonical);
+                if (taught[raw] && taught[raw].canonical) return payWordOnBill(text, String(taught[raw].canonical));
                 const aliases = JSON.parse(localStorage.getItem("kiosk_command_alias_v1") || "{}");
-                if (aliases[key]) return String(aliases[key]);
+                if (aliases[key]) return payWordOnBill(text, String(aliases[key]));
             } catch (e) {}
             return "";
         };
