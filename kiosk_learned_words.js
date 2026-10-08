@@ -8,19 +8,32 @@
     if (typeof module === "object" && module.exports) module.exports = list;
     if (typeof window !== "undefined") {
         window.__kioskLearnedWords = list;
-        window.__kioskTrainedHit = function (text) {
-            const key = String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
-            if (!key) return false;
+        function phraseKey(text) {
+            return String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+        }
+        window.__kioskTrainedTarget = function (text) {
+            const key = phraseKey(text);
+            if (!key) return "";
             for (let i = 0; i < list.length; i++) {
-                const heard = String((list[i] && list[i][0]) || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
-                if (heard && heard === key) return true;
+                const heard = phraseKey(list[i] && list[i][0]);
+                const target = String((list[i] && list[i][1]) || (list[i] && list[i][0]) || "");
+                if (heard && heard === key) return target;
+            }
+            for (let i = 0; i < list.length; i++) {
+                const target = String((list[i] && list[i][1]) || "");
+                if (target && phraseKey(target) === key) return target;
             }
             try {
                 const taught = JSON.parse(localStorage.getItem("kiosk_taught_phrases_v1") || "{}");
+                const raw = String(text || "").trim();
+                if (taught[raw] && taught[raw].canonical) return String(taught[raw].canonical);
                 const aliases = JSON.parse(localStorage.getItem("kiosk_command_alias_v1") || "{}");
-                if (taught[String(text || "").trim()] || aliases[key]) return true;
+                if (aliases[key]) return String(aliases[key]);
             } catch (e) {}
-            return false;
+            return "";
+        };
+        window.__kioskTrainedHit = function (text) {
+            return window.__kioskTrainedTarget(text) !== "";
         };
     }
     root.KioskLearnedWords = list;

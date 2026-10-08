@@ -23,4 +23,14 @@ seen.forEach(function (target, heard) {
     assert.ok(words.some(function (row) { return row[0] === heard && row[1] === target; }), heard);
 });
 
+global.window = {};
+delete require.cache[require.resolve("./kiosk_learned_words.js")];
+require("./kiosk_learned_words.js");
+assert.strictEqual(window.__kioskTrainedTarget("오렌쥐쥬스"), "오렌지 주스");
+assert.strictEqual(window.__kioskTrainedTarget("라지"), "라지");
+assert.strictEqual(window.__kioskTrainedTarget("세트로 주세요"), "세트");
+assert.strictEqual(window.__kioskTrainedHit("추천해줘"), true);
+assert.strictEqual(window.__kioskTrainedTarget("안녕하세요 날씨 좋네요"), "");
+assert.strictEqual(window.__kioskTrainedHit("안녕하세요 날씨 좋네요"), false);
+
 console.log("kiosk learned words ok");

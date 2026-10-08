@@ -13272,6 +13272,19 @@ stopListeningUI = function whisperStopListeningUIOverride() {
             };
         }
 
+        if (typeof window.__kioskTrainedTarget === "function") {
+            const trained = window.__kioskTrainedTarget(raw);
+            if (trained) {
+                return {
+                    related: true,
+                    learnable: false,
+                    outputText: trained,
+                    changed: norm(trained) !== raw,
+                    reason: "trained_phrase"
+                };
+            }
+        }
+
         if (isStrictYes(raw) || isStrictNo(raw) || isMenuConfirmPositive(raw)) {
             return {
                 related: true,
