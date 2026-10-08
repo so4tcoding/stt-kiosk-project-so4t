@@ -35,7 +35,42 @@
         return "그릇";
     }
 
+    function oneLine(line) {
+        let text = String(line || "").replace(/\s+/g, " ").trim();
+        if (!text) return text;
+        const parts = text.split(/[.?!]/).map(function (part) { return part.trim(); }).filter(Boolean);
+        if (parts.length >= 2) {
+            const last = parts[parts.length - 1];
+            text = last.length <= 22 ? last : parts[0];
+        }
+        text = text.replace(/[.?!]+$/g, "").trim();
+        if (text.length > 21) {
+            if (/결제/.test(text)) text = "결제라고 해 주세요";
+            else if (/주문/.test(text)) text = "주문할게요 해 주세요";
+            else if (/포장|먹을게/.test(text)) text = "포장, 여기서 먹을게요";
+            else if (/카드|현금/.test(text)) text = "카드요, 현금이요";
+            else if (/세트|단품/.test(text)) text = "세트요, 단품이요";
+            else if (/따뜻|차갑/.test(text)) text = "따뜻하게, 차갑게요";
+            else if (/잔/.test(text)) text = "작은 잔, 중간 잔";
+            else if (/달콤|맛/.test(text)) text = "달콤, 짭짤, 얼큰";
+            else if (/그릇|개|잔/.test(text)) text = "몇 개 드릴까요";
+            else text = "다시 말해 주세요";
+        }
+        if (!/[.?!]$/.test(text)) text += ".";
+        return text;
+    }
+
     function talkLine(text, heard, qtyWord) {
+        const line = composeTalk(text, heard, qtyWord);
+        const raw = String(text || "");
+        if (!line) return line;
+        if (/비밀번호/.test(raw)) return line;
+        if (/추가 메뉴입니다|등이 있습니다/.test(raw)) return line;
+        if (/무슨 가게인가요|가게를 바꿔|국밥집, 카페/.test(raw)) return line;
+        return oneLine(line);
+    }
+
+    function composeTalk(text, heard, qtyWord) {
         const raw = String(text || "").replace(/\s+/g, " ").trim();
         if (!raw) return raw;
         if (/비밀번호/.test(raw)) return raw;

@@ -793,9 +793,9 @@
 
         // [신규] 컵 사이즈 음성 파싱
         function parseCupSize(text) {
-            if (text.match(/라지|엘사이즈|큰거|큰사이즈|대형|엘/)) return 'Large';
+            if (text.match(/라지|엘사이즈|큰거|큰컵|큰잔|큰사이즈|대형|엘/)) return 'Large';
             if (text.match(/미디엄|중간|보통사이즈|엠사이즈|중형/)) return 'Medium';
-            if (text.match(/스몰|작은거|작은사이즈|소형|에스사이즈/)) return 'Small';
+            if (text.match(/스몰|작은거|작은컵|작은잔|작은사이즈|소형|에스사이즈/)) return 'Small';
             return '';
         }
 
@@ -35914,7 +35914,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (decision.kind === "hear") {
             bumpVolume();
             const last = String(window.__kioskLastSpoken || "").trim();
-            say(last ? ("소리를 키웠습니다. 다시 말씀드릴게요. " + last) : ("소리를 키웠습니다. " + guide));
+            say("소리를 키웠어요. 다시 말씀해 주세요.");
             return true;
         }
 

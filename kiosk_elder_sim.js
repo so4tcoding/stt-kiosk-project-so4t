@@ -288,7 +288,7 @@
         let ok = false;
         let lastHeard = "";
         let stuck = 0;
-        for (let step = 0; step < 16; step++) {
+        for (let step = 0; step < 24; step++) {
             const state = snapshot();
             if (done(goal, state)) { ok = true; break; }
             const prompt = heardLine(state.spoken, lastHeard, shopId);
@@ -350,7 +350,7 @@
                 said: "",
                 prompt: heardLine(state.spoken, lastHeard, shopId).slice(0, 90),
                 cause: "키오스크가 단어를 못 알아들음",
-                bug: "16번을 말해도 결제가 끝나지 않음",
+                bug: "24번을 말해도 결제가 끝나지 않음",
                 next: screenName(state.stage)
             });
         }

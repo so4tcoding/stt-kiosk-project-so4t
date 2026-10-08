@@ -18,15 +18,15 @@ heardOk(shop);
 
 assert.strictEqual(
     Talk.talkLine("메뉴 수량을 말씀해주세요.", "돼지국밥", ""),
-    "돼지국밥이요. 몇 그릇 드릴까요."
+    "몇 그릇 드릴까요."
 );
 assert.strictEqual(
     Talk.talkLine("몇 잔인지 말씀해 주세요.", "초코 케이크", "잔"),
-    "초코 케이크요. 몇 잔 드릴까요."
+    "몇 잔 드릴까요."
 );
 assert.strictEqual(
     Talk.talkLine("몇 개인지 말씀해 주세요.", "꽃다발", "개"),
-    "꽃다발이요. 몇 개 드릴까요."
+    "몇 개 드릴까요."
 );
 assert.strictEqual(
     Talk.talkLine("메뉴 수량을 말씀해주세요.", "네", ""),
@@ -41,7 +41,7 @@ assert.strictEqual(
 );
 
 const taste = Talk.talkLine("골라 주세요. 달콤, 상큼, 구수, 고소, 얼큰, 짭짤입니다. 오늘의 추천 메뉴는 돼지국밥이고, 제일 맛있는 메뉴는 한우 불고기입니다.");
-assert.strictEqual(taste, "달콤, 상큼, 구수, 고소, 얼큰, 짭짤.");
+assert.strictEqual(taste, "달콤, 짭짤, 얼큰.");
 
 assert.strictEqual(Talk.talkLine("세트로 하시려면 세트, 햄버거만이면 단품이라고 말씀해 주세요."), "세트요, 단품이요.");
 assert.strictEqual(Talk.talkLine("추가하실 메뉴가 있습니까. 있으면 네, 없으면 아니요 라고 말씀해주세요."), "더 있으면 네, 없으면 아니요.");
@@ -65,11 +65,11 @@ assert.strictEqual(
 );
 assert.strictEqual(
     Talk.talkLine("포장으로 선택하셨습니다. 주문하신 메뉴는 돼지국밥 1개입니다. 총 금액은 9000원입니다. 맞으시면 결제라고 말씀해주세요."),
-    "포장으로 선택하셨습니다. 맞으면 결제라고 말씀해 주세요."
+    "맞으면 결제라고 말씀해 주세요."
 );
 assert.strictEqual(
     Talk.talkLine("매장에서 드시기를 선택했습니다. 주문하신 메뉴는 오렌지 주스 1개입니다. 총 금액은 4000원입니다. 맞으시면 결제라고 말씀해주세요."),
-    "매장에서 드시기를 선택했습니다. 맞으면 결제라고 말씀해 주세요."
+    "맞으면 결제라고 말씀해 주세요."
 );
 const menuList = "딸기 라떼 4800원, 오렌지 주스 4000원 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?";
 assert.strictEqual(Talk.talkLine(menuList), menuList);
