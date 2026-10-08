@@ -81,7 +81,26 @@
         pendingMenuIndex = -1;
         window.__kioskLastSpoken = "";
         window.__kioskHeard = "";
+        window.__kioskExplainAt = 0;
+        window.__kioskExplainSimple = false;
+        try { window.zoomLevel = 0; zoomLevel = 0; } catch (e) {}
         currentStageName = "welcome";
+    }
+
+    function zoomNeed(bot) {
+        const vision = Number(bot && bot.vision);
+        if (vision >= 0.45) return 0;
+        if (vision >= 0.3) return 1;
+        if (vision >= 0.18) return 2;
+        return 3;
+    }
+
+    function zoomNow() {
+        return Math.max(0, Number(window.zoomLevel) || 0);
+    }
+
+    function readingStage(stage) {
+        return stage === "category_select" || stage === "menu_grid" || stage === "menu_confirm" || stage === "open_order_prompt";
     }
 
     function snapshot() {
@@ -487,7 +506,10 @@
         const rand = mulberry32(filter ? filter.seed(index) : (88021 + index * 251));
         const shopId = SHOPS[(filter ? filter.shopSlot(index) : index) % SHOPS.length];
         resetOrder(shopId);
-        const bot = filter ? filter.profile(rand) : { hearing: 0.4, vision: 0.4, volume: 0.4, diction: 0.4, maxChars: 40, visionSaid: false, volumeSaid: false };
+        const bot = filter ? filter.profile(rand) : { hearing: 0.4, vision: 0.4, volume: 0.4, diction: 0.4, comprehension: 0.8, maxChars: 40, visionSaid: false, volumeSaid: false };
+        const menuCount = (typeof customMenus !== "undefined" && customMenus && customMenus.length) || 1;
+        bot.looks = Math.floor(rand() * menuCount);
+        bot.zoomNeed = zoomNeed(bot);
         const style = index % FOLLOW_STYLES.length;
         window.__kioskLastSpoken = "고객님, 반갑습니다! 주문을 시작하시려면 네, 키오스크 사용법이 궁금하시면 사용법 알려줘 라고 말씀해주세요.";
         let instruction = heardLine(window.__kioskLastSpoken, "", shopId);
@@ -496,8 +518,10 @@
         let ordered = "";
         let stage = "welcome";
         let lastSaid = "";
-        for (let step = 0; step < 24; step++) {
+        let zoomHigh = 0;
+        for (let step = 0; step < 48; step++) {
             const state = snapshot();
+            if (zoomNow() > zoomHigh) zoomHigh = zoomNow();
             if (orderFinished(state)) {
                 ok = true;
                 ordered = state.cart[0].name;
@@ -505,23 +529,32 @@
                 break;
             }
             const gotIt = filter ? filter.understands(instruction, bot) : understands(instruction, bot);
+            const grasped = filter && typeof filter.grasps === "function" ? filter.grasps(instruction, bot) : true;
             let said;
-            const seeing = filter && !bot.visionSaid && bot.vision < 0.18 && state.stage === "welcome";
+            const reading = readingStage(state.stage);
+            const seeing = reading && zoomNow() < bot.zoomNeed;
             const quiet = filter && !bot.volumeSaid && bot.volume < 0.2;
             if (seeing) {
-                bot.visionSaid = true;
                 said = "글씨가 안 보여요";
             } else if (quiet) {
                 bot.volumeSaid = true;
                 said = "안 들려요";
             } else if (!gotIt) {
                 said = filter ? filter.confused(rand) : confusedSay(rand);
+            } else if (!grasped) {
+                said = "이해가 안 돼요";
+            } else if (reading && bot.looks > 0 && /다음/.test(instruction)) {
+                said = "다음";
+                bot.looks -= 1;
             } else {
                 said = followInstruction(instruction, style);
             }
             const complaint = said === "글씨가 안 보여요" || said === "안 들려요";
             lastSaid = said;
+            const zoomBefore = zoomNow();
+            const explainBefore = Number(window.__kioskExplainAt) || 0;
             const result = say(said);
+            if (zoomNow() > zoomHigh) zoomHigh = zoomNow();
             if (!complaint) instruction = heardLine(result.after.spoken, said, shopId);
             if (orderFinished(result.after)) {
                 ok = true;
@@ -529,7 +562,8 @@
                 stage = result.after.stage;
                 break;
             }
-            if (moved(result.before, result.after)) stuck = 0;
+            const progressed = moved(result.before, result.after) || result.before.spoken !== result.after.spoken || zoomNow() !== zoomBefore || (Number(window.__kioskExplainAt) || 0) !== explainBefore;
+            if (progressed) stuck = 0;
             else stuck += 1;
             stage = result.after.stage;
             if (stuck >= 3) break;
@@ -539,6 +573,10 @@
             shop: SHOP_NAME[shopId],
             style: FOLLOW_STYLES[style],
             hearing: Math.round(bot.hearing * 100),
+            vision: Math.round(bot.vision * 100),
+            comprehension: Math.round((bot.comprehension || 0) * 100),
+            zoomNeed: bot.zoomNeed,
+            zoomed: zoomHigh,
             ok: ok,
             menu: ordered,
             stage: stage,
@@ -553,15 +591,26 @@
         let success = 0;
         const fails = [];
         const menus = {};
+        let zoomNeeded = 0;
+        let zoomOk = 0;
+        let lowComp = 0;
+        let lowHear = 0;
         return withQuiet(function () {
         for (let i = 0; i < n; i++) {
             const row = runUntaughtBody(from + i);
             if (row.ok) {
                 success += 1;
-                menus[row.menu] = (menus[row.menu] || 0) + 1;
+                const key = row.shop + " " + row.menu;
+                menus[key] = (menus[key] || 0) + 1;
+                if (row.zoomNeed > 0) {
+                    zoomNeeded += 1;
+                    if (row.zoomed >= row.zoomNeed) zoomOk += 1;
+                }
+                if (row.comprehension < 55) lowComp += 1;
+                if (row.hearing < 35) lowHear += 1;
             } else if (fails.length < 8) fails.push(row);
         }
-        return { start: from, total: n, success: success, fail: n - success, fails: fails, menus: menus };
+        return { start: from, total: n, success: success, fail: n - success, fails: fails, menus: menus, zoomNeeded: zoomNeeded, zoomOk: zoomOk, lowComp: lowComp, lowHear: lowHear };
         });
     }
 

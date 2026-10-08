@@ -1500,9 +1500,11 @@
                 updateUI("[추가주문] 카테고리 선택", "결제를 원하시면 결제라고 말씀해주세요.", html);
                 speakText("추가 메뉴입니다. " + uniqueCats.join(", ") + " 입니다. 원하시는 메뉴를 말씀해 주세요.");
             } else {
-                html += `</div><div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-3 !text-sm mt-2">대답 예: "${(customMenus[0] && customMenus[0].name) || "메뉴"}"</div>`;
+                const explained = (typeof window.__kioskExplainLine === "function" && window.__kioskExplainLine()) || (((customMenus[0] && customMenus[0].name) || "메뉴") + " 해 주세요.");
+                const sampleName = explained.split(",")[0].replace(/해 주세요\.?$/g, "").trim() || "메뉴";
+                html += `</div><div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-3 !text-sm mt-2">대답 예: "${sampleName}"</div>`;
                 updateUI("어떤 메뉴를 원하시나요?", "보이는 메뉴 이름을 그대로 말씀해 주세요.", html);
-                speakText(((customMenus[0] && customMenus[0].name) || "메뉴") + " 해 주세요.");
+                speakText(explained);
             }
         }
 
@@ -1527,17 +1529,18 @@
             let titleText = currentGridTitle; if (isAddOnPhase && !titleText.includes("추가주문")) titleText = `[추가주문] ` + titleText;
 
             const announce = window.__kioskSilentMenuGrid ? function () {} : speakText;
-            const sampleName = menus[0] ? menus[0].name : "메뉴";
+            const explained = (typeof window.__kioskExplainLine === "function" && window.__kioskExplainLine()) || ((menus[0] ? menus[0].name : "메뉴") + " 해 주세요.");
+            const sampleName = explained.split(",")[0].replace(/해 주세요\.?$/g, "").trim() || (menus[0] ? menus[0].name : "메뉴");
             if (selectedCategory === "추천 맛") {
                 html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
-                updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); announce(sampleName + " 해 주세요.");
+                updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); announce(explained);
             } else if (isAddOnPhase) {
                 html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
                 updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html);
-                announce(sampleName + " 해 주세요.");
+                announce(explained);
             } else {
                 html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
-                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); announce(sampleName + " 해 주세요.");
+                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); announce(explained);
             }
         }
 

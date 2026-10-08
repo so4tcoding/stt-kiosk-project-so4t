@@ -188,6 +188,16 @@
         if (typeof window.processVoiceCommand !== "function") return;
         window.__kioskUseMetricsInstalled = true;
         mergeBaked();
+        window.__kioskExplainLine = function () {
+            const menus = Array.isArray(customMenus) ? customMenus : [];
+            const last = Math.max(0, menus.length - 1);
+            let at = Number(window.__kioskExplainAt) || 0;
+            if (at > last) at = last;
+            if (at < 0) at = 0;
+            const name = (menus[at] && menus[at].name) || "메뉴";
+            if (window.__kioskExplainSimple || at >= last) return name + " 해 주세요.";
+            return name + ", 다음.";
+        };
 
         const previous = window.processVoiceCommand;
 
@@ -522,12 +532,64 @@
                 return true;
             }
 
-            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게(?!말)|더키워|안보여|안보임|안봐도/.test(raw))) {
+            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게(?!말)|더키워|안보여|안보임|안봐도/.test(raw) || /^확대(해줘|해주세요|해|요)?$/.test(raw))) {
                 try {
                     rememberZoom(currentZoom() + 1);
                     showZoomedView();
                 } catch (e) {}
                 if (typeof speakText === "function") speakText("화면을 확대했습니다.");
+                return true;
+            }
+
+            if (/^(category_select|menu_grid|open_order_prompt)$/.test(stage) && /^다음(이요|요|메뉴)?$/.test(raw)) {
+                const menus = Array.isArray(customMenus) ? customMenus : [];
+                const last = Math.max(0, menus.length - 1);
+                window.__kioskExplainAt = Math.min((Number(window.__kioskExplainAt) || 0) + 1, last);
+                window.__kioskExplainSimple = false;
+                if (typeof renderCategorySelect === "function") renderCategorySelect();
+                return true;
+            }
+
+            if (/이해가안|이해안|쉽게말|쉽게해|무슨말인지|모르겠어/.test(raw) && typeof speakText === "function") {
+                if (stage === "welcome" || stage === "guide") {
+                    speakText("주문할게요 해 주세요.");
+                    return true;
+                }
+                if (stage === "upsell") {
+                    speakText("단품이요.");
+                    return true;
+                }
+                if (stage === "place") {
+                    speakText("포장이요.");
+                    return true;
+                }
+                if (stage === "payment" || stage === "summary") {
+                    speakText("결제 해 주세요.");
+                    return true;
+                }
+                if (stage === "temp") {
+                    speakText("따뜻하게요.");
+                    return true;
+                }
+                if (stage === "cup_size") {
+                    speakText("중간 잔.");
+                    return true;
+                }
+                if (stage === "taste_select_prompt") {
+                    speakText("달콤.");
+                    return true;
+                }
+                if (stage === "quantity" || stage === "summary_add_quantity") {
+                    const unit = window.__kioskQtyWord === "잔" ? "잔" : (window.__kioskQtyWord === "개" ? "개" : "그릇");
+                    speakText("한 " + unit + " 해 주세요.");
+                    return true;
+                }
+                if (/add_more_prompt|beverage_option_prompt|beverage_option_step|beverage_result/.test(stage)) {
+                    speakText("없으면 아니요.");
+                    return true;
+                }
+                window.__kioskExplainSimple = true;
+                if (typeof renderCategorySelect === "function") renderCategorySelect();
                 return true;
             }
 

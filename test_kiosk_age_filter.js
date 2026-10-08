@@ -22,6 +22,12 @@ assert.ok(bot.hearing >= 0.2 && bot.hearing <= 0.75);
 assert.ok(bot.vision >= 0.08 && bot.vision < 0.75);
 assert.ok(bot.volume >= 0.1 && bot.volume <= 0.8);
 assert.ok(bot.maxChars >= 26 && bot.maxChars <= 54);
+assert.ok(bot.comprehension >= 0.12 && bot.comprehension < 0.92);
+assert.strictEqual(Age.grasps("주문할게요.", { comprehension: 0.2 }), true);
+assert.strictEqual(Age.grasps("돼지국밥, 다음.", { comprehension: 0.2 }), false);
+assert.strictEqual(Age.grasps("돼지국밥, 다음.", { comprehension: 0.8 }), true);
+assert.strictEqual(Age.grasps("맞으면 결제라고 말씀해 주세요.", { comprehension: 0.2 }), true);
+assert.strictEqual(Age.grasps("주문하신 메뉴가 맞는지 지금 바로 확인해 주세요.", { comprehension: 0.2 }), false);
 
 const weak = { hearing: 0.2, volume: 0.12, maxChars: 20 };
 assert.strictEqual(Age.understands("주문할게요, 라고 말씀해 주세요.", weak), true);

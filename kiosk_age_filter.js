@@ -24,16 +24,28 @@
         const vision = 0.08 + rand() * 0.62;
         const volume = 0.1 + rand() * 0.7;
         const diction = rand();
+        const comprehension = 0.12 + rand() * 0.8;
         return {
             hearing: hearing,
             vision: vision,
             volume: volume,
             diction: diction,
             clarity: diction,
+            comprehension: comprehension,
             maxChars: Math.round(16 + hearing * 50),
             visionSaid: false,
             volumeSaid: false
         };
+    }
+
+    function grasps(line, bot) {
+        const text = String(line || "").replace(/\s+/g, " ").trim();
+        if (!text || !bot) return false;
+        const ideas = text.split(",").map(function (part) { return part.trim(); }).filter(Boolean);
+        const comprehension = Number(bot.comprehension);
+        if (ideas.length >= 2 && comprehension < 0.55) return false;
+        if (text.replace(/[\s.?!]/g, "").length >= 14 && comprehension < 0.32) return false;
+        return true;
     }
 
     function understands(line, bot) {
@@ -164,6 +176,7 @@
         shopSlot: shopSlot,
         profile: profile,
         understands: understands,
+        grasps: grasps,
         confused: confused,
         dialect: dialect,
         shortMenu: shortMenu,
