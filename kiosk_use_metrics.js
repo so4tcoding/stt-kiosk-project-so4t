@@ -563,7 +563,11 @@
                     speakText("포장이요.");
                     return true;
                 }
-                if (stage === "payment" || stage === "summary") {
+                if (stage === "payment") {
+                    speakText("카드요.");
+                    return true;
+                }
+                if (stage === "summary") {
                     speakText("결제 해 주세요.");
                     return true;
                 }

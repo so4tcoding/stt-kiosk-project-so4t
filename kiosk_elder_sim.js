@@ -543,9 +543,14 @@
                 said = filter ? filter.confused(rand) : confusedSay(rand);
             } else if (!grasped) {
                 said = "이해가 안 돼요";
-            } else if (reading && bot.looks > 0 && /다음/.test(instruction)) {
-                said = "다음";
-                bot.looks -= 1;
+            } else if (reading && /다음/.test(instruction)) {
+                if (bot.looks > 0) {
+                    said = "다음";
+                    bot.looks -= 1;
+                } else {
+                    const offered = taughtCommands(instruction);
+                    said = offered[0] || followInstruction(instruction, style);
+                }
             } else {
                 said = followInstruction(instruction, style);
             }
