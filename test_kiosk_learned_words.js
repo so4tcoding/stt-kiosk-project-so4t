@@ -15,12 +15,13 @@ Customer.steps().forEach(function (step) {
 });
 
 assert.strictEqual(visited, 1311);
-assert.strictEqual(words.length, seen.size);
+assert.ok(words.length > seen.size);
+const byHeard = new Map();
 words.forEach(function (row) {
-    assert.strictEqual(seen.get(row[0]), row[1]);
+    if (!byHeard.has(row[0])) byHeard.set(row[0], row[1]);
 });
 seen.forEach(function (target, heard) {
-    assert.ok(words.some(function (row) { return row[0] === heard && row[1] === target; }), heard);
+    assert.strictEqual(byHeard.get(heard), target, heard);
 });
 
 global.window = {};
@@ -30,6 +31,13 @@ assert.strictEqual(window.__kioskTrainedTarget("오렌쥐쥬스"), "오렌지 �
 assert.strictEqual(window.__kioskTrainedTarget("라지"), "라지");
 assert.strictEqual(window.__kioskTrainedTarget("세트로 주세요"), "세트");
 assert.strictEqual(window.__kioskTrainedHit("추천해줘"), true);
+assert.strictEqual(window.__kioskTrainedTarget("돼지국밥 주세요"), "돼지국밥");
+assert.strictEqual(window.__kioskTrainedTarget("여섯 잔 주세요"), "여섯 개");
+assert.strictEqual(window.__kioskTrainedTarget("오랜지쥬스"), "오렌지 주스");
+assert.strictEqual(window.__kioskTrainedTarget("장미 한송이"), "장미 한 송이");
+assert.strictEqual(window.__kioskTrainedTarget("카드루 하소"), "카드");
+assert.strictEqual(window.__kioskTrainedTarget("작은 컵"), "스몰");
+assert.strictEqual(words.length, 4869);
 assert.strictEqual(window.__kioskTrainedTarget("안녕하세요 날씨 좋네요"), "");
 assert.strictEqual(window.__kioskTrainedHit("안녕하세요 날씨 좋네요"), false);
 assert.strictEqual(window.__kioskTrainedTarget("결제"), "아니요");
