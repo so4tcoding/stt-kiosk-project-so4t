@@ -34290,21 +34290,17 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         window.showWelcomeScreen = function() {
             origWelcome(); // 원래 화면 먼저 그리고
             
-            // 0.1초 뒤에 문구를 눈에 띄게 덮어씌움
+            // 화면 문구를 음성 대사와 같은 문장으로 맞춘다.
             setTimeout(() => {
+                const line = (typeof window.kioskTtsLine === 'function')
+                    ? window.kioskTtsLine('tts_welcome')
+                    : '첫 주문이신가요? 첫 주문이면 키오스크 사용 방식 알려줘 라고 말씀해주세요. 바로 주문하시려면 주문 시작이라고 말씀해주세요.';
+                const prompt = document.getElementById('ai-prompt');
+                const sub = document.getElementById('ai-subprompt');
                 const statusGiant = document.querySelector('.status-giant');
-                if (statusGiant) {
-                    statusGiant.innerHTML = `
-                        <div style="font-size: 1.4rem; font-weight: 900; color: #2a9d8f; margin-bottom: 12px;">
-                            🎤 말로 주문하는 키오스크입니다
-                        </div>
-                        <div style="font-size: 1.1rem; color: #e76f51; font-weight: bold; background: rgba(231,111,81,0.1); padding: 10px; border-radius: 10px;">
-                            처음이시면 <span style="text-decoration: underline;">"사용법 알려줘"</span><br>
-                            바로 주문하시려면 <span style="text-decoration: underline;">"주문 시작"</span><br>
-                            이라고 편하게 말씀해 보세요!
-                        </div>
-                    `;
-                }
+                if (prompt) prompt.textContent = line;
+                if (sub) sub.textContent = '';
+                if (statusGiant) statusGiant.textContent = line;
             }, 100);
         };
     }
@@ -34425,7 +34421,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     const ALL_TTS_CONFIG = [
         { id: 'tts_welcome', label: '1. 첫 인사', default: '첫 주문이신가요? 첫 주문이면 키오스크 사용 방식 알려줘 라고 말씀해주세요. 바로 주문하시려면 주문 시작이라고 말씀해주세요.' },
-        { id: 'tts_guide', label: '2. 사용법 안내', default: '쉽게 설명해드릴게요. 이 키오스크는 화면을 누르지 않고 말로 주문합니다. 먹고 싶은 메뉴 이름을 말씀하시고, 몇 개 주문할지 수량을 말씀하시면 됩니다. 그 다음 매장인지 포장인지 말하고, 마지막으로 카드 또는 현금이라고 말씀하시면 주문이 끝납니다. 중간에 잘못 골랐으면 이전 화면이라고 말씀하시면 됩니다. 이제 주문을 시작하겠습니다.' },
+        { id: 'tts_guide', label: '2. 사용법 안내', default: '쉽게 설명해드릴게요. 주문은 메뉴 이름으로 합니다. 글씨가 작으면 화면 확대, 소리가 작으면 소리 키워 라고 말씀해주세요. 이용 중 뭘 해야 할지 모를 때는 설명해 줘 라고 말씀하시면 화면을 안내해 드립니다. 자, 원하시는 메뉴를 말씀해주세요.' },
         { id: 'tts_cat', label: '3. 카테고리 선택 ({0}=카테고리명)', default: '저희 매장에는 {0} 카테고리가 있습니다. 무엇을 드시겠습니까?' },
         { id: 'tts_cat_add', label: '4. 카테고리 (추가 주문)', default: '추가로 주문하실 카테고리를 골라주세요. 추가 주문이 없으시면 결제라고 말씀해주세요.' },
         { id: 'tts_grid', label: '5. 메뉴 선택 ({0}=메뉴목록)', default: '{0} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?' },
@@ -34633,16 +34629,36 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         return id;
     }
 
+    function paintExact(text) {
+        const line = String(text || '');
+        const apply = function() {
+            const prompt = document.getElementById('ai-prompt');
+            const sub = document.getElementById('ai-subprompt');
+            const status = document.querySelector('#controls-area .status-giant') || document.querySelector('.status-giant');
+            if (prompt) prompt.textContent = line;
+            if (sub) sub.textContent = '';
+            if (status) status.textContent = line;
+        };
+        apply();
+        setTimeout(apply, 160);
+    }
+
     function rewrite(text) {
         const raw = String(text == null ? '' : text).trim();
         if (!raw) return text;
         const hit = matchPattern(raw);
         if (hit) {
             clearArm();
-            return fillLine(hit.id, usable(hit.vars) ? hit.vars : fallbackVars(hit.id));
+            const line = fillLine(hit.id, usable(hit.vars) ? hit.vars : fallbackVars(hit.id));
+            paintExact(line);
+            return line;
         }
         const armedId = takeArmed(raw);
-        if (armedId) return fillLine(armedId, fallbackVars(armedId));
+        if (armedId) {
+            const line = fillLine(armedId, fallbackVars(armedId));
+            paintExact(line);
+            return line;
+        }
         return text;
     }
 
