@@ -310,15 +310,15 @@
 
         let saved = "";
         try { saved = localStorage.getItem(SHOP_KEY) || ""; } catch (e) {}
-        if (PROFILES[saved]) {
-            applyProfile(saved);
-            try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e2) {}
-            setTimeout(function () {
-                if (typeof showWelcomeScreen === "function") showWelcomeScreen();
-            }, 80);
-        } else {
-            askShop();
+        if (PROFILES[saved]) applyProfile(saved);
+        else {
+            applyProfile("gukbap");
+            try { localStorage.setItem(SHOP_KEY, "gukbap"); } catch (e3) {}
         }
+        try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e2) {}
+        setTimeout(function () {
+            if (typeof showWelcomeScreen === "function") showWelcomeScreen();
+        }, 80);
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", install);

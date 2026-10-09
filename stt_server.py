@@ -14,7 +14,7 @@ from threading import Lock
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 
 import av
 
@@ -483,6 +483,11 @@ def find_ct2_model_dir(root: Path) -> Path:
 # ============================================================
 
 @app.get("/")
+def open_kiosk():
+    return RedirectResponse(url="/kiosk.html")
+
+
+@app.get("/health")
 def health_check():
     return {
         "status": "ok",
