@@ -61,7 +61,7 @@
             right: 12px;
             bottom: 12px;
             z-index: 10000;
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 8px;
             max-width: 720px;
@@ -74,6 +74,7 @@
             pointer-events: auto !important;
             touch-action: auto;
         }
+        body.text-mode-on #text-mode { display: flex; }
         body.touch-locked #text-mode,
         body.touch-locked #text-mode * {
             pointer-events: auto !important;
@@ -431,6 +432,7 @@
 
     <script>
         (function () {
+            if (/[?&]text=1(?:&|$)/.test(location.search)) document.body.classList.add("text-mode-on");
             window.__kioskInTextMode = function (e) {
                 var el = e && e.target;
                 return !!(el && el.closest && el.closest("#text-mode"));
