@@ -34414,6 +34414,373 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 })();
 
+/* ==========================================================================
+   22종 TTS 대사 실행
+   관리자 창에 보이는 문장(저장본 또는 기본 문장)을 해당 단계의 안내 음성으로 말한다.
+   다시 말하기, 오류, 소리/확대 안내는 그대로 둔다.
+   ========================================================================== */
+(function KIOSK_TTS_STAGE_LINES() {
+    if (window.__kioskTtsStageLines) return;
+    window.__kioskTtsStageLines = true;
+
+    const ALL_TTS_CONFIG = [
+        { id: 'tts_welcome', label: '1. 첫 인사', default: '첫 주문이신가요? 첫 주문이면 키오스크 사용 방식 알려줘 라고 말씀해주세요. 바로 주문하시려면 주문 시작이라고 말씀해주세요.' },
+        { id: 'tts_guide', label: '2. 사용법 안내', default: '쉽게 설명해드릴게요. 이 키오스크는 화면을 누르지 않고 말로 주문합니다. 먹고 싶은 메뉴 이름을 말씀하시고, 몇 개 주문할지 수량을 말씀하시면 됩니다. 그 다음 매장인지 포장인지 말하고, 마지막으로 카드 또는 현금이라고 말씀하시면 주문이 끝납니다. 중간에 잘못 골랐으면 이전 화면이라고 말씀하시면 됩니다. 이제 주문을 시작하겠습니다.' },
+        { id: 'tts_cat', label: '3. 카테고리 선택 ({0}=카테고리명)', default: '저희 매장에는 {0} 카테고리가 있습니다. 무엇을 드시겠습니까?' },
+        { id: 'tts_cat_add', label: '4. 카테고리 (추가 주문)', default: '추가로 주문하실 카테고리를 골라주세요. 추가 주문이 없으시면 결제라고 말씀해주세요.' },
+        { id: 'tts_grid', label: '5. 메뉴 선택 ({0}=메뉴목록)', default: '{0} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?' },
+        { id: 'tts_grid_add', label: '6. 메뉴 (추가 주문)', default: '어떤 메뉴를 추가하시겠습니까? 위치나 이름으로 말씀해주세요.' },
+        { id: 'tts_taste', label: '7. 맛 추천 안내 ({0}=메뉴1, {1}=메뉴2)', default: '오늘의 추천 메뉴는 {0}이고, 제일 맛있는 메뉴는 {1}입니다. 고르실 수 있는 맛은 달콤한 맛, 상큼한 맛, 구수한 맛, 고소한 맛, 얼큰한 맛, 짭짤한 맛이 있습니다. 어떤 맛이 드시고 싶으신가요?' },
+        { id: 'tts_confirm', label: '8. 선택 메뉴 확인 ({0}=메뉴명)', default: '선택하신 게 {0} 맞습니까? 맞으면 네, 틀리면 아니요 라고 대답해주세요.' },
+        { id: 'tts_temp', label: '9. 온도 선택 (핫/아이스)', default: '따뜻하게 드시고 싶으시면 따뜻하게, 차갑게 드시고 싶으시면 차갑게 라고 말씀해주세요.' },
+        { id: 'tts_upsell', label: '10. 세트/단품 선택', default: '콜라나 감자튀김을 같이 드시고 싶으시나요? 같이 드시고 싶으시면 네, 햄버거만 드시고 싶으시면 아니요 라고 말씀해주세요.' },
+        { id: 'tts_qty', label: '11. 수량 선택', default: '메뉴 수량을 말씀해주세요.' },
+        { id: 'tts_cup', label: '12. 컵 사이즈 선택', default: '컵 용량을 말씀해주세요. 이백 밀리리터, 삼백오십 밀리리터, 오백 밀리리터 중에서 말씀하시면 됩니다.' },
+        { id: 'tts_bev_prompt2', label: '13. 커피 옵션 안내', default: '커피 샷 추가, 시럽, 얼음 양을 조절하고 싶으시다면 네, 추가할 게 없으시다면 아니요라고 해주세요.' },
+        { id: 'tts_bev_prompt', label: '14. 일반 음료 옵션 안내 ({0}=옵션종류)', default: '{0} 양을 조절하고 싶으시다면 네, 추가할 게 없으시다면 아니요라고 해주세요.' },
+        { id: 'tts_bev_step', label: '15. 음료 옵션 세부 조절 ({0}=옵션명)', default: '{0}, 1단계부터 5단계까지 조절 하실 수 있습니다. 몇 단계로 할까요?' },
+        { id: 'tts_bev_result', label: '16. 음료 옵션 완료 확인', default: '선택하신 옵션으로 음료가 완성되었습니다. 이대로 주문하시겠습니까?' },
+        { id: 'tts_add_more', label: '17. 추가 주문 의향 묻기', default: '추가하실 메뉴가 있습니까. 있으면 네, 없으면 아니요 라고 말씀해주세요.' },
+        { id: 'tts_place', label: '18. 매장/포장 선택', default: '여기서 드시고 가시나요, 아니면 포장해서 들고 가시나요? 여기서 먹을래요, 또는 들고 갈래요 라고 말씀해주세요.' },
+        { id: 'tts_summary', label: '19. 주문 내역 및 결제 유도 ({0}=금액)', default: '주문하신 총 금액은 {0}원입니다. 맞으시면 결제라고 말씀해주세요.' },
+        { id: 'tts_payment', label: '20. 카드/현금 선택', default: '카드로 결제 하실려면 네, 현금으로 결제하실려면 아니요 라고 말씀해주세요.' },
+        { id: 'tts_insert', label: '21. 결제 수단 투입 안내', default: '기기 아래쪽에 결제 수단을 투입해 주세요.' },
+        { id: 'tts_done', label: '22. 결제 완료 인사', default: '감사합니다. 맛있게 드세요.' }
+    ];
+
+    const PATTERNS = [
+        { id: 'tts_welcome', re: /^(?:첫 주문이신가요|고객님,\s*반갑습니다|주문을 시작하시겠습니까\?|첫 주문이면 키오스크 사용 방식)/ },
+        { id: 'tts_welcome', re: /^주문하시려면 주문 시작 또는 네 라고 말씀해주세요/ },
+        { id: 'tts_guide', re: /^(?:쉽게 설명해드릴게요|이 키오스크는 화면을 누르지 않고 말로 주문|이 키오스크는 말로 주문할 수 있습니다)/ },
+        { id: 'tts_cat_add', re: /^추가로 주문하실 카테고리를 골라주세요/ },
+        { id: 'tts_cat', re: /^저희 매장에는 (.+?) 카테고리가 있습니다/ },
+        { id: 'tts_cat', re: /^현재 메뉴 종류는 (.+?) 입니다/ },
+        { id: 'tts_grid_add', re: /^어떤 메뉴를 추가하시겠습니까/ },
+        { id: 'tts_grid', re: /^(.+?) 등이 있습니다\. 어떤 메뉴를 주문하시겠습니까/ },
+        { id: 'tts_taste', re: /^오늘의 추천 메뉴는 (.+?)이고, 제일 맛있는 메뉴는 (.+?)입니다/ },
+        { id: 'tts_taste', re: /^(?:메뉴를 고르기 어려우신가요|고르실 수 있는 맛은 달콤한 맛)/ },
+        { id: 'tts_confirm', re: /^선택하신 게 (.+?) 맞습니까/ },
+        { id: 'tts_confirm', re: /^선택하신 메뉴는 (.+?)입니다/ },
+        { id: 'tts_temp', re: /^(?:따뜻하게 드시고 싶으시면 따뜻하게|따뜻하게 드시면)/ },
+        { id: 'tts_upsell', re: /^(?:콜라나 감자튀김을 같이|세트로 하시려면)/ },
+        { id: 'tts_qty', re: /^메뉴 수량을 말씀해주세요/ },
+        { id: 'tts_cup', re: /^(?:컵 용량을 말씀해주세요\. 이백 밀리리터|컵 사이즈를 스몰, 미디엄, 라지|컵 용량을 이백 밀리리터)/ },
+        { id: 'tts_bev_prompt2', re: /^커피 샷 추가, 시럽, 얼음/ },
+        { id: 'tts_bev_prompt', re: /^(.+?) 양을 조절하고 싶으시다면 네/ },
+        { id: 'tts_bev_prompt', re: /^옵션을 조절하시려면/ },
+        { id: 'tts_bev_step', re: /^(.+?)(?:,|은|는) 1단계부터 5단계까지/ },
+        { id: 'tts_bev_result', re: /^선택하신 옵션으로 (?:음료가 완성되었습니다|준비할까요)/ },
+        { id: 'tts_add_more', re: /^(?:추가하실 메뉴가 있습니까|더 주문하시려면)/ },
+        { id: 'tts_place', re: /^(?:여기서 드시고 가시나요|여기서 드실지)/ },
+        { id: 'tts_summary', re: /주문하신 총 금액은 (.+?)원입니다/ },
+        { id: 'tts_summary', re: /총 금액은 (.+?)원입니다/ },
+        { id: 'tts_payment', re: /^(?:카드로 결제 하실려면 네|카드로 결제하시려면 네|결제 방식은 ['"]?카드)/ },
+        { id: 'tts_insert', re: /^(?:기기 아래쪽에 결제 수단을 투입해 주세요|카드 결제를 진행합니다|카드 결제를 선택하셨습니다)/ },
+        { id: 'tts_done', re: /^감사합니다\. 맛있게 드세요/ }
+    ];
+
+    const PASSTHROUGH = /다시 한 번|다시 말씀|비밀번호|틀렸|현재 첫 화면|이전 화면으로|장바구니|추가했습니다|뺐습니다|절전|학습|단어사전|화면을|소리를|취소하고|창을|삭제했|등록합니다|성공적으로|네, 감사|알겠습니다|바로 결제 단계로|몇 개 추가|수량을 정확히|어떤 메뉴를 추가할지|어떤 메뉴를 뺄지|현재 장바구니|현재 다시|현재 말씀드릴|설명이 준비|가격을|메뉴 추가 라고|관리자 설정이 열렸/;
+
+    let armed = null;
+
+    function arm(id) {
+        if (!id) return;
+        armed = { id: id, until: Date.now() + 900, tries: 0 };
+    }
+
+    function clearArm() {
+        armed = null;
+    }
+
+    function categoriesText() {
+        try {
+            const cats = [...new Set((customMenus || []).map(m => m && m.category).filter(Boolean))];
+            return cats.join(', ');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function gridListText() {
+        try {
+            return (currentGridMenus || []).slice(0, 5).map(m => m.name + ' ' + m.price + '원').join(', ');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function twoMenuNames() {
+        const names = [];
+        try {
+            (customMenus || []).forEach(m => {
+                if (m && m.name && names.indexOf(m.name) < 0) names.push(m.name);
+            });
+        } catch (e) {}
+        if (!names[0]) names[0] = '돼지국밥';
+        if (!names[1]) names[1] = '불고기버거';
+        return [names[0], names[1]];
+    }
+
+    function confirmName() {
+        try {
+            if (pendingMenuName) return pendingMenuName;
+            if (tempItem && tempItem.item) return tempItem.item;
+        } catch (e) {}
+        return '';
+    }
+
+    function summaryAmount() {
+        try {
+            let sum = 0;
+            (orderState.items || []).forEach(i => {
+                let price = getMenuPrice(i.item) * i.count;
+                if (i.isSet) price += 2000 * i.count;
+                sum += price;
+            });
+            return String(sum);
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function bevOptionName() {
+        try {
+            const currentOpt = optionList[optionStepIndex];
+            return currentOpt && currentOpt.name ? currentOpt.name : '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function bevKind() {
+        try {
+            const base = classifyDrinkBase(tempItem.item);
+            if (base === 'dessert') return '얼음, 당도, 과자 크럼블';
+            return '얼음, 당도, 과일 토핑';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function isCoffeeItem() {
+        try {
+            const m = (customMenus || []).find(mm => mm.name === tempItem.item);
+            return !!(m && m.category === '커피');
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function fallbackVars(id) {
+        if (id === 'tts_cat') return [categoriesText()];
+        if (id === 'tts_grid') return [gridListText()];
+        if (id === 'tts_taste') return twoMenuNames();
+        if (id === 'tts_confirm') return [confirmName()];
+        if (id === 'tts_bev_prompt') return [bevKind()];
+        if (id === 'tts_bev_step') return [bevOptionName()];
+        if (id === 'tts_summary') return [summaryAmount()];
+        return [];
+    }
+
+    function storedLine(id) {
+        const rule = ALL_TTS_CONFIG.find(r => r.id === id);
+        let text = '';
+        try {
+            const saved = localStorage.getItem(id);
+            if (saved != null && String(saved).trim() !== '') text = String(saved);
+        } catch (e) {}
+        if (!text) text = rule ? rule.default : '';
+        return text;
+    }
+
+    function fillLine(id, vars) {
+        let text = storedLine(id);
+        const list = vars || [];
+        for (let i = 0; i < list.length; i++) {
+            text = text.split('{' + i + '}').join(list[i] == null ? '' : String(list[i]));
+        }
+        return text;
+    }
+
+    function usable(vars) {
+        return Array.isArray(vars) && vars.some(v => String(v == null ? '' : v).trim() !== '');
+    }
+
+    function matchPattern(text) {
+        for (let i = 0; i < PATTERNS.length; i++) {
+            const hit = text.match(PATTERNS[i].re);
+            if (!hit) continue;
+            const vars = [];
+            for (let g = 1; g < hit.length; g++) vars.push(hit[g]);
+            return { id: PATTERNS[i].id, vars: vars };
+        }
+        return null;
+    }
+
+    function takeArmed(text) {
+        if (!armed) return '';
+        if (Date.now() > armed.until) {
+            clearArm();
+            return '';
+        }
+        armed.tries += 1;
+        if (PASSTHROUGH.test(text) || text.length < 12) {
+            if (armed.tries >= 3) clearArm();
+            return '';
+        }
+        const id = armed.id;
+        clearArm();
+        return id;
+    }
+
+    function rewrite(text) {
+        const raw = String(text == null ? '' : text).trim();
+        if (!raw) return text;
+        const hit = matchPattern(raw);
+        if (hit) {
+            clearArm();
+            return fillLine(hit.id, usable(hit.vars) ? hit.vars : fallbackVars(hit.id));
+        }
+        const armedId = takeArmed(raw);
+        if (armedId) return fillLine(armedId, fallbackVars(armedId));
+        return text;
+    }
+
+    window.kioskTtsLine = function(id, vars) {
+        return fillLine(id, usable(vars) ? vars : fallbackVars(id));
+    };
+    window.__kioskTtsRewrite = rewrite;
+
+    const prevSpeak = window.speakText;
+    if (typeof prevSpeak === 'function' && !prevSpeak.__kioskTtsStageWrapped) {
+        const wrappedSpeak = function(text, onEndCallback) {
+            return prevSpeak.call(this, rewrite(text), onEndCallback);
+        };
+        wrappedSpeak.__kioskTtsStageWrapped = true;
+        window.speakText = speakText = wrappedSpeak;
+    }
+
+    function wrapEntry(name, pickId) {
+        const prev = window[name];
+        if (typeof prev !== 'function' || prev.__kioskTtsEntry) return;
+        const wrapped = function() {
+            try {
+                arm(typeof pickId === 'function' ? pickId() : pickId);
+            } catch (e) {}
+            return prev.apply(this, arguments);
+        };
+        wrapped.__kioskTtsEntry = true;
+        window[name] = wrapped;
+    }
+
+    wrapEntry('showWelcomeScreen', 'tts_welcome');
+    wrapEntry('startGuide', 'tts_guide');
+    wrapEntry('renderCategorySelect', function() {
+        try { if (isAddOnPhase) return 'tts_cat_add'; } catch (e) {}
+        return 'tts_cat';
+    });
+    wrapEntry('renderMenuGrid', function() {
+        try {
+            if (isAddOnPhase && selectedCategory !== '추천 맛') return 'tts_grid_add';
+        } catch (e) {}
+        return 'tts_grid';
+    });
+    wrapEntry('renderTasteSelectPrompt', 'tts_taste');
+    wrapEntry('highlightMenuConfirm', 'tts_confirm');
+    wrapEntry('askTemperature', 'tts_temp');
+    wrapEntry('askUpsell', 'tts_upsell');
+    wrapEntry('askQuantity', 'tts_qty');
+    wrapEntry('askCupSize', 'tts_cup');
+    wrapEntry('renderBeverageOptionPrompt', function() {
+        return isCoffeeItem() ? 'tts_bev_prompt2' : 'tts_bev_prompt';
+    });
+    wrapEntry('renderBeverageOptionStep', 'tts_bev_step');
+    wrapEntry('renderBeverageResult', 'tts_bev_result');
+    wrapEntry('renderAddMorePrompt', 'tts_add_more');
+    wrapEntry('renderPlaceSelect', 'tts_place');
+    wrapEntry('renderSummary', 'tts_summary');
+    wrapEntry('askPaymentStage', 'tts_payment');
+    wrapEntry('selectPayment', 'tts_insert');
+    wrapEntry('showGoodbyeMessage', 'tts_done');
+
+    function buildMasterTTSAdminUI() {
+        const adminPanelBody = document.querySelector('#admin-panel .flex-1');
+        if (!adminPanelBody || document.getElementById('custom-tts-text-block')) return;
+
+        const ttsBlock = document.createElement('div');
+        ttsBlock.id = 'custom-tts-text-block';
+        ttsBlock.className = 'bg-white/10 p-4 rounded-2xl border border-white/20 mt-4 w-full flex-shrink-0';
+
+        const header = document.createElement('div');
+        header.className = 'flex justify-between items-center mb-3 sticky top-0 bg-[#3d2f1f] z-10 py-2';
+        header.innerHTML = '<h3 class="text-white font-bold flex items-center gap-2">✏️ 전체 TTS 대사 영구 커스텀 (22종)</h3>';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.id = 'save-master-tts-btn';
+        saveBtn.type = 'button';
+        saveBtn.className = 'px-5 py-2 bg-[#e76f51] rounded-lg font-black text-white shadow-lg active:scale-95 transition-transform';
+        saveBtn.style.pointerEvents = 'auto';
+        saveBtn.textContent = '전체 저장';
+        header.appendChild(saveBtn);
+
+        const msg = document.createElement('p');
+        msg.id = 'tts-master-save-msg';
+        msg.className = 'text-[#f4a261] text-sm mb-3 font-bold text-center hidden';
+        msg.textContent = '✅ 모든 대사가 컴퓨터에 영구 저장되었습니다!';
+
+        const scroller = document.createElement('div');
+        scroller.className = 'overflow-y-auto pr-2';
+        scroller.style.maxHeight = '50vh';
+
+        ALL_TTS_CONFIG.forEach(k => {
+            const card = document.createElement('div');
+            card.className = 'mb-4 bg-black/40 p-3 rounded-lg border border-white/10';
+            const label = document.createElement('label');
+            label.className = 'text-[#e8d9c0] text-[13px] font-bold block mb-2';
+            label.textContent = k.label;
+            label.htmlFor = k.id;
+            const area = document.createElement('textarea');
+            area.id = k.id;
+            area.rows = 2;
+            area.className = 'w-full p-2 rounded bg-black/60 text-white border border-white/30 outline-none text-sm';
+            area.style.pointerEvents = 'auto';
+            area.style.resize = 'none';
+            area.value = storedLine(k.id);
+            card.appendChild(label);
+            card.appendChild(area);
+            scroller.appendChild(card);
+        });
+
+        ttsBlock.appendChild(header);
+        ttsBlock.appendChild(msg);
+        ttsBlock.appendChild(scroller);
+        adminPanelBody.insertBefore(ttsBlock, adminPanelBody.firstChild);
+
+        saveBtn.addEventListener('click', function() {
+            ALL_TTS_CONFIG.forEach(k => {
+                const el = document.getElementById(k.id);
+                if (el) localStorage.setItem(k.id, el.value);
+            });
+            msg.classList.remove('hidden');
+            setTimeout(function() { msg.classList.add('hidden'); }, 3000);
+        });
+    }
+
+    setTimeout(buildMasterTTSAdminUI, 2800);
+    if (typeof openAdminPanel === 'function' && !openAdminPanel.__kioskTtsUi) {
+        const prevOpen = openAdminPanel;
+        const wrappedOpen = function() {
+            const result = prevOpen.apply(this, arguments);
+            setTimeout(buildMasterTTSAdminUI, 0);
+            return result;
+        };
+        wrappedOpen.__kioskTtsUi = true;
+        window.openAdminPanel = openAdminPanel = wrappedOpen;
+    }
+
+    console.log('✅ 22종 TTS 대사를 단계 시작 시 실행');
+})();
+
 </script>
 
 </body>
