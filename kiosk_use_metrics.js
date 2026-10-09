@@ -425,7 +425,7 @@
                 return true;
             }
 
-            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게|더키워/.test(raw))) {
+            if (!/소리/.test(raw) && (/안보여|안보임|잘안보|글씨안보|글자가안|글씨가안|화면안보/.test(raw) || ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|눈이안|눈안좋|침침|더크게|더키워/.test(raw)))) {
                 try {
                     rememberZoom(currentZoom() + 1);
                     showZoomedView();

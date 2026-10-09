@@ -26763,7 +26763,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/결제|계산|카드|현금|현찰/.test(c)) return true;
         if (/매장|포장|테이크아웃|먹고갈|들고갈|가져갈/.test(c)) return true;
         if (/취소|이전|뒤로|처음/.test(c)) return true;
-        if (/화면확대|글씨크게|글자크게|안보여|잘안보여|아래보여|밑에보여|원래대로|확대해제/.test(c)) return true;
+        if (/화면확대|글씨크게|글자크게|안보여|잘안보여|안보임|글씨안보|글자가안|글씨가안|화면안보|아래보여|밑에보여|원래대로|확대해제|화면축소|축소|작게해|줄여|글씨작/.test(c)) return true;
         if (/소리크게|소리작게|안들려|잘안들려|음소거/.test(c)) return true;
         if (/아이스|따뜻하게|차갑게|얼음|샷|시럽|당도|휘핑|펄|크럼블|밥적게|밥많이|맵게|덜맵게|세트|단품/.test(c)) return true;
         if (/하나|한개|두개|둘|세개|셋|네개|다섯개|[0-9]+개/.test(c)) return true;
@@ -27204,7 +27204,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (/결제|계산|카드|현금|현찰/.test(c)) return true;
         if (/매장|포장|테이크아웃|먹고갈|들고갈|가져갈/.test(c)) return true;
         if (/취소|이전|뒤로|처음/.test(c)) return true;
-        if (/화면확대|글씨크게|글자크게|안보여|잘안보여|아래보여|밑에보여|원래대로|확대해제/.test(c)) return true;
+        if (/화면확대|글씨크게|글자크게|안보여|잘안보여|안보임|글씨안보|글자가안|글씨가안|화면안보|아래보여|밑에보여|원래대로|확대해제|화면축소|축소|작게해|줄여|글씨작/.test(c)) return true;
         if (/소리크게|소리작게|안들려|잘안들려|음소거/.test(c)) return true;
         if (/아이스|따뜻하게|차갑게|얼음|샷|시럽|당도|휘핑|펄|크럼블|밥적게|밥많이|맵게|덜맵게|세트|단품/.test(c)) return true;
         if (/하나|한개|두개|둘|세개|셋|네개|다섯개|[0-9]+개/.test(c)) return true;
@@ -34920,29 +34920,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     const isAdminOpen = adminPanel && !adminPanel.classList.contains('hidden');
                     let intercept = false;
 
-                    // [수정 1] 볼륨과 화면 확대 단어의 완벽한 분리
-                    if (/소리|볼륨/.test(clean)) {
-                        speakText("볼륨 조절은 기기 자체의 물리 버튼을 이용해 주세요.");
-                        intercept = true;
-                    }
-                    else if (/확대|크게|키워/.test(clean)) {
-                        if (typeof zoomFactors !== 'undefined') {
-                            zoomLevel = Math.min(zoomLevel + 1, zoomFactors.length - 1);
-                            updateZoomUI();
-                            speakText("화면을 확대합니다.");
-                        }
-                        intercept = true;
-                    }
-                    else if (/축소|작게|줄여|원래대로/.test(clean)) {
-                        if (typeof zoomFactors !== 'undefined') {
-                            zoomLevel = Math.max(zoomLevel - 1, 0);
-                            updateZoomUI();
-                            speakText("화면을 축소합니다.");
-                        }
-                        intercept = true;
-                    }
-                    // [수정 2] 수량 화면에서 "한 개", "하나" 인식률 극대화 방어막
-                    else if (currentStageName === 'quantity' && /한개|두개|세개|하나|둘|셋|넷|다섯|한|두|세|네|일|이|삼|사|오|1|2|3|4|5|개/.test(clean)) {
+                    // 화면 확대/축소는 아래 주문 처리 한 곳에서만 한다.
+                    if (currentStageName === 'quantity' && /한개|두개|세개|하나|둘|셋|넷|다섯|한|두|세|네|일|이|삼|사|오|1|2|3|4|5|개/.test(clean)) {
                         if (typeof processVoiceCommand === 'function') processVoiceCommand(transcript);
                         intercept = true;
                     }
@@ -35991,11 +35970,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             let menus = [];
             try { stage = String(currentStageName || ""); } catch (e) {}
             try { menus = Array.isArray(customMenus) ? customMenus : []; } catch (e2) {}
-            const judged = window.KioskTalk.judge(text, menus);
-            if (judged.kind === "chat") {
-                console.log("[kiosk] 잡담으로 보고 건너뜀:", text);
-                return;
-            }
             const next = window.KioskTalk.expand(String(text || ""), stage, menus);
             return previous.call(this, next);
         };
