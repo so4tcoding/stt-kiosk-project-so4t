@@ -23,7 +23,9 @@
     const ALIAS_KEY = "kiosk_command_alias_v1";
     const EVENT_KEY = "kiosk_use_metrics_v1";
     const TAUGHT_KEY = "kiosk_taught_phrases_v1";
+    const STORE_CAP = 8000;
     const YESNO = /^(네|내|예|넵|옙|아니|아니요|아니오|응|어|아|음)$/;
+    const AMBIGUOUS = /^(국밥|버거|불고기|꽃|케이크|단|핫|아이스|사과|배|감|치즈|캔)$/;
 
     function compact(text) {
         return String(text || "").toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
@@ -43,17 +45,39 @@
         return "failure";
     }
 
+    function bakedRows() {
+        if (typeof window === "undefined" || !Array.isArray(window.__kioskLearnedWords)) return [];
+        return window.__kioskLearnedWords;
+    }
+
+    function dropUntil(store, cap, protect) {
+        let keys = Object.keys(store);
+        while (keys.length > cap) {
+            let idx = 0;
+            for (let i = 0; i < keys.length; i++) {
+                if (!protect || !protect[keys[i]]) {
+                    idx = i;
+                    break;
+                }
+            }
+            delete store[keys[idx]];
+            keys = Object.keys(store);
+        }
+    }
+
     function rememberAlias(store, variant, canonical) {
         const v = compact(variant);
         const c = compact(canonical);
         if (!store || !v || !c || v === c) return false;
-        if (v.length < 2 || YESNO.test(v)) return false;
+        if (v.length < 2 || YESNO.test(v) || AMBIGUOUS.test(v)) return false;
         if (String(variant).length > 40 || String(canonical).length > 40) return false;
         store[v] = String(canonical).trim();
-        const keys = Object.keys(store);
-        while (keys.length > 400) {
-            delete store[keys.shift()];
-        }
+        const protect = {};
+        bakedRows().forEach(function (row) {
+            const key = compact(row && row[0]);
+            if (key) protect[key] = true;
+        });
+        dropUntil(store, STORE_CAP, protect);
         return true;
     }
 
@@ -61,6 +85,15 @@
         if (!store) return "";
         const hit = store[compact(text)];
         return hit ? String(hit) : "";
+    }
+
+    function payAliasBlocked(spoken, alias) {
+        let stage = "";
+        try { stage = typeof currentStageName === "undefined" ? "" : currentStageName; } catch (e) {}
+        if (stage !== "summary" && stage !== "payment") return false;
+        const heard = compact(spoken);
+        if (!/결제|계산/.test(heard)) return false;
+        return /^(아니요|아니|아니오|네|예|응)$/.test(compact(alias));
     }
 
     function summarize(events) {
@@ -115,10 +148,56 @@
         } catch (e) {}
     }
 
+    function mergeBaked() {
+        const list = bakedRows();
+        if (!list.length) return;
+        const taught = loadJSON(TAUGHT_KEY, {});
+        const aliases = loadJSON(ALIAS_KEY, {});
+        let taughtChanged = false;
+        let aliasChanged = false;
+        const protect = {};
+        if (taught["안녕하세요 날씨 좋네요"]) {
+            delete taught["안녕하세요 날씨 좋네요"];
+            taughtChanged = true;
+        }
+        if (aliases["안녕하세요날씨좋네요"]) {
+            delete aliases["안녕하세요날씨좋네요"];
+            aliasChanged = true;
+        }
+        for (let i = 0; i < list.length; i++) {
+            const heard = String((list[i] && list[i][0]) || "").trim();
+            const target = String((list[i] && list[i][1]) || heard).trim();
+            if (!heard || !target) continue;
+            protect[heard] = true;
+            if (!taught[heard]) {
+                taught[heard] = {
+                    text: heard.slice(0, 40),
+                    canonical: target.slice(0, 40)
+                };
+                taughtChanged = true;
+            }
+            if (rememberAlias(aliases, heard, target)) aliasChanged = true;
+        }
+        dropUntil(taught, STORE_CAP, protect);
+        if (taughtChanged) saveJSON(TAUGHT_KEY, taught);
+        if (aliasChanged) saveJSON(ALIAS_KEY, aliases);
+    }
+
     function install() {
         if (typeof window === "undefined" || window.__kioskUseMetricsInstalled) return;
         if (typeof window.processVoiceCommand !== "function") return;
         window.__kioskUseMetricsInstalled = true;
+        mergeBaked();
+        window.__kioskExplainLine = function () {
+            const menus = Array.isArray(customMenus) ? customMenus : [];
+            const last = Math.max(0, menus.length - 1);
+            let at = Number(window.__kioskExplainAt) || 0;
+            if (at > last) at = last;
+            if (at < 0) at = 0;
+            const name = (menus[at] && menus[at].name) || "메뉴";
+            if (window.__kioskExplainSimple || at >= last) return name + " 해 주세요.";
+            return name + ", 다음.";
+        };
 
         const previous = window.processVoiceCommand;
 
@@ -146,6 +225,7 @@
         }
 
         function record(event) {
+            if (window.__kioskSimQuiet) return;
             const events = loadJSON(EVENT_KEY, []);
             events.push(event);
             saveJSON(EVENT_KEY, events.slice(-500));
@@ -178,10 +258,15 @@
             window.__kioskUseMetrics = summary;
         }
 
+        function unrelatedChat(text) {
+            return String(text || "").replace(/[^0-9a-z가-힣]/g, "") === "안녕하세요날씨좋네요";
+        }
+
         function teachStored(target, heard) {
             const key = String(heard).trim();
             const taught = loadJSON(TAUGHT_KEY, {});
-            if (!key || taught[key]) return false;
+            if (!key || unrelatedChat(key) || unrelatedChat(target)) return false;
+            if (taught[key]) return false;
             const heardCompact = compact(key);
             if (heardCompact !== compact(target) && heardCompact.length >= 2 && !YESNO.test(heardCompact)) {
                 try {
@@ -192,10 +277,12 @@
                 const aliases = loadJSON(ALIAS_KEY, {});
                 if (rememberAlias(aliases, key, target)) saveJSON(ALIAS_KEY, aliases);
             }
-            const keys = Object.keys(taught);
-            while (keys.length >= 400) {
-                delete taught[keys.shift()];
-            }
+            const protect = {};
+            bakedRows().forEach(function (row) {
+                const heard = String((row && row[0]) || "").trim();
+                if (heard) protect[heard] = true;
+            });
+            dropUntil(taught, STORE_CAP - 1, protect);
             taught[key] = {
                 text: key.slice(0, 40),
                 canonical: String(target).slice(0, 40)
@@ -236,6 +323,26 @@
         }
 
         function countIn(raw) {
+            if (/스물아홉/.test(raw)) return 29;
+            if (/스물여덟/.test(raw)) return 28;
+            if (/스물일곱/.test(raw)) return 27;
+            if (/스물여섯/.test(raw)) return 26;
+            if (/스물다섯/.test(raw)) return 25;
+            if (/스물네/.test(raw)) return 24;
+            if (/스물세/.test(raw)) return 23;
+            if (/스물두/.test(raw)) return 22;
+            if (/스물한/.test(raw)) return 21;
+            if (/서른/.test(raw)) return 30;
+            if (/스물/.test(raw)) return 20;
+            if (/열아홉/.test(raw)) return 19;
+            if (/열여덟/.test(raw)) return 18;
+            if (/열일곱/.test(raw)) return 17;
+            if (/열여섯/.test(raw)) return 16;
+            if (/열다섯/.test(raw)) return 15;
+            if (/열네/.test(raw)) return 14;
+            if (/열세/.test(raw)) return 13;
+            if (/열두/.test(raw)) return 12;
+            if (/열한/.test(raw)) return 11;
             if (/열식구|10식구/.test(raw)) return 10;
             if (/아홉식구|9식구/.test(raw)) return 9;
             if (/여덟식구|8식구/.test(raw)) return 8;
@@ -425,12 +532,68 @@
                 return true;
             }
 
-            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게|더키워/.test(raw))) {
+            if (!/소리/.test(raw) && ((/글씨|글자/.test(raw) && /작아|안보|크게|키워|흐리|흐려|흐릿/.test(raw)) || (/화면/.test(raw) && /키워|크게|확대|안보/.test(raw)) || /작아보|잘안보|눈이안|눈안좋|침침|더크게(?!말)|더키워|안보여|안보임|안봐도/.test(raw) || /^확대(해줘|해주세요|해|요)?$/.test(raw))) {
                 try {
                     rememberZoom(currentZoom() + 1);
                     showZoomedView();
                 } catch (e) {}
                 if (typeof speakText === "function") speakText("화면을 확대했습니다.");
+                return true;
+            }
+
+            if (/^(category_select|menu_grid|open_order_prompt)$/.test(stage) && /^다음(이요|요|메뉴)?$/.test(raw)) {
+                const menus = Array.isArray(customMenus) ? customMenus : [];
+                const last = Math.max(0, menus.length - 1);
+                window.__kioskExplainAt = Math.min((Number(window.__kioskExplainAt) || 0) + 1, last);
+                window.__kioskExplainSimple = false;
+                if (typeof renderCategorySelect === "function") renderCategorySelect();
+                return true;
+            }
+
+            if (/이해가안|이해안|쉽게말|쉽게해|무슨말인지|모르겠어/.test(raw) && typeof speakText === "function") {
+                if (stage === "welcome" || stage === "guide") {
+                    speakText("주문할게요 해 주세요.");
+                    return true;
+                }
+                if (stage === "upsell") {
+                    speakText("단품이요.");
+                    return true;
+                }
+                if (stage === "place") {
+                    speakText("포장이요.");
+                    return true;
+                }
+                if (stage === "payment") {
+                    speakText("카드요.");
+                    return true;
+                }
+                if (stage === "summary") {
+                    speakText("결제 해 주세요.");
+                    return true;
+                }
+                if (stage === "temp") {
+                    speakText("따뜻하게요.");
+                    return true;
+                }
+                if (stage === "cup_size") {
+                    speakText("중간 잔.");
+                    return true;
+                }
+                if (stage === "taste_select_prompt") {
+                    speakText("달콤.");
+                    return true;
+                }
+                if (stage === "quantity" || stage === "summary_add_quantity") {
+                    const unit = window.__kioskQtyWord === "잔" ? "잔" : (window.__kioskQtyWord === "개" ? "개" : "그릇");
+                    speakText("한 " + unit + " 해 주세요.");
+                    return true;
+                }
+                if (/add_more_prompt|beverage_option_prompt|beverage_option_step|beverage_result/.test(stage)) {
+                    speakText("없으면 아니요.");
+                    return true;
+                }
+                window.__kioskExplainSimple = true;
+                if (typeof renderCategorySelect === "function") renderCategorySelect();
                 return true;
             }
 
@@ -444,7 +607,7 @@
                 return true;
             }
 
-            if ((/소리/.test(raw) && /키워|높여|올려|크게|켜/.test(raw) && !/꺼/.test(raw)) || /크게말해|말크게|볼륨올/.test(raw)) {
+            if ((/소리/.test(raw) && /키워|높여|올려|크게|켜/.test(raw) && !/꺼/.test(raw)) || /크게말해|말크게|볼륨올|볼륨높|더크게말/.test(raw)) {
                 try {
                     if (typeof ttsVolumeLevel === "undefined") window.ttsVolumeLevel = 3;
                     ttsVolumeLevel = Math.min(4, (Number(ttsVolumeLevel) || 3) + 1);
@@ -689,8 +852,8 @@
                 return true;
             }
 
-            if (stage === "quantity" && /스무|백잔|백개|20잔|20개|서른/.test(raw) && typeof speakText === "function") {
-                speakText("한 번에 열 잔까지 됩니다. 열 잔 이하로 말씀해 주세요.");
+            if (stage === "quantity" && /백잔|백개|백병|100잔|100개/.test(raw) && typeof speakText === "function") {
+                speakText("한 번에 서른 개까지 됩니다. 서른 개 이하로 말씀해 주세요.");
                 return true;
             }
 
@@ -716,6 +879,28 @@
                     transitionTo("category_select", renderCategorySelect);
                 }
                 return true;
+            }
+
+            if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /뭐야|뭔데|뭐예|특징|무슨맛|어떤맛|얼마|가격/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
+                const described = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
+                    return plain(b).length - plain(a).length;
+                });
+                for (let d = 0; d < described.length; d++) {
+                    const key = plain(described[d]);
+                    if (key.length >= 2 && raw.indexOf(key) !== -1) {
+                        const menu = customMenus.find(function (item) { return item.name === described[d]; });
+                        const price = Number(menu && menu.price || 0).toLocaleString();
+                        const taste = String((menu && menu.taste) || "").replace(/\s+/g, " ").trim();
+                        let line = menu.name + ", " + price + "원.";
+                        if (taste && (line + " " + taste).length <= 46) line = line + " " + taste + ".";
+                        speakText(line);
+                        return true;
+                    }
+                }
+                if (/특징|무슨맛|어떤맛|얼마|가격/.test(raw) && !/뭐야|뭔데|뭐예/.test(raw)) {
+                    speakText("어떤 메뉴의 특징인지 이름을 같이 말씀해주세요.");
+                    return true;
+                }
             }
 
             if (/menu_grid/.test(stage) && /이거뭐|뭐예|뭐야|뭔데/.test(raw) && !/메뉴/.test(raw) && typeof speakText === "function") {
@@ -802,23 +987,6 @@
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /순댓국/.test(raw) && typeof selectSpecificItem === "function") {
                 selectSpecificItem("순대국밥");
                 return afterSelect(raw);
-            }
-
-            if (/menu_grid|open_order_prompt|category_select/.test(stage) && /특징|무슨맛|어떤맛|얼마|가격/.test(raw) && Array.isArray(customMenus) && typeof speakText === "function") {
-                const described = customMenus.map(function (item) { return item.name; }).sort(function (a, b) {
-                    return plain(b).length - plain(a).length;
-                });
-                for (let d = 0; d < described.length; d++) {
-                    const key = plain(described[d]);
-                    if (key.length >= 2 && raw.indexOf(key) !== -1) {
-                        const menu = customMenus.find(function (item) { return item.name === described[d]; });
-                        const price = Number(menu && menu.price || 0).toLocaleString();
-                        speakText(menu.name + "은 " + (menu.taste || "기본") + " 메뉴이고, 가격은 " + price + "원입니다.");
-                        return true;
-                    }
-                }
-                speakText("어떤 메뉴의 특징인지 이름을 같이 말씀해주세요.");
-                return true;
             }
 
             if (/menu_grid|open_order_prompt|category_select|welcome/.test(stage) && /바닐라|에스프레소|디카페인|카푸치노|모카|카라멜|헤이즐|녹차라떼|더치/.test(raw) && typeof speakText === "function") {
@@ -1068,7 +1236,7 @@
         }
 
         window.processVoiceCommand = function measuredProcessVoiceCommand(text) {
-            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(text))) {
                 return previous.apply(this, arguments);
             }
             const spoken = String(text || "");
@@ -1076,11 +1244,16 @@
             const intent = String(window.__kioskCustomerIntent || "").trim();
             let result;
             try {
-                if (applyKnownPhrase(spoken)) result = true;
+                let knownAlias = !window.__kioskSuiteRunning ? resolveAlias(loadJSON(ALIAS_KEY, {}), spoken) : "";
+                if (payAliasBlocked(spoken, knownAlias)) knownAlias = "";
+                if (knownAlias && compact(knownAlias) !== compact(spoken)) {
+                    if (applyKnownPhrase(knownAlias)) result = true;
+                    else result = previous.call(this, knownAlias);
+                } else if (applyKnownPhrase(spoken)) result = true;
                 else result = previous.call(this, spoken);
                 if (judgeUse(before, capture()) === "failure") {
                     const alias = resolveAlias(loadJSON(ALIAS_KEY, {}), spoken);
-                    if (alias && compact(alias) !== compact(spoken)) {
+                    if (alias && compact(alias) !== compact(spoken) && alias !== knownAlias && !payAliasBlocked(spoken, alias)) {
                         if (applyKnownPhrase(alias)) result = true;
                         else result = previous.call(this, alias);
                     }
@@ -1088,6 +1261,7 @@
             } finally {
                 const after = capture();
                 const outcome = judgeUse(before, after);
+                const moved = before.stage !== after.stage || before.item !== after.item || before.cart !== after.cart || before.place !== after.place || String(before.count) !== String(after.count);
                 record({
                     kind: "use",
                     outcome: outcome,
@@ -1097,6 +1271,25 @@
                     at: Date.now()
                 });
                 if (outcome === "failure" && intent) learn(intent, text);
+                if (!window.__kioskSuiteRunning) {
+                    const missed = outcome === "failure" || /없습니다|다시 한 번|다시 말씀|알아듣지|정확히 말씀/.test(String(after.spoken || ""));
+                    const ambiguous = /^(국밥|버거|불고기|꽃|케이크|단|핫|아이스|사과|배|감|치즈|캔)$/;
+                    if (moved) {
+                        const pending = window.__kioskPendingLearn;
+                        window.__kioskPendingLearn = null;
+                        if (pending && pending.stage === before.stage && Date.now() - pending.at < 120000) {
+                            const canonical = after.item && after.item !== before.item ? after.item : String(text || "").trim();
+                            if (canonical && compact(canonical) !== compact(pending.text) && !ambiguous.test(compact(pending.text)) && !ambiguous.test(compact(canonical))) {
+                                learn(canonical, pending.text);
+                            }
+                        }
+                    } else if (missed) {
+                        const heard = String(text || "").trim();
+                        if (heard && !ambiguous.test(compact(heard))) window.__kioskPendingLearn = { text: heard, stage: before.stage, at: Date.now() };
+                    } else {
+                        window.__kioskPendingLearn = null;
+                    }
+                }
             }
             return result;
         };

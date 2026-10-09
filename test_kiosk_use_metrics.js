@@ -28,6 +28,9 @@ assert.strictEqual(Metrics.rememberAlias(store, "네", "시작"), false);
 assert.strictEqual(Metrics.rememberAlias(store, "ㅋ", "오렌지 주스"), false);
 assert.strictEqual(Metrics.rememberAlias(store, "두잔", "두 개"), true);
 assert.strictEqual(Metrics.resolveAlias(store, "두잔"), "두 개");
+assert.strictEqual(Metrics.rememberAlias(store, "케이크", "치즈 케이크"), false);
+assert.strictEqual(Metrics.rememberAlias(store, "버거", "햄버거"), false);
+assert.strictEqual(Metrics.resolveAlias(store, "케이크"), "");
 
 const summary = Metrics.summarize([
     { kind: "use", outcome: "success", text: "네" },

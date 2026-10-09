@@ -14,7 +14,7 @@ from threading import Lock
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 
 import av
 
@@ -483,6 +483,11 @@ def find_ct2_model_dir(root: Path) -> Path:
 # ============================================================
 
 @app.get("/")
+def open_kiosk():
+    return RedirectResponse(url="/kiosk.html")
+
+
+@app.get("/health")
 def health_check():
     return {
         "status": "ok",
@@ -588,6 +593,16 @@ def serve_kiosk_customer():
     script = BASE_DIR / "kiosk_customer.js"
     if not script.exists():
         raise HTTPException(status_code=404, detail="kiosk_customer.js not found")
+    return FileResponse(script, media_type="application/javascript")
+
+
+@app.get("/kiosk_{script_name}.js")
+def serve_kiosk_script(script_name: str):
+    if not script_name or script_name.replace("_", "").isalnum() is False or script_name != script_name.lower():
+        raise HTTPException(status_code=404, detail="not found")
+    script = (BASE_DIR / f"kiosk_{script_name}.js").resolve()
+    if script.parent != BASE_DIR.resolve() or not script.is_file():
+        raise HTTPException(status_code=404, detail="not found")
     return FileResponse(script, media_type="application/javascript")
 
 

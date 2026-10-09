@@ -1371,6 +1371,7 @@
         let savedShop = "";
         try { savedShop = localStorage.getItem("kiosk_shop_v1") || ""; } catch (e) {}
         if (typeof window.__kioskApplyShop === "function") window.__kioskApplyShop("gukbap");
+        window.__kioskSuiteRunning = true;
 
         function hush() {
             window.__kioskTtsBlocking = function () { return false; };
@@ -1550,6 +1551,7 @@
             report.rows.push({ group: step.group, text: step.text, passed: passed, learned: learned, stage: after.stage, item: after.item });
         });
 
+        window.__kioskSuiteRunning = false;
         window.speakText = savedSpeak;
         try { speakText = savedSpeak; } catch (e) {}
         window.__kioskTtsBlocking = savedBlock;

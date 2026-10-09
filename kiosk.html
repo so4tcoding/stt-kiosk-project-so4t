@@ -55,6 +55,78 @@
         body.touch-locked #boot-overlay * {
             pointer-events: auto !important;
         }
+        #text-mode {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 12px;
+            border-radius: 16px;
+            background: #2a2018;
+            color: #fffdf8;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+            pointer-events: auto !important;
+            touch-action: auto;
+        }
+        body.text-mode-on #text-mode { display: flex; }
+        body.touch-locked #text-mode,
+        body.touch-locked #text-mode * {
+            pointer-events: auto !important;
+            cursor: auto !important;
+        }
+        #text-mode-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        #text-mode-head strong { font-size: 16px; }
+        #text-mode-head span { color: #e8d9c0; flex: 1; }
+        #text-mode-toggle {
+            border: 0;
+            border-radius: 999px;
+            padding: 4px 12px;
+            background: #e76f51;
+            color: white;
+            font-weight: 700;
+        }
+        #text-mode-log {
+            max-height: 132px;
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 8px 10px;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+        #text-mode-log p { margin: 0 0 6px; }
+        #text-mode-log .text-mode-me b { color: #f4a261; }
+        #text-mode-log .text-mode-kiosk b { color: #b7e4c7; }
+        #text-mode-form { display: flex; gap: 8px; }
+        #text-mode-input {
+            flex: 1;
+            border: 0;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 16px;
+            color: #2a2018;
+        }
+        #text-mode-form button {
+            border: 0;
+            border-radius: 12px;
+            padding: 0 16px;
+            background: #e76f51;
+            color: white;
+            font-weight: 800;
+        }
+        #text-mode.is-collapsed #text-mode-log,
+        #text-mode.is-collapsed #text-mode-form { display: none; }
 
         #kiosk-frame .text-indigo-300, #kiosk-frame .text-indigo-200 { color: var(--text-secondary) !important; }
 
@@ -325,7 +397,7 @@
         <!-- 관리자 진입은 오직 음성 암호로만 (터치 UI 없음) -->
         <div id="admin-panel" class="hidden absolute inset-0 z-[300] flex flex-col items-center justify-start bg-[#3d2f1f]/95 backdrop-blur-lg px-6 pt-10 pb-6">
             <h2 class="text-2xl text-white font-black mb-2" style="font-family:'Jua',sans-serif;">관리자 메뉴 설정 (음성 전용)</h2>
-            <p class="text-[#e8d9c0] text-sm mb-4 text-center leading-relaxed">"메뉴 추가" 라고 말씀하시면 이름 → 가격 → 맛 순서로<br>음성으로 새 메뉴를 등록할 수 있습니다.<br>"고객 실행" 이라고 말씀하시면 주문 말을 처음부터 확인합니다.<br>"닫기" 라고 말씀하시면 처음 화면으로 돌아갑니다.</p>
+            <p class="text-[#e8d9c0] text-sm mb-4 text-center leading-relaxed">가게는 아래 버튼으로 고릅니다.<br>"메뉴 추가" 라고 말씀하시면 이름 → 가격 → 맛 순서로<br>음성으로 새 메뉴를 등록할 수 있습니다.<br>"고객 실행" 이라고 말씀하시면 주문 말을 처음부터 확인합니다.<br>"닫기" 라고 말씀하시면 처음 화면으로 돌아갑니다.</p>
             <div id="admin-draft-box" class="w-full bg-white/10 p-4 rounded-2xl border border-white/20 mb-4 text-white font-bold text-center min-h-[70px] flex items-center justify-center"></div>
             <div class="w-full flex-1 overflow-hidden flex flex-col gap-4">
                 <div class="bg-white/10 p-4 rounded-2xl border border-white/20">
@@ -345,6 +417,34 @@
 
     <div id="voice-result"></div>
 
+    <aside id="text-mode">
+        <div id="text-mode-head">
+            <strong>글자로 시험</strong>
+            <span>말한 것처럼 적으면 키오스크 대답이 글자로 나옵니다.</span>
+            <button type="button" id="text-mode-toggle">접기</button>
+        </div>
+        <div id="text-mode-log"></div>
+        <form id="text-mode-form">
+            <input id="text-mode-input" autocomplete="off" placeholder="예: 아메리카노, 다섯 개, 그대로">
+            <button type="submit">보내기</button>
+        </form>
+    </aside>
+
+    <script>
+        (function () {
+            if (/[?&]text=1(?:&|$)/.test(location.search)) document.body.classList.add("text-mode-on");
+            window.__kioskInTextMode = function (e) {
+                var el = e && e.target;
+                return !!(el && el.closest && el.closest("#text-mode"));
+            };
+            try {
+                var synth = window.speechSynthesis;
+                if (!synth || window.__kioskNativeSpeak) return;
+                window.__kioskNativeSpeak = synth.speak.bind(synth);
+                window.__kioskNativeCancel = synth.cancel.bind(synth);
+            } catch (e) {}
+        })();
+    </script>
     <script>
         /* ==========================================================================
            [자산 교체] 텍스트 이모지 → 만화체 2D 일러스트 매핑
@@ -548,12 +648,13 @@
                 if (!isListening && !isStarting) startListening(); else stopListening();
             }
             if (e.key.toLowerCase() === 't') {
-                if (window.speechSynthesis.speaking) return;
-                let simText = prompt("🗣️ [테스트용] 텍스트 명령어를 입력하세요:");
-                if (simText) {
-                    if (!isValidContext(simText)) { alert("문맥 분석 결과, 무시되었습니다."); return; }
-                    showVoiceResult(simText);
-                    processVoiceCommand(simText);
+                if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
+                var textBox = document.getElementById('text-mode-input');
+                if (textBox) {
+                    e.preventDefault();
+                    var textPanel = document.getElementById('text-mode');
+                    if (textPanel) textPanel.classList.remove('is-collapsed');
+                    textBox.focus();
                 }
             }
         });
@@ -694,9 +795,9 @@
 
         // [신규] 컵 사이즈 음성 파싱
         function parseCupSize(text) {
-            if (text.match(/라지|엘사이즈|큰거|큰사이즈|대형|엘/)) return 'Large';
+            if (text.match(/라지|엘사이즈|큰거|큰컵|큰잔|큰사이즈|대형|엘/)) return 'Large';
             if (text.match(/미디엄|중간|보통사이즈|엠사이즈|중형/)) return 'Medium';
-            if (text.match(/스몰|작은거|작은사이즈|소형|에스사이즈/)) return 'Small';
+            if (text.match(/스몰|작은거|작은컵|작은잔|작은사이즈|소형|에스사이즈/)) return 'Small';
             return '';
         }
 
@@ -1246,8 +1347,8 @@
             document.getElementById('admin-panel').classList.remove('hidden');
             currentStageName = 'admin_panel_open';
             adminDraft = null;
-            document.getElementById('admin-draft-box').innerText = '"메뉴 추가" 또는 "고객 실행" 이라고 말씀해보세요.';
-            speakText("관리자 설정이 열렸습니다. 메뉴 추가 라고 말씀하시면 새 메뉴를 등록하고, 고객 실행 이라고 말씀하시면 주문 말을 확인합니다.");
+            document.getElementById('admin-draft-box').innerText = '가게는 아래 버튼으로 고르고, "메뉴 추가" 또는 "고객 실행" 이라고 말씀해보세요.';
+            speakText("관리자 설정이 열렸습니다. 가게는 화면의 버튼으로 고르세요. 메뉴 추가 라고 말씀하시면 새 메뉴를 등록하고, 고객 실행 이라고 말씀하시면 주문 말을 확인합니다.");
         }
         function closeAdminPanel() { document.getElementById('admin-panel').classList.add('hidden'); adminDraft = null; showWelcomeScreen(); }
         function handleAdminVoice(lower, original) {
@@ -1399,11 +1500,13 @@
             if (isAddOnPhase) {
                 html += `</div><div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-3 !text-sm mt-2">대답 예: "음료", 또는 "결제할게요"</div>`;
                 updateUI("[추가주문] 카테고리 선택", "결제를 원하시면 결제라고 말씀해주세요.", html);
-                speakText(`추가로 주문하실 카테고리를 골라주세요. 추가 주문이 없으시면 결제라고 말씀해주세요.`);
+                speakText("추가 메뉴입니다. " + uniqueCats.join(", ") + " 입니다. 원하시는 메뉴를 말씀해 주세요.");
             } else {
-                html += `</div><div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-3 !text-sm mt-2">대답 예: "국밥", "음료"</div>`;
-                updateUI("어떤 메뉴를 원하시나요?", "카테고리를 확인하고 말씀해주세요.", html);
-                speakText(`저희 매장에는 ${uniqueCats.join(", ")} 카테고리가 있습니다. 무엇을 드시겠습니까?`);
+                const explained = (typeof window.__kioskExplainLine === "function" && window.__kioskExplainLine()) || (((customMenus[0] && customMenus[0].name) || "메뉴") + " 해 주세요.");
+                const sampleName = explained.split(",")[0].replace(/해 주세요\.?$/g, "").trim() || "메뉴";
+                html += `</div><div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-3 !text-sm mt-2">대답 예: "${sampleName}"</div>`;
+                updateUI("어떤 메뉴를 원하시나요?", "보이는 메뉴 이름을 그대로 말씀해 주세요.", html);
+                speakText(explained);
             }
         }
 
@@ -1427,16 +1530,19 @@
             html += `</div>`;
             let titleText = currentGridTitle; if (isAddOnPhase && !titleText.includes("추가주문")) titleText = `[추가주문] ` + titleText;
 
+            const announce = window.__kioskSilentMenuGrid ? function () {} : speakText;
+            const explained = (typeof window.__kioskExplainLine === "function" && window.__kioskExplainLine()) || ((menus[0] ? menus[0].name : "메뉴") + " 해 주세요.");
+            const sampleName = explained.split(",")[0].replace(/해 주세요\.?$/g, "").trim() || (menus[0] ? menus[0].name : "메뉴");
             if (selectedCategory === "추천 맛") {
-                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${menus[0].name}" 또는 "오른쪽 거"</div>`;
-                updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); speakText(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
+                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
+                updateUI(titleText, "원하시는 메뉴 이름이나 위치를 말씀해주세요.", html); announce(explained);
             } else if (isAddOnPhase) {
-                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "오른쪽 거", 또는 "결제할게요"</div>`;
+                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
                 updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html);
-                speakText((ttsArray.length ? ttsArray.join(", ") + " 등이 있습니다. " : "") + "추가하실 메뉴 이름을 말씀해주세요. 더 없으면 결제라고 말씀해주세요.");
+                announce(explained);
             } else {
-                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${menus[0].name}" 또는 "첫번째 거"</div>`;
-                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); speakText(`${ttsArray.join(", ")} 등이 있습니다. 어떤 메뉴를 주문하시겠습니까?`);
+                html += `<div class="status-giant border-emerald-500 text-emerald-600 bg-emerald-50/50 !p-2.5 !text-sm mt-2 w-full">대답 예: "${sampleName}"</div>`;
+                updateUI(titleText, "원하시는 위치나 이름을 말씀해주세요.", html); announce(explained);
             }
         }
 
@@ -1572,9 +1678,12 @@
                 <div class="font-black text-center mt-1" style="font-size:1.2em">추가할 메뉴가 있으면 이름을 말씀해 주세요.</div>
             `);
             const itemSpeech = orderState.items.map(i => `${i.item} ${i.count}개`).join(", ");
+            const placeSpeech = orderState.place.indexOf("포장") !== -1
+                ? "포장으로 선택하셨습니다. "
+                : (orderState.place.indexOf("매장") !== -1 ? "매장에서 드시기를 선택했습니다. " : "");
             speakText(itemSpeech
-                ? `주문하신 메뉴는 ${itemSpeech}입니다. 총 금액은 ${sum}원입니다. 맞으시면 결제라고 말씀해주세요.`
-                : "주문 내역이 비어 있습니다.");
+                ? `${placeSpeech}주문하신 메뉴는 ${itemSpeech}입니다. 총 금액은 ${sum}원입니다. 맞으시면 결제라고 말씀해주세요.`
+                : (placeSpeech || "주문 내역이 비어 있습니다."));
         }
         function askPaymentStage() {
             let html = `
@@ -1638,8 +1747,18 @@
                     const m = customMenus.find(mm => mm.name === keptName);
                     if (m && m.category === '커피') { askTemperature(); break; }
                     if (m && m.category === "햄버거") { askUpsell(); break; }
+                    if (m) {
+                        selectedCategory = m.category;
+                        currentGridMenus = customMenus.filter(mm => mm.category === m.category);
+                        currentGridTitle = m.category + " 메뉴판";
+                        const idx = Math.max(0, currentGridMenus.findIndex(mm => mm.name === m.name));
+                        window.__kioskSilentMenuGrid = true;
+                        try { renderMenuGrid(); } finally { window.__kioskSilentMenuGrid = false; }
+                        highlightMenuConfirm(m, idx);
+                        updateFloatingBasket();
+                        break;
+                    }
                     transitionTo('menu_grid', renderMenuGrid);
-                    if (keptName) speakText(keptName + " 수량 선택에서 메뉴판으로 돌아왔습니다. " + keptName + "을 다시 고르시려면 그 메뉴 이름을 말씀해주세요.");
                     break;
                 }
                 case 'cup_size': transitionTo('quantity', askQuantity); break;
@@ -1654,6 +1773,14 @@
                 case 'beverage_result': optionStepIndex = Math.max(0, optionList.length - 1); transitionTo('beverage_option_step', renderBeverageOptionStep); break;
                 case 'summary_add_quantity': resetTempItemOnly(); transitionTo('summary', renderSummary); break;
                 case 'add_more_prompt':
+                    if (isTempItemValid(tempItem)) {
+                        const kept = customMenus.find(m => m.name === tempItem.item);
+                        if (kept && kept.category === "음료" && tempItem.cupSize) transitionTo('cup_size', askCupSize);
+                        else if (kept && (kept.category === "음료" || kept.category === "커피") && tempItem.beverageOptions) transitionTo('beverage_result', renderBeverageResult);
+                        else askQuantity();
+                        updateFloatingBasket();
+                        break;
+                    }
                     if(orderState.items.length > 0) {
                         tempItem = orderState.items.pop();
                         const mm = customMenus.find(m => m.name === tempItem.item);
@@ -1661,7 +1788,7 @@
                         else if (mm && mm.category === "커피") transitionTo('beverage_result', renderBeverageResult);
                         else askQuantity();
                         speakText("이전 화면으로 돌아왔습니다.");
-                    } else { resetTempItemOnly(); askQuantity(); }
+                    } else { transitionTo('category_select', renderCategorySelect); }
                     break;
                 case 'place': transitionTo('add_more_prompt', renderAddMorePrompt); break;
                 case 'summary': transitionTo('place', renderPlaceSelect); break;
@@ -7436,6 +7563,8 @@ var addLearningCluster = window.addLearningCluster || function() {
         // 지금은 "주문 중" 안정성을 우선해서 절전 모드에서는 자동 재시작 안 함.
         if (isActuallySleepMode()) return false;
 
+        if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF) return false;
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) return false;
         if (window.speechSynthesis && window.speechSynthesis.speaking) return false;
 
         return true;
@@ -7447,6 +7576,7 @@ var addLearningCluster = window.addLearningCluster || function() {
         const wait = delay !== null ? delay : restartBackoff;
 
         recoveryTimer = setTimeout(() => {
+            if (window.__kioskHybridRunning || window.__kioskHybridStarting) return;
             if (!canStartSpeech()) {
                 // TTS 중이면 조금 뒤 다시
                 if (window.speechSynthesis && window.speechSynthesis.speaking) {
@@ -7679,7 +7809,7 @@ var addLearningCluster = window.addLearningCluster || function() {
 
         let selected = normalizeCandidateText(candidates[0]);
 
-        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        if (window.speechSynthesis && window.speechSynthesis.speaking && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(selected))) {
             console.log("TTS 중 인식 차단:", selected);
             return;
         }
@@ -7718,7 +7848,10 @@ var addLearningCluster = window.addLearningCluster || function() {
     watchdogTimer = setInterval(() => {
         if (forceStopped) return;
         if (isActuallySleepMode()) return;
+        if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF) return;
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) return;
         if (window.speechSynthesis && window.speechSynthesis.speaking) return;
+        if (window.__kioskHybridRunning || window.__kioskHybridStarting) return;
 
         if (!isListening && !isStarting) {
             console.log("🛠️ Watchdog: 음성인식 꺼짐 감지 → 복구");
@@ -9012,9 +9145,14 @@ if (typeof updateDrink3DFromTempItem === "function") {
             window.speechSynthesis.cancel();
         } catch (e) {}
 
-        setTimeout(() => {
-            speakText("절전 모드입니다. 주문을 시작하시려면 아래의 빛나는 버튼을 눌러주세요.");
-        }, 500);
+        const sleepLine = "절전 모드입니다. 주문을 시작하시려면 아래의 빛나는 버튼을 눌러주세요.";
+        const sleepNow = Date.now();
+        if (!(window.__kioskSleepAnnouncedAt && sleepNow - window.__kioskSleepAnnouncedAt < 8000)) {
+            window.__kioskSleepAnnouncedAt = sleepNow;
+            setTimeout(() => {
+                speakText(sleepLine);
+            }, 500);
+        }
 
         console.log("💤 버튼 기반 절전 모드 진입");
     }
@@ -9548,7 +9686,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
 
         if (!recognition) return;
 
-        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF || (window.speechSynthesis && window.speechSynthesis.speaking) || (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking())) {
             fastRecoveryTimer = setTimeout(() => {
                 fastStartRecognition(reason + " / TTS 후", 300);
             }, 400);
@@ -9562,7 +9700,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
         const wait = Math.max(delay, Math.max(0, MIN_RESTART_GAP - sinceLast));
 
         fastRecoveryTimer = setTimeout(() => {
-            if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            if (window.isTtsSpeaking || window.__TTS_FINAL_MIC_OFF || (window.speechSynthesis && window.speechSynthesis.speaking) || (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking())) {
                 fastStartRecognition(reason + " / TTS 재대기", 300);
                 return;
             }
@@ -9777,7 +9915,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
 
         const selected = normalizeCandidate(candidates[0]);
 
-        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        if (window.speechSynthesis && window.speechSynthesis.speaking && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(selected))) {
             console.log("TTS 중 인식 차단:", selected);
             return;
         }
@@ -9815,18 +9953,8 @@ if (typeof updateDrink3DFromTempItem === "function") {
        ---------------------------------------------------------------------- */
     if (fastWatchdogTimer) {
         clearInterval(fastWatchdogTimer);
+        fastWatchdogTimer = null;
     }
-
-    fastWatchdogTimer = setInterval(() => {
-        if (window.speechSynthesis && window.speechSynthesis.speaking) return;
-
-        const offlineTime = Date.now() - lastRecognitionActiveAt;
-
-        if (!isListening && !isStarting && offlineTime > MAX_OFFLINE_TIME) {
-            console.log("🛠️ Watchdog: 5초 이상 비활성 → 강제 복구");
-            fastStartRecognition("watchdog 빠른 복구", 100);
-        }
-    }, WATCHDOG_INTERVAL);
 
     setTimeout(() => {
         fastStartRecognition("초기 빠른 복구", 300);
@@ -10819,6 +10947,7 @@ if (typeof updateDrink3DFromTempItem === "function") {
     };
 
     window.addEventListener("keydown", function(e) {
+        if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
         if (e.key.toLowerCase() === "d") {
             openWordDictionaryWindow();
         }
@@ -13149,6 +13278,19 @@ stopListeningUI = function whisperStopListeningUIOverride() {
             };
         }
 
+        if (typeof window.__kioskTrainedTarget === "function") {
+            const trained = window.__kioskTrainedTarget(raw);
+            if (trained) {
+                return {
+                    related: true,
+                    learnable: false,
+                    outputText: trained,
+                    changed: norm(trained) !== raw,
+                    reason: "trained_phrase"
+                };
+            }
+        }
+
         if (isStrictYes(raw) || isStrictNo(raw) || isMenuConfirmPositive(raw)) {
             return {
                 related: true,
@@ -14319,6 +14461,7 @@ stopListeningUI = function whisperStopListeningUIOverride() {
     window.deleteAutoLearnedVariant = deleteVariant;
 
     window.addEventListener("keydown", function(e) {
+        if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
         if (e.key.toLowerCase() === "d") {
             openView();
         }
@@ -14816,7 +14959,7 @@ function isRepeatMenuCommand(text) {
         const c = compact(text);
 
         if (/200|이백|스몰|작은|소형|작은컵|작은거/.test(c)) return "200ml";
-        if (/350|삼백오십|미디엄|중간|보통|중형/.test(c)) return "350ml";
+        if (/350|삼백오십|미디엄|중간장|중간잔|중간|보통|중형/.test(c)) return "350ml";
         if (/500|오백|라지|큰|대형|큰컵|큰거/.test(c)) return "500ml";
 
         return "";
@@ -16902,6 +17045,7 @@ stopListeningUI = function finalStopListeningUI() {
 };
 
 window.addEventListener("keydown", function(e) {
+    if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
     if (e.key && e.key.toLowerCase() === "d") {
         openLearningWindow();
     }
@@ -19364,7 +19508,8 @@ console.log("✅ FINAL_SINGLE_CLEAN_INTEGRATION 적용 완료");
           숫자 직접 입력/인식
           예: 3개, 50개, 7번째
         */
-        const digitMatch = raw.match(/([0-9]+)\s*(개|잔|그릇|인분|명|병|컵|번|번째|째)?/);
+        const withoutCup = raw.replace(/[0-9]+\s*(ml|밀리리터|밀리|미리|엠엘)/gi, " ");
+        const digitMatch = withoutCup.match(/([0-9]+)\s*(개|잔|그릇|인분|명|병|컵|번|번째|째)?/);
 
         if (digitMatch) {
             const n = parseInt(digitMatch[1], 10);
@@ -21055,13 +21200,25 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
 
         if (!clean) return 0;
 
-        // 1개, 2개, 10개, 50개
-        const digitMatch = raw.match(/([0-9]+)\s*(개|잔|그릇|인분|명|병|컵)?/);
+        const withoutCup = raw.replace(/[0-9]+\s*(ml|밀리리터|밀리|미리|엠엘)/gi, " ");
+
+        // 1개, 2개, 10개, 50개. 350ml, 500ml 같은 용량 숫자는 수량이 아니다.
+        const digitMatch = withoutCup.match(/([0-9]+)\s*(개|잔|그릇|인분|명|병|컵)?/);
         if (digitMatch) {
             const n = parseInt(digitMatch[1], 10);
             if (!Number.isNaN(n) && n > 0) {
                 return Math.min(n, 99);
             }
+        }
+
+        const compoundMap = [
+            ["스물아홉", 29], ["스물여덟", 28], ["스물일곱", 27], ["스물여섯", 26], ["스물다섯", 25],
+            ["스물네", 24], ["스물세", 23], ["스물두", 22], ["스물한", 21],
+            ["열아홉", 19], ["열여덟", 18], ["열일곱", 17], ["열여섯", 16], ["열다섯", 15],
+            ["열네", 14], ["열세", 13], ["열두", 12], ["열한", 11]
+        ];
+        for (const [word, value] of compoundMap) {
+            if (clean.includes(word)) return value;
         }
 
         // 단순 수량
@@ -21243,6 +21400,12 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
         );
     }
 
+    window.__kioskAllowDuringTts = function (text) {
+        const raw = String(text || "");
+        const compact = raw.replace(/[\s.,?!~'"]/g, "");
+        return /이대로|그대로|이상태|다시|이전으로|이전|뒤로|돌아가/.test(raw) || /이대로|그대로|이상태|다시|대로|전으로|이전|뒤로/.test(compact);
+    };
+
     const previousSpeakTextEmergency = window.speakText || speakText;
 
     window.speakText = speakText = function emergencySpeakText(text, onEndCallback = null) {
@@ -21299,11 +21462,6 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
     const previousShowVoiceResultEmergency = window.showVoiceResult || showVoiceResult;
 
     window.showVoiceResult = showVoiceResult = function emergencyShowVoiceResult(text) {
-        if (isTtsBlockedNow()) {
-            console.log("🚫 TTS 중 showVoiceResult 차단:", text);
-            return;
-        }
-
         return previousShowVoiceResultEmergency(text);
     };
 
@@ -21648,6 +21806,7 @@ speakText = function whisperSafeSpeakText(text, onEndCallback = null) {
     window.addEventListener(
         "keydown",
         function(e) {
+            if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
             const key = String(e.key || "").toLowerCase();
 
             if (key !== "f") return;
@@ -23618,6 +23777,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             }, Math.max(2500, job.message.length * 210) + 1200);
 
             utterance.onstart = function () {
+                job.started = true;
                 document.body.classList.add("tts-speaking");
             };
 
@@ -23629,21 +23789,38 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 const reason = event && event.error ? String(event.error) : "";
                 if (reason === "interrupted" || reason === "canceled" || reason === "cancelled") {
                     if (job.done) return;
-                    job.done = true;
+                    if (job.started) {
+                        finishRecoveredUtterance(job, safetyTimer, true);
+                        return;
+                    }
                     clearTimeout(safetyTimer);
                     if (recoveredSmoothSpeakText._currentJob !== job) return;
+                    job.retries = (job.retries || 0) + 1;
+                    if (job.retries <= 2) {
+                        window.isTtsSpeaking = true;
+                        window.__ttsHardBlock = true;
+                        try { if (typeof window.stopHybridSTT === "function") window.stopHybridSTT(); } catch (e) {}
+                        try { if (typeof window.stopListening === "function") window.stopListening(); } catch (e) {}
+                        setTimeout(function () {
+                            if (job.done || recoveredSmoothSpeakText._currentJob !== job) return;
+                            playRecoveredUtterance(job);
+                        }, 180);
+                        return;
+                    }
+                    job.done = true;
                     recoveredSmoothSpeakText._queue.length = 0;
                     recoveredSmoothSpeakText._busy = false;
                     recoveredSmoothSpeakText._current = "";
                     window.isTtsSpeaking = false;
                     window.__ttsHardBlock = false;
-                    window.__ttsBlockUntil = Date.now() + 200;
+                    window.__ttsBlockUntil = 0;
                     document.body.classList.remove("tts-speaking");
                     return;
                 }
                 finishRecoveredUtterance(job, safetyTimer, true);
             };
 
+            try { if (window.speechSynthesis.paused) window.speechSynthesis.resume(); } catch (e) {}
             try { window.speechSynthesis.speak(utterance); } catch (e) {}
         }
 
@@ -24267,6 +24444,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function processDirectOption(text) {
         const raw = norm(text);
 
+        try {
+            if (/^(quantity|cup_size|beverage_option_prompt|beverage_option_step|beverage_result|add_more_prompt|place|summary|summary_add_quantity|payment)$/.test(String(currentStageName || ""))) {
+                return false;
+            }
+        } catch (e) {}
+
         if (!hasAnyDirectOptionIntent(raw)) {
             return false;
         }
@@ -24424,9 +24607,14 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             window.__ttsBlockUntil = 0;
         } catch (e) {}
 
-        setTimeout(() => {
-            speakText("절전 모드입니다. 주문을 시작하시려면 아래의 빛나는 버튼을 눌러주세요.");
-        }, 300);
+        const sleepLine = "절전 모드입니다. 주문을 시작하시려면 아래의 빛나는 버튼을 눌러주세요.";
+        const sleepNow = Date.now();
+        if (!(window.__kioskSleepAnnouncedAt && sleepNow - window.__kioskSleepAnnouncedAt < 8000)) {
+            window.__kioskSleepAnnouncedAt = sleepNow;
+            setTimeout(() => {
+                speakText(sleepLine);
+            }, 300);
+        }
     };
 
     window.exitSleepMode = function recoveredExitSleepMode() {
@@ -25101,6 +25289,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     function processDirectOptionOrder(text) {
         const raw = norm(text);
+
+        try {
+            if (/^(quantity|cup_size|beverage_option_prompt|beverage_option_step|beverage_result|add_more_prompt|place|summary|summary_add_quantity|payment)$/.test(String(currentStageName || ""))) {
+                return false;
+            }
+        } catch (e) {}
 
         if (!hasDirectOptionIntent(raw)) {
             return false;
@@ -26699,6 +26893,13 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const c = compact(text);
 
         if (!c) return false;
+        if (window.__kioskTrainedHit && window.__kioskTrainedHit(text)) return true;
+        if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
+        if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
+        if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
+        const heard = String(text || "").replace(/\s+/g, "");
+        if (/작은잔|작은전|중간잔|중간장|큰잔|작잔/.test(heard) || /작잔|작전|큰잔|중간잔|중간장/.test(c)) return true;
+        if (/집가서먹|집에서먹|집에가서먹/.test(heard) || /집서먹|집에서먹|집가서먹/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -26829,7 +27030,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function processFilteredText(text){
         const t = normalizeText(text);
 
-        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(t))) {
             console.log("[kiosk] TTS 중 음성 차단:", t);
             return true;
         }
@@ -26846,8 +27047,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
+        const asking = /뭐야|뭔데|뭐예|특징|설명|얼마|가격|무슨맛|어떤맛/.test(compact(t));
         const menu = findMenu(t);
-        if (menu) return selectMenu(menu, t);
+        if (menu && !asking) return selectMenu(menu, t);
+        if (asking) return false;
 
         const cat = findCategory(t);
         if (cat) return openCategory(cat);
@@ -27140,6 +27343,13 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const c = compact(text);
 
         if (!c) return false;
+        if (window.__kioskTrainedHit && window.__kioskTrainedHit(text)) return true;
+        if (/이대로|그대로|이상태/.test(String(text || "")) || /대로|그대로|이상태/.test(c)) return true;
+        if (/뭐야|뭔데|뭐예|다시/.test(String(text || "")) || /뭐야|뭔데|뭐예|다시/.test(c)) return true;
+        if (/이전으로|이전|뒤로|돌아가/.test(String(text || "")) || /전으로|이전|뒤로/.test(c)) return true;
+        const heard = String(text || "").replace(/\s+/g, "");
+        if (/작은잔|작은전|중간잔|중간장|큰잔|작잔/.test(heard) || /작잔|작전|큰잔|중간잔|중간장/.test(c)) return true;
+        if (/집가서먹|집에서먹|집에가서먹/.test(heard) || /집서먹|집에서먹|집가서먹/.test(c)) return true;
 
         // __PLACE_HARD_RELATED_PATCH__
         // compact()가 '가'를 지워서 '들고 가서 먹을래요'가 '들고서먹래'가 되는 문제 보정
@@ -27263,7 +27473,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     function routeText(text){
         const t = normalizeText(text);
 
-        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(t))) {
             console.log("[kiosk] TTS 중 음성 차단:", t);
             chunks = [];
             return true;
@@ -27281,7 +27491,23 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
+        let stageNow = "";
+        try { stageNow = String(currentStageName || ""); } catch (e) {}
+        if (stageNow === "summary") {
+            try {
+                if (typeof processVoiceCommand === "function") processVoiceCommand(t);
+            } catch (e) {}
+            return true;
+        }
+
+        const asking = /뭐야|뭔데|뭐예|특징|설명|얼마|가격|무슨맛|어떤맛/.test(compact(t));
         const menu = findMenu(t);
+        if (asking) {
+            try {
+                if (typeof processVoiceCommand === "function") processVoiceCommand(t);
+            } catch (e) {}
+            return true;
+        }
         if (menu) {
             console.log("✅ HYBRID 메뉴:", menu.name);
 
@@ -27375,7 +27601,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     async function sendWhisper(fallbackText){
         if (sendingWhisper) return;
-        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(fallbackText))) {
             chunks = [];
             console.log("[kiosk] TTS 중 음성 차단:", fallbackText);
             return;
@@ -27435,7 +27661,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
         if (!t) return;
 
-        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+        if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(t))) {
             chunks = [];
             console.log("[kiosk] TTS 중 음성 차단:", t);
             return;
@@ -27465,37 +27691,74 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         }
     }
 
+    let wantHybrid = false;
+    let starting = false;
+    let listenGen = 0;
+
+    function markHybrid(on) {
+        window.__kioskHybridRunning = !!on;
+        try {
+            isListening = !!on;
+            if (on) isStarting = false;
+        } catch (e) {}
+    }
+
+    function releaseStart(gen) {
+        if (gen !== listenGen) return;
+        starting = false;
+        window.__kioskHybridStarting = false;
+    }
+
     async function startHybrid(){
+        wantHybrid = true;
+        if (running || starting) return;
+
+        const gen = ++listenGen;
+        starting = true;
+        window.__kioskHybridStarting = true;
+
         if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            releaseStart(gen);
             clearTimeout(restartTimer);
-            restartTimer = setTimeout(startHybrid, 50);
+            restartTimer = setTimeout(startHybrid, 200);
             return;
         }
 
-        await ensureAudioQueue();
+        try {
+            await ensureAudioQueue();
+        } catch (e) {}
+
+        if (gen !== listenGen || !wantHybrid || running) {
+            releaseStart(gen);
+            return;
+        }
 
         if (!SpeechRecognitionClass) {
+            releaseStart(gen);
             console.warn("Web Speech API 없음. Whisper 전용으로 동작합니다.");
             if (typeof startWhisperListening === "function") startWhisperListening();
             return;
         }
 
-        if (running) return;
-
         try {
-            rec = new SpeechRecognitionClass();
-            rec.lang = "ko-KR";
-            rec.continuous = true;
-            rec.interimResults = false;
+            const mine = new SpeechRecognitionClass();
+            rec = mine;
+            mine.lang = "ko-KR";
+            mine.continuous = true;
+            mine.interimResults = false;
 
-            try { rec.maxAlternatives = 5; } catch(e) {}
+            try { mine.maxAlternatives = 5; } catch(e) {}
 
-            rec.onstart = function(){
+            mine.onstart = function(){
+                if (rec !== mine || gen !== listenGen) return;
                 running = true;
+                releaseStart(gen);
+                markHybrid(true);
                 console.log("⚡ HYBRID 빠른 STT 시작");
             };
 
-            rec.onresult = function(event){
+            mine.onresult = function(event){
+                if (rec !== mine) return;
                 let candidates = [];
 
                 for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -27521,36 +27784,51 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 handleFast(candidates[0]);
             };
 
-            rec.onerror = function(e){
-                console.log("HYBRID 빠른 STT error:", e.error);
+            mine.onerror = function(e){
+                if (rec !== mine) return;
+                const err = e && e.error ? e.error : "";
+                if (err === "aborted" && !wantHybrid) return;
+                console.log("HYBRID 빠른 STT error:", err);
             };
 
-            rec.onend = function(){
+            mine.onend = function(){
+                if (rec !== mine) return;
                 running = false;
+                releaseStart(gen);
+                markHybrid(false);
+                if (!wantHybrid || gen !== listenGen) return;
 
                 clearTimeout(restartTimer);
-                restartTimer = setTimeout(startHybrid, 80);
+                restartTimer = setTimeout(startHybrid, 300);
             };
 
-            rec.start();
+            mine.start();
 
         } catch(e) {
             running = false;
+            releaseStart(gen);
             console.log("HYBRID 빠른 STT 시작 실패:", e);
 
+            if (!wantHybrid || gen !== listenGen) return;
             clearTimeout(restartTimer);
             restartTimer = setTimeout(startHybrid, 1500);
         }
     }
 
     function stopHybrid(){
+        listenGen++;
+        wantHybrid = false;
         clearTimeout(restartTimer);
+        window.__kioskHybridStarting = false;
 
+        const mine = rec;
         try {
-            if (rec) rec.stop();
+            if (mine) mine.stop();
         } catch(e) {}
 
         running = false;
+        starting = false;
+        markHybrid(false);
     }
 
     window.startHybridSTT = startHybrid;
@@ -27956,7 +28234,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             return true;
         }
 
-        if (/이전|이전화면|뒤로|전화면/.test(c)) {
+        if (/이전|이전화면|뒤로|전화면|전으로/.test(c)) {
             try {
                 if (typeof goBack === "function") {
                     goBack();
@@ -28027,7 +28305,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 }
             } catch(e) {}
 
-            say("결제 단계로 이동합니다.");
+            say("카드요, 현금이요.");
             return true;
         }
 
@@ -28374,7 +28652,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 const menu = list[idx];
                 if (typeof highlightMenuConfirm === "function") highlightMenuConfirm(menu, idx);
                 else if (typeof selectSpecificItem === "function") selectSpecificItem(menu.name);
-                say(`${menu.name} 맞습니까? 맞으면 네, 아니면 아니요라고 말씀해주세요.`);
                 return true;
             }
         } else if (/마지막|끝/.test(c)) {
@@ -28382,7 +28659,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             const menu = list[idx];
             if (typeof highlightMenuConfirm === "function") highlightMenuConfirm(menu, idx);
             else if (typeof selectSpecificItem === "function") selectSpecificItem(menu.name);
-            say(`${menu.name} 맞습니까? 맞으면 네, 아니면 아니요라고 말씀해주세요.`);
             return true;
         }
 
@@ -28413,8 +28689,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         } else if (typeof selectSpecificItem === "function") {
             selectSpecificItem(menu.name);
         }
-
-        say(`${menu.name} 맞습니까? 맞으면 네, 아니면 아니요라고 말씀해주세요.`);
         return true;
     }
 
@@ -30123,6 +30397,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const stage = String(typeof currentStageName !== "undefined" ? currentStageName : "");
 
         if (stage !== "beverage_option_step") return false;
+        if (isBackCommand(text) || isHomeCommand(text)) return false;
 
         const level = parseOptionLevel(text);
 
@@ -31665,10 +31940,15 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             };
         }
 
+        const notAPlainNo = /뭐|왜|이게|무슨|뭔|어떻게/.test(c) && !noExact.includes(c);
+
         if (
+            !notAPlainNo &&
+            (
             noExact.includes(c) ||
             noStarts.some(w => c.startsWith(compactText(w))) ||
             noContains.some(w => c.includes(compactText(w)))
+            )
         ) {
             return {
                 related: true,
@@ -31999,6 +32279,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const n = normalizeNumberText(c);
 
         if (!c) return null;
+        if (/이대로|그대로|이상태|다시/.test(c)) return null;
 
         /*
           explicit:
@@ -32049,7 +32330,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             "큰컵", "큰 컵",
             "큰사이즈", "큰 사이즈",
             "큰거", "큰 것",
-            "대", "대자"
+            "대자"
         ];
 
         function includesAny(list) {
@@ -32093,8 +32374,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
           명확한 단위 표현은 언제든 라우팅.
           별칭 표현은 컵사이즈 화면일 때만 라우팅.
         */
+        let stage = "";
+        try { stage = String(currentStageName || ""); } catch (e) {}
+        if (stage && stage !== "cup_size") return false;
         if (r.explicit) return true;
-        if (isCupSizeContext()) return true;
+        if (stage === "cup_size" || isCupSizeContext()) return true;
 
         return false;
     }
@@ -34111,6 +34395,14 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 
     function muteMicForTTS(text, reason) {
+        const muteKey = rawText(text).slice(0, 160);
+        const muteNow = Date.now();
+        if (window.__lastTTSMuteKey === muteKey && muteNow - (window.__lastTTSMuteAt || 0) < 400) {
+            return window.__lastTTSFinalMicOff;
+        }
+        window.__lastTTSMuteKey = muteKey;
+        window.__lastTTSMuteAt = muteNow;
+
         window.__TTS_FINAL_MIC_OFF = true;
         window.__kioskTTSBusy = true;
 
@@ -34311,7 +34603,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                         }
                         intercept = true;
                     }
-                    else if (/이전|뒤로|전화면|돌아가/.test(clean)) { goBack(); intercept = true; }
                     else if (/추천|뭐먹|결정장애/.test(clean)) {
                         if (['welcome', 'category_select', 'menu_grid', 'add_more_prompt'].includes(currentStageName)) {
                             currentStageName = 'taste_select_prompt'; renderTasteSelectPrompt(); 
@@ -34404,6 +34695,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         document.head.appendChild(style);
     }
     window.addEventListener('keydown', function(e) {
+        if (window.__kioskInTextMode && window.__kioskInTextMode(e)) return;
         if (e.key.toLowerCase() === 'g') {
             const adminPanel = document.getElementById('admin-panel');
             if (adminPanel) {
@@ -34463,13 +34755,17 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 if (match) { isMatch = true; for(let i=1; i<match.length; i++) capturedVars.push(match[i]); }
             } else if (rule.match && text.includes(rule.match)) {
                 isMatch = true;
-            } else if (text.includes(rule.default.split(' ')[0])) { 
-                isMatch = true;
+            } else if (rule.default) {
+                const head = String(rule.default).replace(/\s+/g, " ").trim().slice(0, 12);
+                if (head.length >= 8 && String(text).includes(head)) isMatch = true;
             }
             
             if (isMatch) {
                 let customText = localStorage.getItem(rule.id);
-                if (customText) {
+                const source = String(text || "");
+                const savedQty = customText && String(customText).indexOf("메뉴 수량을 말씀") !== -1;
+                const sourceIsQty = /메뉴 수량을 말씀|몇 .+인지 말씀|수량을 말씀해/.test(source);
+                if (customText && !(savedQty && !sourceIsQty)) {
                     finalText = customText;
                     for(let i=0; i<capturedVars.length; i++) finalText = finalText.replace(`{${i}}`, capturedVars[i]);
                 }
@@ -34921,8 +35217,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     const isAdminOpen = adminPanel && !adminPanel.classList.contains('hidden');
                     let intercept = false;
 
+                    if (/이대로|그대로|이상태|다시/.test(clean)) {
+                        intercept = false;
+                    }
                     // [수정 1] 볼륨과 화면 확대 단어의 완벽한 분리
-                    if (/소리|볼륨/.test(clean)) {
+                    else if (/소리|볼륨/.test(clean)) {
                         speakText("볼륨 조절은 기기 자체의 물리 버튼을 이용해 주세요.");
                         intercept = true;
                     }
@@ -34967,7 +35266,6 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                         if (typeof renderTasteSelectPrompt === 'function') renderTasteSelectPrompt();
                         intercept = true;
                     }
-                    else if (/이전|뒤로|전화면|돌아가/.test(clean)) { goBack(); intercept = true; }
                     else if (/처음부터|처음으로|다시시작/.test(clean)) {
                         if(document.getElementById('custom-alert-modal') && !document.getElementById('custom-alert-modal').classList.contains('hidden')) closeCustomAlert(); 
                         else { speakText("네, 처음 화면으로 돌아갑니다."); showWelcomeScreen(); }
@@ -35166,7 +35464,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     const clean = String(transcript).replace(/[\s,.'?!]+/g, '');
                     
                     // "설명해 줘" 명령어 가로채기
-                    if (/설명해줘|뭐야|뭐해야돼|어떻게해|기능설명/.test(clean)) {
+                    if (/설명해줘|뭐야|뭐해야돼|어떻게해|기능설명/.test(clean) && !/세트/.test(clean)) {
                         console.log("🛡️ [HELP SHIELD] 화면 설명 요청 가로챔");
                         window.hybridLock = true; setTimeout(() => window.hybridLock = false, 2000);
                         if (typeof showVoiceResult === 'function') showVoiceResult(transcript);
@@ -35284,7 +35582,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                     const clean = String(transcript).replace(/[\s,.'?!]+/g, '');
 
                     // 사용자가 제안한 '뭔데', '뭐고', '어떻게', '도와' 등 자연스러운 표현 싹 다 추가
-                    if (/설명|뭐야|뭔데|뭐고|뭐해야|어떻게|도와/.test(clean)) {
+                    if (/설명|뭐야|뭔데|뭐고|뭐해야|어떻게|도와/.test(clean) && !/세트/.test(clean) && !/이대로|그대로|다시/.test(clean)) {
                         console.log("🛡️ [HELP SHIELD V2] 자연스러운 화면 설명 요청 가로챔:", transcript);
                         window.hybridLock = true; setTimeout(() => window.hybridLock = false, 2000);
                         if (typeof showVoiceResult === 'function') showVoiceResult(transcript);
@@ -35403,18 +35701,8 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     // 1. 브라우저의 말하기 엔진(speak)을 가로채서 톤과 속도를 강제로 덮어씌움
     if (!window._deepVoicePatched) {
-        const origSpeak = window.speechSynthesis.speak;
-        window.speechSynthesis.speak = function(utterance) {
-            // 기본값: 톤 0.7 (낮고 묵직하게), 속도 0.85 (조금 느리고 또박또박하게)
-            const savedPitch = parseFloat(localStorage.getItem('kiosk_tts_pitch')) || 0.7;
-            const savedRate = parseFloat(localStorage.getItem('kiosk_tts_rate')) || 0.85;
-            
-            utterance.pitch = savedPitch;
-            utterance.rate = savedRate;
-            
-            origSpeak.call(window.speechSynthesis, utterance);
-        };
         window._deepVoicePatched = true;
+        console.log("[목소리] 낮은 톤으로 덮어쓰지 않습니다.");
     }
 
     // 2. 관리자 패널(G키)에 톤과 속도를 직접 조절할 수 있는 슬라이더 추가
@@ -35424,10 +35712,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             const sliderHtml = `
                 <div class="mt-3 mb-3 bg-black/40 p-3 rounded-lg border border-white/10">
                     <label class="text-[#e8d9c0] text-[13px] font-bold block mb-2">🎚️ 목소리 톤 (낮게 ~ 높게)</label>
-                    <input type="range" id="tts-pitch-slider" min="0.1" max="1.5" step="0.1" value="${localStorage.getItem('kiosk_tts_pitch') || 0.7}" class="w-full mb-4" style="pointer-events: auto;">
+                    <input type="range" id="tts-pitch-slider" min="0.1" max="1.5" step="0.1" value="${localStorage.getItem('kiosk_tts_pitch') || 1}" class="w-full mb-4" style="pointer-events: auto;">
                     
                     <label class="text-[#e8d9c0] text-[13px] font-bold block mb-2">⏱️ 말하기 속도 (느리게 ~ 빠르게)</label>
-                    <input type="range" id="tts-rate-slider" min="0.5" max="1.5" step="0.05" value="${localStorage.getItem('kiosk_tts_rate') || 0.85}" class="w-full" style="pointer-events: auto;">
+                    <input type="range" id="tts-rate-slider" min="0.5" max="1.5" step="0.05" value="${localStorage.getItem('kiosk_tts_rate') || 0.94}" class="w-full" style="pointer-events: auto;">
                 </div>
             `;
             
@@ -35468,11 +35756,10 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         const voices = window.speechSynthesis.getVoices();
         if (voices.length === 0) return;
         
-        // 1순위: 엣지 자연스러운 여성 (SunHi) / 2순위: 구글 여성 / 3순위: 윈도우 기본 여성(Heami)
-        let bestVoice = voices.find(v => v.name.includes('SunHi') && v.name.includes('Natural')) ||
+        let bestVoice = voices.find(v => v.name.includes('SunHi') && /Natural|Neural/i.test(v.name)) ||
                         voices.find(v => v.name.includes('Google') && v.lang.includes('ko')) ||
-                        voices.find(v => v.name.includes('Heami'));
-                        
+                        voices.find(v => /SunHi|Yuna|InJoon/i.test(v.name));
+
         if (bestVoice && !localStorage.getItem('kiosk_manual_tts_voice')) {
             window.selectedFemaleVoice = bestVoice;
             localStorage.setItem('kiosk_manual_tts_voice', bestVoice.voiceURI);
@@ -35643,7 +35930,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         if (decision.kind === "hear") {
             bumpVolume();
             const last = String(window.__kioskLastSpoken || "").trim();
-            say(last ? ("소리를 키웠습니다. 다시 말씀드릴게요. " + last) : ("소리를 키웠습니다. " + guide));
+            say("소리를 키웠어요. 다시 말씀해 주세요.");
             return true;
         }
 
@@ -35665,7 +35952,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     const previousCommand = window.processVoiceCommand;
     if (typeof previousCommand === "function" && !previousCommand.__kioskAssistFront) {
         const wrappedCommand = function (text) {
-            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+            if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking() && !(typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(text))) {
                 console.log("[kiosk] TTS 중 음성 차단:", text);
                 return;
             }
@@ -35962,6 +36249,13 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
                 this.__kioskTtsGuard = true;
                 this.addEventListener("result", function (event) {
                     if (typeof window.__kioskTtsBlocking === "function" && window.__kioskTtsBlocking()) {
+                        let heard = "";
+                        try {
+                            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                                heard += event.results[i][0].transcript;
+                            }
+                        } catch (e) {}
+                        if (typeof window.__kioskAllowDuringTts === "function" && window.__kioskAllowDuringTts(heard)) return;
                         console.log("[kiosk] TTS 중 음성 차단");
                         event.stopImmediatePropagation();
                     }
@@ -35975,11 +36269,50 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 
     console.log("[kiosk] 상황 안내를 적용했습니다. 말하는 동안에는 음성 인식을 받지 않습니다.");
 })();
+
+    (function exposeOrderState() {
+        function bind(name, read, write) {
+            try {
+                Object.defineProperty(window, name, {
+                    configurable: true,
+                    enumerable: false,
+                    get: read,
+                    set: write
+                });
+            } catch (err) {}
+        }
+        bind("currentStageName", function () { return currentStageName; }, function (value) { currentStageName = value; });
+        bind("orderState", function () { return orderState; }, function (value) { orderState = value; });
+        bind("tempItem", function () { return tempItem; }, function (value) { tempItem = value; });
+        bind("customMenus", function () { return customMenus; }, function (value) { customMenus = value; });
+        bind("isAddOnPhase", function () { return isAddOnPhase; }, function (value) { isAddOnPhase = value; });
+        bind("optionList", function () { return optionList; }, function (value) { optionList = value; });
+        bind("optionStepIndex", function () { return optionStepIndex; }, function (value) { optionStepIndex = value; });
+        bind("selectedCategory", function () { return selectedCategory; }, function (value) { selectedCategory = value; });
+        bind("currentGridMenus", function () { return currentGridMenus; }, function (value) { currentGridMenus = value; });
+        bind("pendingMenuName", function () { return pendingMenuName; }, function (value) { pendingMenuName = value; });
+        bind("pendingMenuIndex", function () { return pendingMenuIndex; }, function (value) { pendingMenuIndex = value; });
+        bind("categoryIconMap", function () { return categoryIconMap; }, function () {});
+        bind("categoryToneMap", function () { return categoryToneMap; }, function () {});
+        bind("exactMenuIconMap", function () { return exactMenuIconMap; }, function () {});
+    })();
 </script>
+<script src="/kiosk_learned_words.js"></script>
 <script src="/kiosk_use_metrics.js"></script>
 <script src="/kiosk_customer.js"></script>
 <script src="/kiosk_shop.js"></script>
 <script src="/kiosk_presbyopia.js"></script>
+<script src="/kiosk_talk.js"></script>
+<script src="/kiosk_age_filter.js"></script>
+<script src="/kiosk_elder_sim.js"></script>
+<script src="/kiosk_reach.js"></script>
+<script src="/kiosk_age_learn.js"></script>
+<script src="/kiosk_order_fix.js"></script>
+<script src="/kiosk_noise_learn.js"></script>
+<script src="/kiosk_crowd_sim.js"></script>
+<script src="/kiosk_quiet_sim.js"></script>
+<script src="/kiosk_voice.js"></script>
+<script src="/kiosk_text_mode.js"></script>
 
 </body>
 </html>
