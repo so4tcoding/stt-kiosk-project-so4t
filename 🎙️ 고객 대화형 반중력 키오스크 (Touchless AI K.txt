@@ -21,9 +21,9 @@ PowerShell
 Write-Host "키오스크 로컬 서버 세팅 중..." -ForegroundColor Cyan
 Start-Job {
     Start-Sleep -Seconds 2
-    Start-Process "http://localhost:8000/kiosk_stable_current.html"
+    Start-Process "http://localhost:8000/kiosk.html"
 } | Out-Null
-python -m http.server 8000
+python -m uvicorn stt_server:app --host 127.0.0.1 --port 8000
 "@ | Out-File -FilePath ".\start_kiosk.ps1" -Encoding utf8
 이제 실행 스크립트가 만들어졌습니다. 터미널에 아래 명령어를 입력하여 키오스크를 실행합니다.
 
@@ -43,11 +43,11 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 명령어 입력 후 Y를 누르고, 다시 .\start_kiosk.ps1 을 실행하시면 정상 작동합니다.
 
 💻 4. 코드 수정 및 개발 가이드
-이 프로젝트의 메인 파일은 kiosk_stable_current.html 입니다. 코드를 수정하고 결과를 확인하는 방법은 다음과 같습니다.
+이 프로젝트의 메인 파일은 kiosk.html 입니다. 음성 인식은 stt_server.py 의 /transcribe 를 사용하므로, 정적 http.server 가 아니라 uvicorn 으로 실행합니다. 코드를 수정하고 결과를 확인하는 방법은 다음과 같습니다.
 
 [기본 방식]
 
-에디터(VS Code, 메모장 등)로 kiosk_stable_current.html 파일을 엽니다.
+에디터(VS Code, 메모장 등)로 kiosk.html 파일을 엽니다.
 
 코드를 수정하고 저장(Ctrl + S)합니다.
 
@@ -57,7 +57,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 VS Code 확장 프로그램에서 Live Server를 설치합니다.
 
-kiosk_stable_current.html 파일을 띄워두고, VS Code 우측 하단의 [Go Live] 버튼을 클릭합니다.
+kiosk.html 파일을 띄워두고, VS Code 우측 하단의 [Go Live] 버튼을 클릭합니다. Live Server는 화면만 열고 /transcribe 는 동작하지 않습니다. 음성 주문 확인은 uvicorn 실행이 필요합니다.
 
 앞으로는 파워셸을 켤 필요 없이, 코드를 저장(Ctrl + S)할 때마다 브라우저가 자동으로 새로고침 됩니다.
 
