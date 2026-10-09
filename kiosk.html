@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Jua&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/kiosk_talk.js"></script>
     <style>
         /* ==========================================================================
            [디자인 요구사항 #2] 모던하고 따뜻한 베이지 그라데이션 배경
@@ -34444,40 +34445,32 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         { id: 'tts_done', label: '22. 결제 완료 인사', default: '감사합니다. 맛있게 드세요.' }
     ];
 
+    function resolveMasterTts(text, options) {
+        if (!window.KioskTalk || typeof window.KioskTalk.resolveSpeak !== "function") return text;
+        let stage = "";
+        let menus = [];
+        let pending = "";
+        try { stage = String(currentStageName || ""); } catch (e) {}
+        try { menus = Array.isArray(customMenus) ? customMenus : []; } catch (e2) {}
+        try { pending = typeof pendingMenuName !== "undefined" ? pendingMenuName : ""; } catch (e3) {}
+        return window.KioskTalk.resolveSpeak(text, {
+            raw: !!(options && options.raw),
+            stage: stage,
+            lines: ALL_TTS_CONFIG,
+            menus: menus,
+            pendingMenu: pending,
+            saved: function (id) {
+                try { return localStorage.getItem(id) || ""; } catch (err) { return ""; }
+            }
+        });
+    }
+
     if (!window.__originalSpeakTextForMasterTTS) window.__originalSpeakTextForMasterTTS = speakText;
-    speakText = function(text, onEndCallback = null) {
-        let finalText = text;
-        for (let rule of ALL_TTS_CONFIG) {
-            let isMatch = false, capturedVars = [];
-            const regexMap = {
-                'tts_cat': /저희 매장에는 (.*?) 카테고리가 있습니다/,
-                'tts_grid': /^(.*?) 등이 있습니다. 어떤 메뉴를 주문하시겠습니까/,
-                'tts_taste': /오늘의 추천 메뉴는 (.*?)이고, 제일 맛있는 메뉴는 (.*?)입니다/,
-                'tts_confirm': /선택하신 게 (.*?) 맞습니까/,
-                'tts_bev_prompt': /^(.*?) 양을 조절하고 싶으시다면 네/,
-                'tts_bev_step': /^(.*?), 1단계부터 5단계까지/,
-                'tts_summary': /주문하신 총 금액은 (.*?)원입니다/
-            };
-            if (regexMap[rule.id]) {
-                let match = text.match(regexMap[rule.id]);
-                if (match) { isMatch = true; for(let i=1; i<match.length; i++) capturedVars.push(match[i]); }
-            } else if (rule.match && text.includes(rule.match)) {
-                isMatch = true;
-            } else if (text.includes(rule.default.split(' ')[0])) { 
-                isMatch = true;
-            }
-            
-            if (isMatch) {
-                let customText = localStorage.getItem(rule.id);
-                if (customText) {
-                    finalText = customText;
-                    for(let i=0; i<capturedVars.length; i++) finalText = finalText.replace(`{${i}}`, capturedVars[i]);
-                }
-                break;
-            }
-        }
+    speakText = function(text, onEndCallback = null, options = null) {
+        const finalText = resolveMasterTts(text, options);
         window.__originalSpeakTextForMasterTTS(finalText, onEndCallback);
     };
+    window.kioskResolveTts = resolveMasterTts;
 
     function buildMasterTTSAdminUI() {
         const adminPanelBody = document.querySelector('#admin-panel .flex-1');
@@ -34493,7 +34486,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         
         ALL_TTS_CONFIG.forEach(k => {
             const savedVal = localStorage.getItem(k.id) || k.default;
-            html += `<div class="mb-4 bg-black/40 p-3 rounded-lg border border-white/10"><label class="text-[#e8d9c0] text-[13px] font-bold block mb-2">${k.label}</label><textarea id="${k.id}" rows="2" class="w-full p-2 rounded bg-black/60 text-white border border-white/30 outline-none text-sm" style="pointer-events: auto; resize: none;">${savedVal}</textarea></div>`;
+            html += `<div class="mb-4 bg-black/40 p-3 rounded-lg border border-white/10"><div class="flex justify-between items-center mb-2 gap-2"><label class="text-[#e8d9c0] text-[13px] font-bold">${k.label}</label><button type="button" class="tts-preview-btn px-3 py-1 rounded bg-white/20 text-white text-xs font-bold" data-tts-id="${k.id}" style="pointer-events: auto;">듣기</button></div><textarea id="${k.id}" rows="2" class="w-full p-2 rounded bg-black/60 text-white border border-white/30 outline-none text-sm" style="pointer-events: auto; resize: none;">${savedVal}</textarea></div>`;
         });
         html += `</div>`;
         ttsBlock.innerHTML = html;
@@ -34503,6 +34496,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             ALL_TTS_CONFIG.forEach(k => localStorage.setItem(k.id, document.getElementById(k.id).value));
             const msg = document.getElementById('tts-master-save-msg');
             msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 3000);
+        });
+        ttsBlock.addEventListener('click', (event) => {
+            const btn = event.target.closest('.tts-preview-btn');
+            if (!btn) return;
+            const area = document.getElementById(btn.getAttribute('data-tts-id'));
+            if (area && typeof speakText === 'function') speakText(area.value, null, { raw: true });
         });
     }
     setTimeout(buildMasterTTSAdminUI, 1800);
@@ -35980,6 +35979,35 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
 <script src="/kiosk_customer.js"></script>
 <script src="/kiosk_shop.js"></script>
 <script src="/kiosk_presbyopia.js"></script>
+<script>
+(function () {
+    if (!window.KioskTalk) return;
+
+    function installGate() {
+        const previous = window.processVoiceCommand;
+        if (typeof previous !== "function" || previous.__kioskTalkGate) return;
+        const gated = function (text) {
+            let stage = "";
+            let menus = [];
+            try { stage = String(currentStageName || ""); } catch (e) {}
+            try { menus = Array.isArray(customMenus) ? customMenus : []; } catch (e2) {}
+            const judged = window.KioskTalk.judge(text, menus);
+            if (judged.kind === "chat") {
+                console.log("[kiosk] 잡담으로 보고 건너뜀:", text);
+                return;
+            }
+            const next = window.KioskTalk.expand(String(text || ""), stage, menus);
+            return previous.call(this, next);
+        };
+        gated.__kioskTalkGate = true;
+        window.processVoiceCommand = gated;
+        try { processVoiceCommand = gated; } catch (e) {}
+    }
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", installGate);
+    else installGate();
+})();
+</script>
 
 </body>
 </html>
