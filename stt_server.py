@@ -151,7 +151,27 @@ def normalize_kiosk_text(text: str) -> str:
     text = (text or "").strip()
 
     replacements = [
-        # 메뉴명 보정
+        # 메뉴명 / 주문 표현 보정
+        ("돼지국바", "돼지국밥"),
+        ("순대국바", "순대국밥"),
+        ("국바", "국밥"),
+        ("아아", "아이스 아메리카노"),
+        ("뜨아", "따뜻한 아메리카노"),
+        ("계산할게", "결제"),
+        ("계산해줘", "결제"),
+        ("돈 낼게", "결제"),
+        ("돈낼게", "결제"),
+        ("싸갈게", "포장"),
+        ("체크카드", "카드"),
+        ("신용카드", "카드"),
+        ("한그릇", "한 개"),
+        ("두그릇", "두 개"),
+        ("한잔만", "한 개"),
+        ("뜨겁게", "따뜻하게"),
+        ("시원하게", "아이스"),
+        ("사장님 추천", "추천"),
+        ("아무거나", "추천"),
+
         ("아메리카 너", "아메리카노"),
         ("아메리카 노", "아메리카노"),
         ("아메리가노", "아메리카노"),
@@ -419,6 +439,15 @@ def serve_kiosk_html():
         raise HTTPException(status_code=404, detail="kiosk.html not found")
 
     return FileResponse(KIOSK_HTML)
+
+
+@app.get("/kiosk_talk.js")
+def serve_kiosk_talk():
+    path = BASE_DIR / "kiosk_talk.js"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="kiosk_talk.js not found")
+
+    return FileResponse(path, media_type="application/javascript")
 
 
 @app.get("/kiosk")
