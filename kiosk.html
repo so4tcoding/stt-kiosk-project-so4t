@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Jua&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="kiosk_talk.js"></script>
     <style>
         /* ==========================================================================
            [디자인 요구사항 #2] 모던하고 따뜻한 베이지 그라데이션 배경
@@ -26223,6 +26224,23 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     console.log("✅ 불고기버거 → 불고기 카테고리 오작동 방지 완료");
 })();
 
+Object.defineProperty(window, "kioskState", {
+    configurable: true,
+    get: function () {
+        return {
+            stage: currentStageName,
+            menus: customMenus,
+            grid: currentGridMenus,
+            pendingMenuName: pendingMenuName,
+            orderState: orderState,
+            tempItem: tempItem,
+            isAddOnPhase: isAddOnPhase,
+            optionList: optionList,
+            optionStepIndex: optionStepIndex
+        };
+    }
+});
+
         </script>
 
 <script>
@@ -27064,9 +27082,17 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 
     function routeText(text){
-        const t = normalizeText(text);
+        const talk = window.KioskTalk;
+        let t = normalizeText(text);
+        if (talk && typeof talk.expand === "function") t = normalizeText(talk.expand(t));
+        const verdict = talk && typeof talk.judge === "function" ? talk.judge(t) : "";
 
-        if (!isRelated(t)) {
+        if (verdict === "chatter") {
+            console.log("🚫 HYBRID 잡담 버림:", t);
+            return true;
+        }
+
+        if (verdict !== "order" && !isRelated(t)) {
             console.log("🚫 HYBRID 무관 발화 버림:", t);
             return true;
         }
@@ -27198,9 +27224,14 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             });
 
             const data = await res.json();
-            const text = normalizeText(data.text || "");
+            const heard = normalizeText(data.text || "");
+            const talk = window.KioskTalk;
+            const text = talk && typeof talk.expand === "function" ? normalizeText(talk.expand(heard)) : heard;
+            const verdict = talk && typeof talk.judge === "function" ? talk.judge(text) : "";
 
-            if (text && isRelated(text)) {
+            if (verdict === "chatter") {
+                console.log("🚫 HYBRID Whisper 잡담 버림:", text);
+            } else if (verdict === "order" || (text && isRelated(text))) {
                 console.log("🧠 HYBRID Whisper 결과:", text);
                 routeText(text);
             } else {
@@ -27215,12 +27246,18 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 
     function handleFast(text){
-        const t = normalizeText(text);
+        const talk = window.KioskTalk;
+        let t = normalizeText(text);
+        if (talk && typeof talk.expand === "function") t = normalizeText(talk.expand(t));
 
         if (!t) return;
 
-        if (!isRelated(t)) {
-            console.log("🚫 HYBRID 1차 무관 발화 버림:", t);
+        const verdict = talk && typeof talk.judge === "function"
+            ? talk.judge(t)
+            : (isRelated(t) ? "order" : "chatter");
+
+        if (verdict === "chatter") {
+            console.log("🚫 HYBRID 잡담 즉시 버림:", t);
             return;
         }
 
@@ -27234,13 +27271,18 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         lastText = t;
         lastAt = now;
 
-        console.log("⚡ HYBRID 1차 인식:", t);
+        console.log("⚡ HYBRID 1차 인식:", t, verdict || "unknown");
 
-        if (!needsWhisper(t)) {
-            routeText(t);
-        } else {
-            sendWhisper(t);
+        if (verdict === "order" || !needsWhisper(t)) {
+            if (verdict === "order" || isRelated(t)) {
+                routeText(t);
+                return;
+            }
+            console.log("🚫 HYBRID 1차 무관 발화 버림:", t);
+            return;
         }
+
+        sendWhisper(t);
     }
 
     async function startHybrid(){
@@ -34220,37 +34262,12 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         { id: 'tts_done', label: '22. 결제 완료 인사', default: '감사합니다. 맛있게 드세요.' }
     ];
 
+    window.ALL_TTS_CONFIG = ALL_TTS_CONFIG;
     if (!window.__originalSpeakTextForMasterTTS) window.__originalSpeakTextForMasterTTS = speakText;
     speakText = function(text, onEndCallback = null) {
         let finalText = text;
-        for (let rule of ALL_TTS_CONFIG) {
-            let isMatch = false, capturedVars = [];
-            const regexMap = {
-                'tts_cat': /저희 매장에는 (.*?) 카테고리가 있습니다/,
-                'tts_grid': /^(.*?) 등이 있습니다. 어떤 메뉴를 주문하시겠습니까/,
-                'tts_taste': /오늘의 추천 메뉴는 (.*?)이고, 제일 맛있는 메뉴는 (.*?)입니다/,
-                'tts_confirm': /선택하신 게 (.*?) 맞습니까/,
-                'tts_bev_prompt': /^(.*?) 양을 조절하고 싶으시다면 네/,
-                'tts_bev_step': /^(.*?), 1단계부터 5단계까지/,
-                'tts_summary': /주문하신 총 금액은 (.*?)원입니다/
-            };
-            if (regexMap[rule.id]) {
-                let match = text.match(regexMap[rule.id]);
-                if (match) { isMatch = true; for(let i=1; i<match.length; i++) capturedVars.push(match[i]); }
-            } else if (rule.match && text.includes(rule.match)) {
-                isMatch = true;
-            } else if (text.includes(rule.default.split(' ')[0])) { 
-                isMatch = true;
-            }
-            
-            if (isMatch) {
-                let customText = localStorage.getItem(rule.id);
-                if (customText) {
-                    finalText = customText;
-                    for(let i=0; i<capturedVars.length; i++) finalText = finalText.replace(`{${i}}`, capturedVars[i]);
-                }
-                break;
-            }
+        if (window.KioskTalk && typeof window.KioskTalk.resolveSpeak === "function") {
+            finalText = window.KioskTalk.resolveSpeak(text);
         }
         window.__originalSpeakTextForMasterTTS(finalText, onEndCallback);
     };

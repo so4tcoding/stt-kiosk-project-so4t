@@ -1,5 +1,6 @@
 #uvicorn stt_server:app --host 0.0.0.0 --port 8000
 import os
+import re
 import csv
 import io
 import uuid
@@ -82,7 +83,8 @@ INITIAL_PROMPT = (
     "카테고리는 국밥, 불고기, 햄버거, 커피, 음료, 디저트입니다. "
 
     "자주 나오는 주문 명령은 주문 시작, 메뉴판 보여줘, 추천해줘, 한 개, 두 개, 세 개, "
-    "매장, 포장, 카드, 현금, 결제, 추가, 취소, 이전 화면, 처음으로입니다. "
+    "한잔, 두잔, 매장, 포장, 싸갈게, 가져갈게, 카드, 현금, 결제, 계산할게, 추가, 취소, 이전 화면, 처음으로입니다. "
+    "줄임말도 메뉴로 인식합니다. 아아, 뜨아, 핫아메는 아메리카노. 라떼는 카페라떼. "
 
     "화면 제어 명령은 화면 확대, 글씨 크게, 안 보여, 잘 안 보여, 아래 보여줘, 밑에 보여줘, "
     "원래대로, 화면 축소, 확대 해제입니다. "
@@ -152,6 +154,9 @@ def normalize_kiosk_text(text: str) -> str:
 
     replacements = [
         # 메뉴명 보정
+        ("아이스 아메리카노", "아메리카노"),
+        ("아이스아메리카노", "아메리카노"),
+        ("핫아메", "아메리카노"),
         ("아메리카 너", "아메리카노"),
         ("아메리카 노", "아메리카노"),
         ("아메리가노", "아메리카노"),
@@ -163,13 +168,20 @@ def normalize_kiosk_text(text: str) -> str:
         ("까페 라떼", "카페라떼"),
 
         ("돼지 국밥", "돼지국밥"),
+        ("돼지국빱", "돼지국밥"),
+        ("도야지국밥", "돼지국밥"),
         ("순대 국밥", "순대국밥"),
+        ("순댓국밥", "순대국밥"),
         ("소고기 국밥", "소고기국밥"),
+        ("쇠고기 국밥", "소고기국밥"),
 
         ("불고기 보거", "불고기버거"),
         ("불고기 버거", "불고기버거"),
+        ("볼고기버거", "불고기버거"),
+        ("불고기버가", "불고기버거"),
         ("치즈 보거", "치즈버거"),
         ("치즈 버거", "치즈버거"),
+        ("치즈버가", "치즈버거"),
 
         ("오랜지", "오렌지"),
         ("쥬스", "주스"),
@@ -185,7 +197,10 @@ def normalize_kiosk_text(text: str) -> str:
         ("소프트콘", "소프트 아이스크림"),
 
         # 결제어 보정
+        ("계산할게", "결제"),
+        ("계산할께", "결제"),
         ("결재", "결제"),
+        ("싸갈게", "포장"),
         ("카도로", "카드로"),
         ("카도", "카드"),
         ("현끔", "현금"),
@@ -243,6 +258,13 @@ def normalize_kiosk_text(text: str) -> str:
 
     for wrong, right in replacements:
         text = text.replace(wrong, right)
+
+    text = text.replace("딸기 라떼", "\u0001BERRY\u0001").replace("딸기라떼", "\u0001BERRY\u0001")
+    text = text.replace("카페라떼", "\u0001LATTE\u0001")
+    text = re.sub(r"(?<![가-힣])아아(?![가-힣])", "아메리카노", text)
+    text = re.sub(r"(?<![가-힣])뜨아(?![가-힣])", "아메리카노", text)
+    text = re.sub(r"(?<![가-힣])라떼(?![가-힣])", "카페라떼", text)
+    text = text.replace("\u0001BERRY\u0001", "딸기 라떼").replace("\u0001LATTE\u0001", "카페라떼")
 
     return text
 
@@ -411,6 +433,14 @@ def health_check():
         "model": MODEL_PATH,
         "cpu_threads": CPU_THREADS
     }
+
+
+@app.get("/kiosk_talk.js")
+def serve_kiosk_talk_js():
+    script_path = BASE_DIR / "kiosk_talk.js"
+    if not script_path.exists():
+        raise HTTPException(status_code=404, detail="kiosk_talk.js not found")
+    return FileResponse(script_path, media_type="application/javascript")
 
 
 @app.get("/kiosk.html")
