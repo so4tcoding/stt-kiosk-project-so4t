@@ -26523,6 +26523,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 
     function isRelated(text){
+        if (window.KioskTalk && typeof window.KioskTalk.judge === "function") {
+            const judged = window.KioskTalk.judge(text);
+            if (judged && judged.kind === "chatter") return false;
+            if (judged && judged.kind === "order") return true;
+        }
         const c = compact(text);
 
         if (!c) return false;
@@ -26943,6 +26948,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 
     function isRelated(text){
+        if (window.KioskTalk && typeof window.KioskTalk.judge === "function") {
+            const judged = window.KioskTalk.judge(text);
+            if (judged && judged.kind === "chatter") return false;
+            if (judged && judged.kind === "order") return true;
+        }
         const c = compact(text);
 
         if (!c) return false;
@@ -34220,38 +34230,16 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         { id: 'tts_done', label: '22. 결제 완료 인사', default: '감사합니다. 맛있게 드세요.' }
     ];
 
+    window.ALL_TTS_CONFIG = ALL_TTS_CONFIG;
     if (!window.__originalSpeakTextForMasterTTS) window.__originalSpeakTextForMasterTTS = speakText;
     speakText = function(text, onEndCallback = null) {
         let finalText = text;
-        for (let rule of ALL_TTS_CONFIG) {
-            let isMatch = false, capturedVars = [];
-            const regexMap = {
-                'tts_cat': /저희 매장에는 (.*?) 카테고리가 있습니다/,
-                'tts_grid': /^(.*?) 등이 있습니다. 어떤 메뉴를 주문하시겠습니까/,
-                'tts_taste': /오늘의 추천 메뉴는 (.*?)이고, 제일 맛있는 메뉴는 (.*?)입니다/,
-                'tts_confirm': /선택하신 게 (.*?) 맞습니까/,
-                'tts_bev_prompt': /^(.*?) 양을 조절하고 싶으시다면 네/,
-                'tts_bev_step': /^(.*?), 1단계부터 5단계까지/,
-                'tts_summary': /주문하신 총 금액은 (.*?)원입니다/
-            };
-            if (regexMap[rule.id]) {
-                let match = text.match(regexMap[rule.id]);
-                if (match) { isMatch = true; for(let i=1; i<match.length; i++) capturedVars.push(match[i]); }
-            } else if (rule.match && text.includes(rule.match)) {
-                isMatch = true;
-            } else if (text.includes(rule.default.split(' ')[0])) { 
-                isMatch = true;
+        try {
+            if (!window.__kioskTTSBypass && window.KioskTalk && typeof window.KioskTalk.resolveSpeak === "function") {
+                const resolved = window.KioskTalk.resolveSpeak(text);
+                if (resolved) finalText = resolved;
             }
-            
-            if (isMatch) {
-                let customText = localStorage.getItem(rule.id);
-                if (customText) {
-                    finalText = customText;
-                    for(let i=0; i<capturedVars.length; i++) finalText = finalText.replace(`{${i}}`, capturedVars[i]);
-                }
-                break;
-            }
-        }
+        } catch (e) {}
         window.__originalSpeakTextForMasterTTS(finalText, onEndCallback);
     };
 
@@ -34267,9 +34255,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         
         let html = `<div class="flex justify-between items-center mb-3 sticky top-0 bg-[#3d2f1f] z-10 py-2"><h3 class="text-white font-bold flex items-center gap-2">✏️ 전체 TTS 대사 영구 커스텀 (22종)</h3><button id="save-master-tts-btn" class="px-5 py-2 bg-[#e76f51] rounded-lg font-black text-white shadow-lg active:scale-95 transition-transform" style="pointer-events: auto;">전체 저장</button></div><p id="tts-master-save-msg" class="text-[#f4a261] text-sm mb-3 font-bold text-center hidden">✅ 모든 대사가 컴퓨터에 영구 저장되었습니다!</p><div class="overflow-y-auto pr-2" style="max-height: 50vh;">`;
         
+        const escTts = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         ALL_TTS_CONFIG.forEach(k => {
             const savedVal = localStorage.getItem(k.id) || k.default;
-            html += `<div class="mb-4 bg-black/40 p-3 rounded-lg border border-white/10"><label class="text-[#e8d9c0] text-[13px] font-bold block mb-2">${k.label}</label><textarea id="${k.id}" rows="2" class="w-full p-2 rounded bg-black/60 text-white border border-white/30 outline-none text-sm" style="pointer-events: auto; resize: none;">${savedVal}</textarea></div>`;
+            html += `<div class="mb-4 bg-black/40 p-3 rounded-lg border border-white/10"><div class="flex justify-between items-center gap-2 mb-2"><label class="text-[#e8d9c0] text-[13px] font-bold">${k.label}</label><button type="button" class="tts-line-preview px-3 py-1 bg-emerald-700 rounded-lg text-white text-xs font-black" data-tts-id="${k.id}" style="pointer-events: auto;">이 대사 듣기</button></div><textarea id="${k.id}" rows="2" class="w-full p-2 rounded bg-black/60 text-white border border-white/30 outline-none text-sm" style="pointer-events: auto; resize: none;">${escTts(savedVal)}</textarea></div>`;
         });
         html += `</div>`;
         ttsBlock.innerHTML = html;
@@ -34279,6 +34269,19 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             ALL_TTS_CONFIG.forEach(k => localStorage.setItem(k.id, document.getElementById(k.id).value));
             const msg = document.getElementById('tts-master-save-msg');
             msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 3000);
+        });
+        ttsBlock.addEventListener('click', (e) => {
+            const btn = e.target.closest('.tts-line-preview');
+            if (!btn) return;
+            const id = btn.getAttribute('data-tts-id');
+            const field = document.getElementById(id);
+            const raw = field ? field.value : '';
+            const spoken = (window.KioskTalk && typeof window.KioskTalk.previewLine === 'function')
+                ? window.KioskTalk.previewLine(id, raw)
+                : raw;
+            window.__kioskTTSBypass = true;
+            try { speakText(spoken); }
+            finally { window.__kioskTTSBypass = false; }
         });
     }
     setTimeout(buildMasterTTSAdminUI, 1800);
@@ -34892,25 +34895,11 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
             
             if (currentStageName === 'payment') {
                 if (/네|예|응|맞아/.test(clean)) {
-                    console.log("💳 카드 결제(네) 확정 강제 이동");
-                    currentStageName = 'done';
-                    speakText("카드 결제를 선택하셨습니다.");
-                    setTimeout(() => {
-                        if (typeof transitionTo === 'function' && typeof showGoodbyeMessage === 'function') {
-                            transitionTo('done', showGoodbyeMessage);
-                        }
-                    }, 2500);
-                    return;
+                    console.log("💳 카드 결제(네) 확정");
+                    if (typeof selectPayment === 'function') { selectPayment('카드'); return; }
                 } else if (/아니|아니요|아뇨|틀려/.test(clean)) {
-                    console.log("💵 현금 결제(아니요) 확정 강제 이동");
-                    currentStageName = 'done';
-                    speakText("현금 결제를 선택하셨습니다.");
-                    setTimeout(() => {
-                        if (typeof transitionTo === 'function' && typeof showGoodbyeMessage === 'function') {
-                            transitionTo('done', showGoodbyeMessage);
-                        }
-                    }, 2500);
-                    return;
+                    console.log("💵 현금 결제(아니요) 확정");
+                    if (typeof selectPayment === 'function') { selectPayment('현금'); return; }
                 }
             }
             baseProcessVoice(text);
@@ -35023,20 +35012,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
         });
     }
 
-    // 3. 첫 사용법 안내(가이드) 멘트를 "화면확대, 소리, 설명해줘" 포함 버전으로 강제 업데이트
-    function updateInitialGuideTTS() {
-        const newGuideText = "쉽게 설명해드릴게요. 이 키오스크는 말로 주문합니다. 글씨가 작으면 화면 확대, 기기 소리가 작으면 소리 키워 라고 말씀해주세요. 이용 중 뭘 해야 할지 모를 때는 설명해 줘 라고 말씀하시면 화면을 안내해 드립니다. 자, 원하시는 메뉴를 말씀해주세요.";
-        
-        // 로컬 스토리지 업데이트
-        localStorage.setItem('tts_guide', newGuideText);
-        
-        // 관리자 창의 입력칸(2번. 사용법 안내) 내용도 이걸로 변경해서 보여줌
-        const guideInput = document.getElementById('tts_guide');
-        if (guideInput) guideInput.value = newGuideText;
-    }
-
     setTimeout(buildHelpAdminUI, 2500);
-    setTimeout(updateInitialGuideTTS, 3000); // 폼이 렌더링된 후 내용 교체
 })();
 
 /* ==========================================================================
@@ -35272,6 +35248,7 @@ const val = rawVal === undefined || rawVal === null ? 3 : rawVal;
     }
 })();
 </script>
+<script src="kiosk_talk.js"></script>
 
 </body>
 </html>
