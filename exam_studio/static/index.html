@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>기말 스튜디오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true">기</span>
+        <div>
+          <strong>기말 스튜디오</strong>
+          <p>유형 문제집 · 모의고사</p>
+        </div>
+      </div>
+      <span class="pill quiet">둥근 시험지</span>
+    </header>
+
+    <div class="studio">
+      <section class="card builder" aria-labelledby="builder-title">
+        <div class="card-head">
+          <h1 id="builder-title">어떤 시험지로 볼까요</h1>
+          <p>문제집처럼 개념부터 밟거나, 기말 모의고사처럼 시간을 재고 풉니다.</p>
+        </div>
+
+        <div class="modes" role="radiogroup" aria-label="시험지 형식">
+          <button type="button" class="mode is-on" data-mode="workbook" role="radio" aria-checked="true">
+            <span class="mode-kicker">문제집</span>
+            <strong>유형서</strong>
+            <em>개념 카드, 대표 유형, 난이도 순</em>
+          </button>
+          <button type="button" class="mode" data-mode="mock" role="radio" aria-checked="false">
+            <span class="mode-kicker">모의고사</span>
+            <strong>시험지</strong>
+            <em>제한 시간, 배점, 답안지와 해설</em>
+          </button>
+        </div>
+
+        <fieldset class="group">
+          <legend>과목</legend>
+          <div id="subjects" class="chips"></div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>단원</legend>
+          <div id="units" class="chips"></div>
+        </fieldset>
+
+        <label class="count-row">
+          <span>문항 수 <b id="count-label">8</b></span>
+          <input id="count" type="range" min="4" max="20" value="8">
+        </label>
+
+        <div class="actions">
+          <button type="button" class="primary" id="make">문제 만들기</button>
+          <button type="button" class="ghost" id="toggle-answers" disabled>정답·해설 펼치기</button>
+          <button type="button" class="ghost" id="print" disabled>인쇄</button>
+        </div>
+        <p id="error" class="error" role="alert" hidden></p>
+      </section>
+
+      <aside class="card style-card" aria-labelledby="style-title">
+        <div class="card-head">
+          <h2 id="style-title">학습된 형식</h2>
+          <p id="style-lead">문제집과 모의고사 예시에서 구성만 읽어 두었습니다.</p>
+        </div>
+        <div id="style-list"></div>
+        <form id="learn-form" class="learn">
+          <label>
+            형식 더 배우기
+            <select id="learn-kind">
+              <option value="workbook">문제집</option>
+              <option value="mock">모의고사</option>
+            </select>
+          </label>
+          <textarea id="learn-text" rows="5" placeholder="배점, ①~⑤, 제한 시간, 답안지처럼 구성이 보이는 예시를 붙여 넣으세요. 문제 문장은 저장하지 않습니다."></textarea>
+          <div class="actions tight">
+            <button type="submit" class="primary slim">형식 학습</button>
+            <button type="button" class="ghost slim" id="reset-style">기본 형식</button>
+          </div>
+          <p class="fine">붙여 넣은 글에서 보인 형식만 더합니다. 문장 원문은 서버에 남기지 않습니다.</p>
+        </form>
+      </aside>
+    </div>
+
+    <section id="paper" class="paper-slot" aria-live="polite"></section>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
