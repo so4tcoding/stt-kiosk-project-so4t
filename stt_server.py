@@ -2,6 +2,7 @@
 import os
 import csv
 import io
+import re
 import uuid
 import time
 import shutil
@@ -26,6 +27,7 @@ ADMIN_PASSWORD = "0302"
 BASE_DIR = Path(__file__).resolve().parent
 
 KIOSK_HTML = BASE_DIR / "kiosk.html"
+KIOSK_TALK_JS = BASE_DIR / "kiosk_talk.js"
 
 COLLECT_DIR = BASE_DIR / "voice_collection_data"
 COLLECT_AUDIO_DIR = COLLECT_DIR / "audio"
@@ -91,6 +93,7 @@ INITIAL_PROMPT = (
 
     "도움 요청 표현은 사용법 알려줘, 이게 뭐야, 어떻게 대답하라고, 뭐라고 말하면 돼, "
     "다시 설명해줘, 메뉴 다시 말해줘, 한 번 더 말해줘입니다. "
+    "줄임말도 주문입니다. 아아는 아메리카노, 국바는 국밥, 계산할게는 결제, 한잔은 한 개입니다. "
 
     "장소 선택은 매장, 여기서 먹을게요, 먹고 갈게요, 포장, 들고 갈게요, 가져갈게요로 인식하세요. "
     "결제 방식은 카드, 신용카드, 체크카드, 현금, 현찰로 인식하세요. "
@@ -243,6 +246,26 @@ def normalize_kiosk_text(text: str) -> str:
 
     for wrong, right in replacements:
         text = text.replace(wrong, right)
+
+    slang_patterns = [
+        (r"아이스\s*아아", "아이스 아메리카노"),
+        (r"뜨\s*아(?![가-힣])", "따뜻한 아메리카노"),
+        (r"(?<![가-힣])아아(?![가-힣])", "아메리카노"),
+        (r"(?<![가-힣])아메(?!리카노)(?![가-힣])", "아메리카노"),
+        (r"국바", "국밥"),
+        (r"치버", "치즈버거"),
+        (r"불버", "불고기버거"),
+        (r"계산할게요|계산할게|계산하자|계산해\s*줘", "결제"),
+        (r"한\s*잔", "한 개"),
+        (r"두\s*잔", "두 개"),
+        (r"세\s*잔", "세 개"),
+        (r"포장할게요|포장할게|싸\s*줘(?:요)?|가져갈게요|가져갈게", "포장"),
+        (r"먹고\s*갈게요|먹고\s*갈게|여기서\s*먹을게요|여기서\s*먹을게", "매장"),
+        (r"카드로\s*할게요|카드로\s*할게", "카드"),
+    ]
+
+    for pattern, repl in slang_patterns:
+        text = re.sub(pattern, repl, text)
 
     return text
 
@@ -427,6 +450,14 @@ def serve_kiosk_alias():
         raise HTTPException(status_code=404, detail="kiosk.html not found")
 
     return FileResponse(KIOSK_HTML)
+
+
+@app.get("/kiosk_talk.js")
+def serve_kiosk_talk_js():
+    if not KIOSK_TALK_JS.exists():
+        raise HTTPException(status_code=404, detail="kiosk_talk.js not found")
+
+    return FileResponse(KIOSK_TALK_JS, media_type="application/javascript")
 
 
 @app.get("/favicon.ico")
